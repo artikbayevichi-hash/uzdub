@@ -1,0 +1,97 @@
+/* ============================================================
+   css/voice-assistant.css
+   "UZDUB AI" ovozli yordamchi — mavjud sayt uslubiga mos (shisha,
+   ko'k porlash, yumshoq 3D)
+   ============================================================ */
+
+.va-widget {
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.va-toggle {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(79,195,247,0.4);
+    background: linear-gradient(145deg, rgba(18,26,43,0.9), rgba(13,71,161,0.55));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.45), 0 0 0 rgba(79,195,247,0);
+    transition: box-shadow 0.25s ease, transform 0.2s ease, background 0.25s ease;
+}
+.va-toggle:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(33,150,243,0.35); }
+.va-mic-icon { width: 24px; height: 24px; fill: var(--blue-glow); position: relative; z-index: 2; }
+
+.va-pulse-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(79,195,247,0.55);
+    opacity: 0;
+    transform: scale(0.85);
+    pointer-events: none;
+}
+
+/* Doim tinglash (wake-word) rejimida — sekin nafas oluvchi halqa */
+.va-widget.va-armed .va-toggle { background: linear-gradient(145deg, rgba(18,26,43,0.92), rgba(13,71,161,0.7)); }
+.va-widget.va-armed .va-pulse-ring {
+    opacity: 1;
+    animation: va-breathe 2.6s ease-in-out infinite;
+}
+
+/* Faol tinglash (buyruq kutilmoqda) — tezroq, yorqinroq puls */
+.va-widget.va-listening .va-toggle { box-shadow: 0 0 0 6px rgba(33,150,243,0.18), 0 6px 22px rgba(33,150,243,0.5); }
+.va-widget.va-listening .va-pulse-ring {
+    opacity: 1;
+    border-color: rgba(79,195,247,0.9);
+    animation: va-pulse-fast 1s ease-out infinite;
+}
+.va-widget.va-listening .va-mic-icon { fill: #ffffff; }
+
+/* Gapirayotganda (TTS) — logotip kabi porlash */
+.va-widget.va-speaking .va-toggle { box-shadow: 0 0 24px rgba(79,195,247,0.65); }
+
+@keyframes va-breathe {
+    0%, 100% { transform: scale(0.9); opacity: 0.35; }
+    50% { transform: scale(1.12); opacity: 0.75; }
+}
+@keyframes va-pulse-fast {
+    0% { transform: scale(0.85); opacity: 0.9; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.va-panel {
+    max-width: 260px;
+    background: rgba(10,14,23,0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(33,150,243,0.25);
+    border-radius: 12px;
+    padding: 10px 14px;
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+.va-widget.va-show-panel .va-panel { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.va-status { font-size: 12px; font-weight: 600; color: var(--blue-glow); margin-bottom: 4px; }
+.va-transcript { font-size: 13px; color: var(--text-light); line-height: 1.4; word-break: break-word; }
+
+@media (max-width: 900px) {
+    .va-widget { left: 14px; bottom: 90px; }
+    .va-panel { max-width: 200px; }
+}

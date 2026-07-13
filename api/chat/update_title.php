@@ -1,0 +1,39 @@
+<?php
+/* ============================================================
+   api/chat/update_title.php
+   Chat sarlavhasini yangilash
+   ============================================================ */
+
+session_start();
+header('Content-Type: application/json; charset=utf-8');
+
+require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/includes/functions.php';
+
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['error' => 'Kirish talab qilinadi']);
+    exit;
+}
+
+if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+    echo json_encode(['error' => 'Xavfsizlik tokeni noto\'g\'ri']);
+    exit;
+}
+
+$userId = $_SESSION['user_id'];
+$sessionId = (int)($_POST['session_id'] ?? 0);
+$title = trim($_POST['title'] ?? '');
+
+if (!$sessionId || !$title) {
+    echo json_encode(['error' => 'Ma\'lumotlar to\'liq emas']);
+    exit;
+}
+
+try {
+    $stmt = $pdo->prepare("UPDATE ai_chat_sessions SET title = ? WHERE id = ? AND user_id = ?");
+    $stmt->execute([$title, $sessionId, $userId]);
+    
+    echo json_encode(['success' => true]);
+} catch (PDOException $e) {
+    echo json_encode(['error' => 'Xatolik: ' . $e->getMessage()]);
+}

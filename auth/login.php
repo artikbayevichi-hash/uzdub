@@ -1,0 +1,83 @@
+<?php
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+if (is_user()) { header('Location: /uzdub/index.php'); exit; }
+
+$error = '';
+$redirect = $_GET['redirect'] ?? '/uzdub/index.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $login    = trim($_POST['login'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE username=? OR email=?");
+    $stmt->execute([$login, $login]);
+    $user = $stmt->fetch();
+
+    if ($user && password_verify($password, $user['password'])) {
+        check_premium_expiry($pdo, $user['id']);
+        refresh_user_session($pdo, $user['id']);
+        header('Location: ' . $redirect);
+        exit;
+    }
+
+    // Agar oddiy foydalanuvchi topilmasa, admin sifatida tekshirish
+    $admin_stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
+    $admin_stmt->execute([$login]);
+    $admin = $admin_stmt->fetch();
+
+    if ($admin && password_verify($password, $admin['password'])) {
+        $_SESSION['admin_id'] = $admin['id'];
+        $_SESSION['admin_username'] = $admin['username'];
+        header('Location: /uzdub/admin/dashboard.php');
+        exit;
+    }
+
+    $error = 'Login yoki parol noto\'g\'ri.';
+}
+?>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirish - UZDUB</title>
+<link rel="stylesheet" href="/uzdub/css/style.css">
+<style>
+.auth-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.auth-box { width:380px; background:var(--card-bg); border:1px solid rgba(33,150,243,0.3); border-radius:14px; padding:38px; }
+.auth-box h1 { text-align:center; color:var(--blue-glow); margin-bottom:6px; font-size:26px; }
+.auth-box h2 { text-align:center; font-size:17px; margin-bottom:22px; color:var(--text-muted); font-weight:400; }
+.auth-box label { display:block; margin:12px 0 5px; font-size:13px; color:var(--text-muted); }
+.auth-box input { width:100%; padding:11px 14px; background:#0d1424; border:1px solid rgba(33,150,243,0.25); border-radius:7px; color:var(--text-light); font-size:14px; outline:none; }
+.auth-box input:focus { border-color:var(--blue-primary); }
+.auth-box .btn { width:100%; padding:12px; background:var(--blue-primary); color:#fff; border:none; border-radius:7px; font-size:15px; font-weight:600; cursor:pointer; margin-top:18px; }
+.auth-box .btn:hover { background:var(--blue-glow); }
+.auth-box .alt-link { text-align:center; margin-top:16px; font-size:13px; color:var(--text-muted); }
+.auth-box .alt-link a { color:var(--blue-glow); text-decoration:none; }
+.alert { padding:11px 15px; border-radius:7px; margin-bottom:14px; font-size:13px; }
+.alert-error { background:rgba(229,57,53,0.15); border:1px solid #e53935; color:#ef9a9a; }
+</style>
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<div class="auth-wrap">
+    <div class="auth-box">
+        <h1>🎬 UZDUB</h1>
+        <h2>Tizimga kirish</h2>
+        <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
+        <form method="post">
+            <label>Login yoki Email</label>
+            <input type="text" name="login" placeholder="ali123 yoki email@example.com" required autofocus>
+            <label>Parol</label>
+            <input type="password" name="password" required>
+            <button type="submit" class="btn">Kirish</button>
+        </form>
+        <div class="alt-link">Hisobingiz yo'qmi? <a href="register.php">Ro'yxatdan o'tish</a></div>
+        <div class="alt-link" style="margin-top:6px;"><a href="/uzdub/admin/login.php" style="color:var(--text-muted);">🔐 Men adminman</a></div>
+    </div>
+</div>
+<script src="/uzdub/js/stars.js"></script>
+</body>
+</html>
