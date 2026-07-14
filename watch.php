@@ -41,17 +41,6 @@ if (is_user()) {
     $in_watchlist = (bool)$chk->fetch();
 }
 
-$episodes = [];
-$current_ep = null;
-if ($item['is_series']) {
-    $stmt = $pdo->prepare("SELECT * FROM episodes WHERE content_id = ? ORDER BY season, episode_number");
-    $stmt->execute([$id]);
-    $episodes = $stmt->fetchAll();
-    $ep_id = (int)($_GET['ep'] ?? 0);
-    if ($ep_id) { foreach ($episodes as $e) if ($e['id'] == $ep_id) $current_ep = $e; }
-    if (!$current_ep && !empty($episodes)) $current_ep = $episodes[0];
-}
-
 $stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? AND id != ? ORDER BY RAND() LIMIT 12");
 $stmt->execute([$item['category_id'], $id]);
 $similar = $stmt->fetchAll();
@@ -72,15 +61,7 @@ include __DIR__ . '/includes/header.php';
 
     <div class="watch-player-section">
         <span class="content-id-tag">🆔 <?php echo e($item['content_code'] ?? ('ID' . $item['id'])); ?></span>
-        <?php if ($item['is_series']): ?>
-            <?php if ($current_ep): ?>
-                <?php echo render_player($current_ep['video_type'], $current_ep['video_url'], 'uploads/videos/'); ?>
-            <?php else: ?>
-                <p class="player-error">Bu kontentga hali qism qo'shilmagan.</p>
-            <?php endif; ?>
-        <?php else: ?>
-            <?php echo render_player($item['video_type'], $item['video_url'], 'uploads/videos/'); ?>
-        <?php endif; ?>
+        <?php echo render_player($item['video_type'], $item['video_url'], 'uploads/videos/'); ?>
     </div>
 
     <div class="watch-action-bar">
@@ -122,24 +103,6 @@ include __DIR__ . '/includes/header.php';
             <p class="desc"><?php echo nl2br(e($item['description'])); ?></p>
         </div>
     </div>
-
-    <?php if ($item['is_series'] && !empty($episodes)): ?>
-    <div>
-        <h2 style="font-size:18px; margin-bottom:10px; border-left:4px solid var(--blue-primary); padding-left:10px;">Qismlar</h2>
-        <div class="episode-list">
-            <?php foreach ($episodes as $ep): ?>
-            <a href="watch.php?id=<?php echo $id; ?>&ep=<?php echo $ep['id']; ?>" class="episode-btn <?php echo ($current_ep && $current_ep['id'] == $ep['id']) ? 'active' : ''; ?>">
-                <?php if ($ep['thumbnail']): ?>
-                <img src="uploads/episodes/<?php echo e($ep['thumbnail']); ?>" alt="" class="ep-thumb">
-                <?php endif; ?>
-                <span class="ep-info">
-                    <?php echo $ep['season'] > 1 ? ($ep['season'] . '-fasl ') : ''; ?><?php echo $ep['episode_number']; ?>-qism<?php echo $ep['title'] ? ': ' . e($ep['title']) : ''; ?>
-                </span>
-            </a>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
 
     <?php if (!empty($similar)): ?>
     <section class="content-section" style="padding-left:0; padding-right:0;">

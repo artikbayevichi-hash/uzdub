@@ -20,7 +20,7 @@ include __DIR__ . '/includes/header.php';
         <div class="hero-content">
             <div class="hero-tags">
                 <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>
-                <?php if ($hero['is_series']): ?><span class="hero-tag">Ko'p qismli</span><?php endif; ?>
+                
             </div>
             <h1><?php echo e($hero['title']); ?></h1>
             <div class="hero-meta">
@@ -45,6 +45,8 @@ include __DIR__ . '/includes/header.php';
         <span class="hero-dot <?php echo $i === 0 ? 'active' : ''; ?>" data-index="<?php echo $i; ?>"></span>
         <?php endforeach; ?>
     </div>
+    <button class="hero-arrow hero-arrow-prev" aria-label="Oldingi">&#10094;</button>
+    <button class="hero-arrow hero-arrow-next" aria-label="Keyingi">&#10095;</button>
     <?php endif; ?>
 </section>
 <?php endif; ?>
@@ -84,9 +86,17 @@ include __DIR__ . '/includes/header.php';
 (function() {
     var slides = document.querySelectorAll('.hero-slide');
     var dots = document.querySelectorAll('.hero-dot');
+    var prevBtn = document.querySelector('.hero-arrow-prev');
+    var nextBtn = document.querySelector('.hero-arrow-next');
     if (slides.length <= 1) return;
     var current = 0;
     var timer;
+
+    slides.forEach(function(s) {
+        s.style.opacity = '';
+        s.style.transform = '';
+        s.style.transition = '';
+    });
 
     function showSlide(idx) {
         slides.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
@@ -94,14 +104,44 @@ include __DIR__ . '/includes/header.php';
         current = idx;
     }
     function nextSlide() { showSlide((current + 1) % slides.length); }
-    function resetTimer() { clearInterval(timer); timer = setInterval(nextSlide, 6000); }
+    function prevSlide() { showSlide((current - 1 + slides.length) % slides.length); }
+    function resetTimer() { clearInterval(timer); timer = setInterval(nextSlide, 5000); }
 
+    if (prevBtn) prevBtn.addEventListener('click', function() { prevSlide(); resetTimer(); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { nextSlide(); resetTimer(); });
     dots.forEach(function(dot) {
         dot.addEventListener('click', function() {
             showSlide(parseInt(dot.dataset.index));
             resetTimer();
         });
     });
+
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var carousel = document.querySelector('.hero-carousel');
+    if (carousel) {
+        carousel.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carousel.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+    }
+
+    function handleSwipe() {
+        var diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+            resetTimer();
+        }
+    }
+
     resetTimer();
 })();
 </script>

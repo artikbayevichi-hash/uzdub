@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS categories (
     slug VARCHAR(50) NOT NULL UNIQUE
 );
 INSERT INTO categories (name, slug) VALUES
-('Kino', 'kino'),('Anime', 'anime'),('Multfilm', 'multfilm'),('Serial', 'serial')
+('Kino', 'kino'),('Anime', 'anime'),('Multfilm', 'multfilm')
 ON DUPLICATE KEY UPDATE name=name;
 
 CREATE TABLE IF NOT EXISTS content (

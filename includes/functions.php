@@ -68,7 +68,7 @@ function generate_user_id($pdo) {
 
 // ===== Kontent uchun avtomatik ID (masalan: KN0001, AN0002, MF0003, SR0004) =====
 function generate_content_code($pdo, $category_slug) {
-    $prefix_map = ['kino' => 'KN', 'anime' => 'AN', 'multfilm' => 'MF', 'serial' => 'SR'];
+    $prefix_map = ['kino' => 'KN', 'anime' => 'AN', 'multfilm' => 'MF'];
     $prefix = $prefix_map[$category_slug] ?? 'CN';
     do {
         $num = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);

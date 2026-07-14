@@ -1,0 +1,5 @@
+# Yuklangan fayllar papkasida PHP skriptlarni bajarilishini oldini olish
+<FilesMatch "\.(php|phtml|php[0-9]?|phar)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes

@@ -5,13 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB' : 'UZDUB - Kino, Anime, Multfilm'; ?></title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/uzdub/js/3d-loader.js"></script>
+<script src="/uzdub/js/3d-effects.js"></script>
+<script src="/uzdub/js/3d-cards.js"></script>
+<script src="/uzdub/js/3d-hero.js"></script>
+<script src="/uzdub/js/3d-animations.js"></script>
 </head>
 <body>
+<div class="floating-orb"></div>
+<div class="floating-orb"></div>
+<div class="floating-orb"></div>
 <canvas id="stars-canvas"></canvas>
 
 <header class="site-header">
     <a href="/uzdub/index.php" class="logo">UZDUB</a>
-    <ul class="nav-links">
+    <button class="nav-toggle" id="navToggle" aria-label="Menyu">&#9776;</button>
+    <ul class="nav-links" id="navLinks">
         <li><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"><?php echo t('home'); ?></a></li>
         <li><a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a></li>
         <li><a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a></li>
@@ -48,10 +58,39 @@
         <?php endif; ?>
     </div>
 </header>
+
+<?php $__cur_page = basename($_SERVER['PHP_SELF']); ?>
+<nav class="bottom-nav" aria-label="Asosiy navigatsiya">
+    <a href="/uzdub/index.php" class="<?php echo $__cur_page=='index.php' ? 'active' : ''; ?>">
+        <span class="bn-icon">🏠</span><span class="bn-label"><?php echo t('home'); ?></span>
+    </a>
+    <a href="/uzdub/category.php?slug=kino" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='kino') ? 'active' : ''; ?>">
+        <span class="bn-icon">🎬</span><span class="bn-label"><?php echo t('movies'); ?></span>
+    </a>
+    <a href="/uzdub/category.php?slug=anime" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='anime') ? 'active' : ''; ?>">
+        <span class="bn-icon">🎌</span><span class="bn-label"><?php echo t('anime'); ?></span>
+    </a>
+    <a href="/uzdub/category.php?slug=multfilm" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='multfilm') ? 'active' : ''; ?>">
+        <span class="bn-icon">🧸</span><span class="bn-label"><?php echo t('cartoons'); ?></span>
+    </a>
+    <?php if (is_user()): $__u = current_user(); ?>
+    <a href="/uzdub/profile.php?uid=<?php echo e($__u['user_id']); ?>" class="<?php echo $__cur_page=='profile.php' ? 'active' : ''; ?>">
+        <span class="bn-icon">👤</span><span class="bn-label"><?php echo t('profile'); ?></span>
+    </a>
+    <?php else: ?>
+    <a href="/uzdub/auth/login.php" class="<?php echo $__cur_page=='login.php' ? 'active' : ''; ?>">
+        <span class="bn-icon">👤</span><span class="bn-label"><?php echo t('login'); ?></span>
+    </a>
+    <?php endif; ?>
+</nav>
+
 <script>
 document.addEventListener('click', function(e) {
     var menu = document.getElementById('langMenu');
     var btn = document.querySelector('.lang-current');
     if (menu && !menu.contains(e.target) && e.target !== btn) menu.classList.remove('active');
+});
+document.getElementById('navToggle').addEventListener('click', function() {
+    document.getElementById('navLinks').classList.toggle('nav-open');
 });
 </script>

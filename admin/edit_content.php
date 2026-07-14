@@ -44,11 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp']);
     if ($new_poster) $poster = $new_poster;
 
-    $is_series = isset($_POST['is_series']) ? 1 : 0;
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
 
-    $stmt = $pdo->prepare("UPDATE content SET title=?, description=?, category_id=?, release_year=?, rating=?, poster=?, studio=?, director=?, duration=?, status=?, is_series=?, is_premium=? WHERE id=?");
-    $stmt->execute([$title, $description, $category_id, $release_year ?: null, $rating, $poster, $studio ?: null, $director ?: null, $duration ?: null, $status, $is_series, $is_premium, $id]);
+    $stmt = $pdo->prepare("UPDATE content SET title=?, description=?, category_id=?, release_year=?, rating=?, poster=?, studio=?, director=?, duration=?, status=?, is_premium=? WHERE id=?");
+    $stmt->execute([$title, $description, $category_id, $release_year ?: null, $rating, $poster, $studio ?: null, $director ?: null, $duration ?: null, $status, $is_premium, $id]);
 
     // Janrlarni yangilash
     $pdo->prepare("DELETE FROM content_genres WHERE content_id = ?")->execute([$id]);
@@ -59,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Yagona video bo'lsa, video ma'lumotlarini ham yangilash imkoni
-    if (!$is_series && isset($_POST['video_type'])) {
+    // Video ma'lumotlarini yangilash
+    if (isset($_POST['video_type'])) {
         $video_type = $_POST['video_type'];
         $video_url = $item['video_url'];
         if ($video_type === 'file') {
@@ -141,14 +140,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <input type="file" name="poster" accept="image/*">
 
     <label style="margin-top:20px;">
-        <input type="checkbox" name="is_series" id="is_series" <?php echo $item['is_series'] ? 'checked' : ''; ?>> Bu serial/qismli kontent
-    </label>
-
-    <label style="margin-top:20px;">
         <input type="checkbox" name="is_premium" id="is_premium" <?php echo $item['is_premium'] ? 'checked' : ''; ?>> Premium tavsiya
     </label>
 
-    <?php if (!$item['is_series']): ?>
     <div id="single-video-block">
         <label>Video manbasi</label>
         <div class="radio-group">
@@ -161,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>Yoki yangi video fayl yuklash</label>
         <input type="file" name="video_file" accept="video/*">
     </div>
-    <?php endif; ?>
 
     <button type="submit" class="btn">Saqlash</button>
 </form>

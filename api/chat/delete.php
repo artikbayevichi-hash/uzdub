@@ -29,11 +29,19 @@ if (!$sessionId) {
 }
 
 try {
+    // Avval sessiya haqiqatan shu foydalanuvchiga tegishli ekanini tekshirish
+    $own = $pdo->prepare("SELECT id FROM ai_chat_sessions WHERE id = ? AND user_id = ?");
+    $own->execute([$sessionId, $userId]);
+    if (!$own->fetch()) {
+        echo json_encode(['error' => 'Chat topilmadi']);
+        exit;
+    }
+
     $pdo->prepare("DELETE FROM ai_chat_messages WHERE session_id = ?")->execute([$sessionId]);
     $stmt = $pdo->prepare("DELETE FROM ai_chat_sessions WHERE id = ? AND user_id = ?");
     $stmt->execute([$sessionId, $userId]);
 
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    echo json_encode(['error' => 'Xatolik: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Xatolik yuz berdi.']);
 }

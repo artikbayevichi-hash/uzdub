@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category_id = (int)($_POST['category_id'] ?? 0);
     $release_year = (int)($_POST['release_year'] ?? 0);
     $rating = (float)($_POST['rating'] ?? 0);
-    $is_series = isset($_POST['is_series']) ? 1 : 0;
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
     $studio = trim($_POST['studio'] ?? '');
     $director = trim($_POST['director'] ?? '');
@@ -34,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $video_type = null;
         $video_url = null;
 
-        if (!$is_series && !$error) {
+        if (!$error) {
             $video_type = $_POST['video_type'] ?? null;
             if ($video_type === 'file') {
                 $video_url = upload_file('video_file', __DIR__ . '/../uploads/videos/', ['mp4','webm','mkv','ogg']);
@@ -51,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cat_slug = $cat_stmt->fetch()['slug'] ?? 'kino';
             $content_code = generate_content_code($pdo, $cat_slug);
 
-            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, description, poster, category_id, release_year, rating, is_series, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->execute([$content_code, $title, $description, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_series, $is_premium, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $status]);
+            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, description, poster, category_id, release_year, rating, is_series, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,0,?,?,?,?,?,?,?)");
+            $stmt->execute([$content_code, $title, $description, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_premium, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $status]);
             $content_id = (int)$pdo->lastInsertId();
 
             // Janrlarni saqlash
@@ -63,14 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $message = "Kontent muvaffaqiyatli qo'shildi! ID: <b>$content_code</b>" . ($is_series ? ' Endi "Qism qo\'shish" bo\'limidan qismlarni qo\'shing.' : '');
+            $message = "Kontent muvaffaqiyatli qo'shildi! ID: <b>$content_code</b>";
         }
     }
     }
 }
 ?>
 
-<h1>Yangi kino / anime / multfilm / serial qo'shish</h1>
+<h1>Yangi kino / anime / multfilm qo'shish</h1>
 
 <?php if ($message): ?><div class="alert alert-success"><?php echo $message; ?></div><?php endif; ?>
 <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
@@ -127,10 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <input type="file" name="poster" accept="image/*">
 
     <label style="margin-top:20px;">
-        <input type="checkbox" name="is_series" id="is_series"> Bu serial/qismli kontent
-    </label>
-
-    <label style="margin-top:20px;">
         <input type="checkbox" name="is_premium" id="is_premium"> Premium tavsiya
     </label>
 
@@ -156,9 +151,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-document.getElementById('is_series').addEventListener('change', function() {
-    document.getElementById('single-video-block').style.display = this.checked ? 'none' : 'block';
-});
 document.querySelectorAll('input[name=video_type]').forEach(function(radio) {
     radio.addEventListener('change', function() {
         document.getElementById('video_url_block').style.display = this.value === 'file' ? 'none' : 'block';

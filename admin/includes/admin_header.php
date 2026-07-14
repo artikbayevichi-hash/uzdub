@@ -19,8 +19,6 @@ $current = basename($_SERVER['PHP_SELF']);
         <a href="dashboard.php" class="<?php echo $current=='dashboard.php'?'active':''; ?>">&#128202; Boshqaruv paneli</a>
         <a href="list_content.php" class="<?php echo $current=='list_content.php'?'active':''; ?>">&#127916; Barcha kontent</a>
         <a href="add_content.php" class="<?php echo $current=='add_content.php'?'active':''; ?>">&#10133; Kino/Anime/Multfilm qo'shish</a>
-        <a href="add_episode.php" class="<?php echo $current=='add_episode.php'?'active':''; ?>">&#127909; Qism qo'shish</a>
-        <a href="list_episodes.php" class="<?php echo $current=='list_episodes.php'?'active':''; ?>">&#128203; Qismlar ro'yxati</a>
         <a href="users.php" class="<?php echo $current=='users.php'?'active':''; ?>">&#128101; Foydalanuvchilar</a>
         <a href="payments.php" class="<?php echo $current=='payments.php'?'active':''; ?>">&#128176; To'lovlar
             <?php

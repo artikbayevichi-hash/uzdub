@@ -258,3 +258,11 @@
   .aic-panel { right: 16px; bottom: 88px; }
   .aic-fab { right: 16px; bottom: 16px; }
 }
+
+/* Mobil pastki navigatsiya paneli (bottom-nav) bilan qoplanib qolmasligi uchun
+   AI yordamchi tugmasini undan yuqoriroqqa ko'taramiz */
+@media (max-width: 768px) {
+  .aic-fab { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .aic-panel { bottom: calc(148px + env(safe-area-inset-bottom, 0px)); }
+}
+

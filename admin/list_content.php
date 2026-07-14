@@ -24,7 +24,7 @@ foreach ($items as $it) {
         <td><?php echo e($item['cat_name']); ?></td>
         <td><?php echo !empty($genre_map[$item['id']]) ? e(implode(', ', $genre_map[$item['id']])) : '-'; ?></td>
         <td><?php echo e($item['release_year']); ?></td>
-        <td><?php echo $item['is_series'] ? 'Qismli' : 'Yagona video'; ?></td>
+        <td>Yagona video</td>
         <td><?php echo e($item['views']); ?></td>
         <td class="action-links">
             <a href="edit_content.php?id=<?php echo $item['id']; ?>">Tahrirlash</a>

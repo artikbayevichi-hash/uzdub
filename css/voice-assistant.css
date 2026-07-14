@@ -92,6 +92,6 @@
 .va-transcript { font-size: 13px; color: var(--text-light); line-height: 1.4; word-break: break-word; }
 
 @media (max-width: 900px) {
-    .va-widget { left: 14px; bottom: 90px; }
+    .va-widget { left: 14px; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
     .va-panel { max-width: 200px; }
 }

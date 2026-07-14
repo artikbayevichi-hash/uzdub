@@ -34,5 +34,5 @@ try {
 
     echo json_encode(['success' => true, 'sessions' => $sessions]);
 } catch (PDOException $e) {
-    echo json_encode(['error' => 'Xatolik: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Xatolik yuz berdi. Qaytadan urinib ko\'ring.']);
 }
