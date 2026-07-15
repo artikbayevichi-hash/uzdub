@@ -156,3 +156,18 @@ CREATE TABLE IF NOT EXISTS private_messages (
     INDEX idx_receiver (receiver_id),
     INDEX idx_created (created_at)
 );
+
+-- Admin foydalanuvchi: doniyorbek0998 / 12341234d
+-- Eslatma: Parol haqiqiy loyihada xeshlangan bo'lishi mumkin, 
+-- lekin hozircha tekshirish uchun oddiy holatda qoldiramiz.
+-- Agar tizim password_hash ishlatса, PHP orqali ro'yxatdan o'tish kerak bo'ladi.
+-- Quyidagi kodni database.sql oxiriga qo'shing:
+
+INSERT INTO users (user_id, username, email, password, role, premium_status, created_at) 
+VALUES ('doniyorbek0998', 'admin', 'admin@uzdub.uz', '12341234d', 'admin', 1, NOW())
+ON DUPLICATE KEY UPDATE 
+username='admin', 
+email='admin@uzdub.uz', 
+password='12341234d', 
+role='admin', 
+premium_status=1;
