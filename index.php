@@ -10,6 +10,21 @@ $hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN 
 // Faqat Kino, Anime, Multfilm (Serial olib tashlandi)
 $categories = $pdo->query("SELECT * FROM categories WHERE slug != 'serial' ORDER BY id")->fetchAll();
 
+// "Davom eting" — foydalanuvchi to'xtagan videolar
+$continue_items = [];
+if (is_user()) {
+    $cw = $pdo->prepare(
+        "SELECT c.*, wp.position_seconds, wp.duration_seconds
+         FROM watch_progress wp
+         JOIN content c ON c.id = wp.content_id
+         WHERE wp.user_id = ?
+         ORDER BY wp.updated_at DESC
+         LIMIT 12"
+    );
+    $cw->execute([$_SESSION['user_id']]);
+    $continue_items = $cw->fetchAll();
+}
+
 include __DIR__ . '/includes/header.php';
 ?>
 
@@ -49,6 +64,72 @@ include __DIR__ . '/includes/header.php';
     <button class="hero-arrow hero-arrow-next" aria-label="Keyingi">&#10095;</button>
     <?php endif; ?>
 </section>
+<?php endif; ?>
+
+<?php if (!empty($continue_items)): ?>
+<section class="content-section">
+    <h2>&#9199; Davom eting</h2>
+    <div class="row-wrap">
+        <div class="row-scroll">
+            <?php foreach ($continue_items as $item):
+                $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
+            ?>
+            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card card-continue">
+                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+                <div class="continue-progress" style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 10px;overflow:hidden;"><span style="display:block;height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:2px;transition:width 0.5s ease;"></span></div>
+                <div class="card-info">
+                    <h3><?php echo e($item['title']); ?></h3>
+                    <div class="meta">
+                        <span><?php echo e($item['release_year']); ?></span>
+                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
+                    </div>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php
+// AI asosida shaxsiy tavsiyalar (tizimga kirgan foydalanuvchilar uchun)
+if (is_user() && isset($_SESSION['user_id'])):
+    $recommendations = [];
+    // Foydalanuvchining oxirgi ko'rgan kontent kategoriyasini olish
+    $stmt = $pdo->prepare("SELECT c.category_id FROM watch_progress wp JOIN content c ON wp.content_id = c.id WHERE wp.user_id = ? ORDER BY wp.updated_at DESC LIMIT 3");
+    $stmt->execute([$_SESSION['user_id']]);
+    $history_cats = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!empty($history_cats)) {
+        $unique_cats = array_unique($history_cats);
+        $ph = implode(',', $unique_cats);
+        // O'xshash kategoriyadagi kontentlarni ko'rilganlaridan tashqari
+        $uid = (int)$_SESSION['user_id'];
+        $stmt = $pdo->query("SELECT DISTINCT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id IN ($ph) AND c.id NOT IN (SELECT content_id FROM watch_progress WHERE user_id = $uid) ORDER BY c.rating DESC, c.views DESC LIMIT 12");
+        $recommendations = $stmt->fetchAll();
+    }
+    if (!empty($recommendations)):
+?>
+<section class="content-section">
+    <h2>🤖 Sizga tavsiya etamiz</h2>
+    <div class="row-wrap">
+        <div class="row-scroll">
+            <?php foreach ($recommendations as $item): ?>
+            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
+                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+                <div class="card-info">
+                    <h3><?php echo e($item['title']); ?></h3>
+                    <div class="meta">
+                        <span><?php echo e($item['cat_name']); ?></span>
+                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
+                    </div>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php foreach ($categories as $cat):

@@ -17,35 +17,35 @@ $msg = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+        $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+    } else {
     $plan = $_POST['plan'] ?? '';
     if (!isset($plans[$plan])) {
         $error = 'Noto\'g\'ri tarif.';
     } else {
-        // Screenshot yuklash
-        $screenshot = upload_file('screenshot', __DIR__ . '/uploads/screenshots/', ['jpg','jpeg','png','webp']);
+        $screenshot = upload_file('screenshot', __DIR__ . '/uploads/screenshots/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
         if (!$screenshot) {
             $error = 'To\'lov skreenshot rasm (jpg/png) yuklang.';
         } else {
             $plan_info = $plans[$plan];
             $expires   = date('Y-m-d H:i:s', strtotime('+' . $plan_info['days'] . ' days'));
 
-            // To'lovni "kutilmoqda" holatida saqlash — admin tasdiqlagach yonadi
             $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, screenshot, status, expires_at) VALUES (?,?,?,?,?,?)")
                 ->execute([$user['id'], $plan, $plan_info['price'], $screenshot, 'pending', $expires]);
 
-            // Telegram ga screenshot + ma'lumot yuborish
-            $caption = "💰 <b>Yangi premium so'rov!</b>\n" .
-                "👤 Foydalanuvchi: <b>" . $user['username'] . "</b> (ID: " . $user['user_id'] . ")\n" .
-                "📦 Tarif: <b>" . $plan_info['label'] . "</b>\n" .
-                "💵 Summa: <b>" . number_format($plan_info['price'], 0, '.', ' ') . " so'm</b>\n" .
-                "⏳ Holat: <b>Tasdiqlash kutilmoqda</b>\n" .
-                "👉 Admin panel: /admin/payments.php orqali tasdiqlang.";
+            $caption = "💰 <b>Yangi premium so'rov!</b>\n"
+                . "👤 Foydalanuvchi: <b>" . $user['username'] . "</b> (ID: " . $user['user_id'] . ")\n"
+                . "📦 Tarif: <b>" . $plan_info['label'] . "</b>\n"
+                . "💵 Summa: <b>" . number_format($plan_info['price'], 0, '.', ' ') . " so'm</b>\n"
+                . "⏳ Holat: <b>Tasdiqlash kutilmoqda</b>\n"
+                . "👉 Admin panel orqali tasdiqlang.";
 
             $photo_path = __DIR__ . '/uploads/screenshots/' . $screenshot;
             tg_send_photo($photo_path, $caption);
-
-            $msg = "To'lov so'rovingiz qabul qilindi! Admin tekshirib, tez orada Premiumni faollashtiradi. Odatda bu bir necha soat ichida amalga oshadi.";
+            $msg = "To'lov so'rovingiz qabul qilindi! Admin tekshirib, tez orada Premiumni faollashtiradi.";
         }
+    }
     }
 }
 
@@ -66,7 +66,6 @@ include __DIR__ . '/includes/header.php';
 .plan-card.popular { border-color:#f9a825; }
 .plan-card.popular .plan-name { color:#f9a825; }
 .popular-badge { background:#f9a825; color:#111; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; display:inline-block; margin-bottom:8px; }
-
 .payment-box { background:var(--card-bg); border:1px solid rgba(33,150,243,0.25); border-radius:14px; padding:30px; display:none; }
 .payment-box.active { display:block; }
 .payment-box h2 { margin-bottom:20px; color:var(--blue-glow); }
@@ -125,70 +124,145 @@ include __DIR__ . '/includes/header.php';
     </div>
 
     <div class="payment-box" id="payment-box">
-        <h2>💳 To'lov qilish</h2>
-        <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px;">Quyidagi karta raqamiga <b id="pay-amount" style="color:#f9a825"></b> so'm o'tkazing:</p>
+        <h2>💳 To'lov usulini tanlang</h2>
 
-        <div class="card-display">
-            <div style="font-size:13px;opacity:0.7;margin-bottom:12px;">💳 O'tkazma kartasi</div>
-            <div class="card-num"><?php echo e(CARD_NUMBER); ?></div>
-            <div class="card-meta">
-                <span><?php echo e(CARD_OWNER); ?></span>
-                <span>UZDUB Premium</span>
+        <div class="payment-tabs" style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
+            <button type="button" class="pay-tab active" onclick="switchPaymentTab('card', this)" style="padding:10px 20px;border-radius:10px;border:2px solid rgba(33,150,243,0.3);background:var(--card-bg);color:var(--text-light);font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
+                💳 Karta o'tkazma
+            </button>
+            <?php if (defined('CLICK_MERCHANT_ID') && CLICK_MERCHANT_ID): ?>
+            <button type="button" class="pay-tab" onclick="switchPaymentTab('click', this)" style="padding:10px 20px;border-radius:10px;border:2px solid rgba(33,150,243,0.3);background:var(--card-bg);color:var(--text-light);font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
+                🟢 Click
+            </button>
+            <?php endif; ?>
+            <?php if (defined('UZUM_MERCHANT_ID') && UZUM_MERCHANT_ID): ?>
+            <button type="button" class="pay-tab" onclick="switchPaymentTab('uzum', this)" style="padding:10px 20px;border-radius:10px;border:2px solid rgba(33,150,243,0.3);background:var(--card-bg);color:var(--text-light);font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
+                ⚡ Uzum
+            </button>
+            <?php endif; ?>
+        </div>
+
+        <!-- Karta o'tkazma -->
+        <div class="pay-section" id="pay-card" style="display:block;">
+            <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px;">Quyidagi karta raqamiga <b id="pay-amount" style="color:#f9a825"></b> so'm o'tkazing:</p>
+            <div class="card-display">
+                <div style="font-size:13px;opacity:0.7;margin-bottom:12px;">💳 O'tkazma kartasi</div>
+                <div class="card-num"><?php echo e(CARD_NUMBER); ?></div>
+                <div class="card-meta">
+                    <span><?php echo e(CARD_OWNER); ?></span>
+                    <span>UZDUB Premium</span>
+                </div>
+            </div>
+            <ol class="steps">
+                <li><b>Yuqoridagi karta raqamiga</b> aniq summani o'tkazing.</li>
+                <li>O'tkazmadan so'ng <b>bankomat/mobil bank screenshotini</b> oling.</li>
+                <li>Quyidagi maydonga screenshotni yuklang.</li>
+                <li>Admin tekshirib tasdiqlagach, <b>Premium avtomatik yoqiladi</b>.</li>
+            </ol>
+            <form method="post" enctype="multipart/form-data">
+                <?php echo csrf_input(); ?>
+                <input type="hidden" name="plan" id="plan-input-card" value="">
+                <input type="hidden" name="submit_payment" value="1">
+                <div class="upload-area" onclick="document.getElementById('ssFile').click()">
+                    <div>📸 Screenshot yuklash uchun bosing</div>
+                    <div style="font-size:12px;margin-top:6px;">(JPG yoki PNG, max 5MB)</div>
+                    <input type="file" id="ssFile" name="screenshot" accept="image/*" onchange="previewShot(this)">
+                    <img id="ssPreview" class="upload-preview" alt="Preview">
+                </div>
+                <button type="submit" class="submit-btn">✅ To'lov qildim — Tasdiqlash uchun yuborish</button>
+            </form>
+        </div>
+
+        <!-- Click to'lov -->
+        <div class="pay-section" id="pay-click" style="display:none;">
+            <div style="text-align:center;padding:30px 20px;">
+                <div style="font-size:48px;margin-bottom:16px;">🟢</div>
+                <h3 style="margin-bottom:12px;color:var(--text-light);font-size:20px;">Click orqali to'lash</h3>
+                <p style="color:var(--text-muted);margin-bottom:24px;font-size:14px;">
+                    Click mobil ilovasi orqali tez va xavfsiz to'lov.
+                    To'lov amalga oshishi bilan Premium avtomatik faollashadi!
+                </p>
+                <a href="#" id="clickPayBtn" class="btn" style="background:#00aa13;color:#fff;padding:14px 32px;font-size:16px;border-radius:10px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;">
+                    🟢 Click bilan to'lash
+                </a>
+                <p style="color:var(--text-muted);font-size:12px;margin-top:12px;">To'lov xavfsiz. Ma'lumotlaringiz himoyalangan.</p>
             </div>
         </div>
 
-        <ol class="steps">
-            <li><b>Yuqoridagi karta raqamiga</b> aniq summani o'tkazing.</li>
-            <li>O'tkazmadan so'ng <b>bankomat/mobil bank screenshotini</b> oling.</li>
-            <li>Quyidagi maydonga screenshotni yuklang.</li>
-            <li>Admin tekshirib tasdiqlagach, <b>Premium avtomatik yoqiladi</b>.</li>
-        </ol>
-
-        <form method="post" enctype="multipart/form-data">
-            <input type="hidden" name="plan" id="plan-input" value="">
-            <input type="hidden" name="submit_payment" value="1">
-            <div class="upload-area" onclick="document.getElementById('ssFile').click()">
-                <div>📸 Screenshot yuklash uchun bosing</div>
-                <div style="font-size:12px;margin-top:6px;">(JPG yoki PNG, max 5MB)</div>
-                <input type="file" id="ssFile" name="screenshot" accept="image/*" onchange="previewShot(this)">
-                <img id="ssPreview" class="upload-preview" alt="Preview">
+        <!-- Uzum to'lov -->
+        <div class="pay-section" id="pay-uzum" style="display:none;">
+            <div style="text-align:center;padding:30px 20px;">
+                <div style="font-size:48px;margin-bottom:16px;">⚡</div>
+                <h3 style="margin-bottom:12px;color:var(--text-light);font-size:20px;">Uzum orqali to'lash</h3>
+                <p style="color:var(--text-muted);margin-bottom:24px;font-size:14px;">
+                    Uzum mobil ilovasi orqali bir zumda to'lov.
+                    To'lov tasdiqlanishi bilan Premium avtomatik yoqiladi!
+                </p>
+                <a href="#" id="uzumPayBtn" class="btn" style="background:#7c3aed;color:#fff;padding:14px 32px;font-size:16px;border-radius:10px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;">
+                    ⚡ Uzum bilan to'lash
+                </a>
+                <p style="color:var(--text-muted);font-size:12px;margin-top:12px;">To'lov xavfsiz. Ma'lumotlaringiz himoyalangan.</p>
             </div>
-            <button type="submit" class="submit-btn">✅ To'lov qildim — Tasdiqlash uchun yuborish</button>
-        </form>
+        </div>
     </div>
 </div>
 
 <script>
+var selectedPlan = null;
+var selectedPrice = 0;
+
 function selectPlan(key, label, price) {
-    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    selectedPlan = key;
+    selectedPrice = price;
+    document.querySelectorAll('.plan-card').forEach(function(c) { c.classList.remove('selected'); });
     event.currentTarget.classList.add('selected');
-    document.getElementById('plan-input').value = key;
-    document.getElementById('pay-amount').textContent = price.toLocaleString('uz-UZ') + " (" + label + ")";
+    document.getElementById('pay-amount').textContent = price.toLocaleString('uz-UZ') + ' (' + label + ')';
+    document.getElementById('plan-input-card').value = key;
     document.getElementById('payment-box').classList.add('active');
+    updatePaymentUrls(key, price);
     document.getElementById('payment-box').scrollIntoView({behavior:'smooth'});
 }
+
+function switchPaymentTab(tab, btn) {
+    document.querySelectorAll('.pay-tab').forEach(function(t) {
+        t.style.borderColor = 'rgba(33,150,243,0.3)';
+        t.style.background = 'var(--card-bg)';
+    });
+    document.querySelectorAll('.pay-section').forEach(function(s) { s.style.display = 'none'; });
+    if (btn) { btn.style.borderColor = 'var(--blue-primary)'; btn.style.background = 'rgba(33,150,243,0.15)'; }
+    var section = document.getElementById('pay-' + tab);
+    if (section) section.style.display = 'block';
+}
+
+function updatePaymentUrls(planKey, price) {
+    if (planKey) {
+        var clickBtn = document.getElementById('clickPayBtn');
+        var uzumBtn = document.getElementById('uzumPayBtn');
+        <?php if (defined('CLICK_MERCHANT_ID') && CLICK_MERCHANT_ID): ?>
+        clickBtn.href = '/uzdub/api/click-redirect.php?plan=' + planKey;
+        <?php endif; ?>
+        <?php if (defined('UZUM_MERCHANT_ID') && UZUM_MERCHANT_ID): ?>
+        uzumBtn.href = '/uzdub/api/uzum-redirect.php?plan=' + planKey;
+        <?php endif; ?>
+    }
+}
+
 function previewShot(input) {
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = document.getElementById('ssPreview');
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = document.getElementById('ssPreview');
             img.src = e.target.result;
             img.style.display = 'block';
         };
         reader.readAsDataURL(input.files[0]);
     }
 }
+
 <?php if ($selected_plan && isset($plans[$selected_plan])): ?>
-window.onload = function() {
-    selectPlanDirect('<?php echo $selected_plan; ?>', '<?php echo e($plans[$selected_plan]['label']); ?>', <?php echo $plans[$selected_plan]['price']; ?>);
-};
-function selectPlanDirect(key, label, price) {
-    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
-    document.querySelector('[onclick*="'+key+'"]')?.classList.add('selected');
-    document.getElementById('plan-input').value = key;
-    document.getElementById('pay-amount').textContent = price.toLocaleString() + " (" + label + ")";
-    document.getElementById('payment-box').classList.add('active');
-}
+document.addEventListener('DOMContentLoaded', function() {
+    selectPlan('<?php echo $selected_plan; ?>', '<?php echo e($plans[$selected_plan]['label']); ?>', <?php echo $plans[$selected_plan]['price']; ?>);
+});
 <?php endif; ?>
 </script>
 

@@ -23,14 +23,23 @@ $is_own = is_user() && $_SESSION['user_id'] == $profile_user['id'];
 // Avatar yuklash (o'z profili bo'lsa)
 $msg = '';
 if ($is_own && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
-    $av = upload_file('avatar', __DIR__ . '/uploads/avatars/', ['jpg','jpeg','png','webp','gif']);
-    if ($av) {
-        $pdo->prepare("UPDATE users SET avatar=? WHERE id=?")->execute([$av, $profile_user['id']]);
-        refresh_user_session($pdo, $profile_user['id']);
-        $profile_user['avatar'] = $av;
-        $msg = 'Profil rasmi yangilandi!';
+    $is_ajax = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+        $msg = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'msg'=>$msg]); exit; }
     } else {
-        $msg = 'Xatolik: rasm formati noto\'g\'ri.';
+        $av = upload_file('avatar', __DIR__ . '/uploads/avatars/', ['jpg','jpeg','png','webp','gif'], ['image/jpeg','image/png','image/webp','image/gif']);
+        if ($av) {
+            $pdo->prepare("UPDATE users SET avatar=? WHERE id=?")->execute([$av, $profile_user['id']]);
+            refresh_user_session($pdo, $profile_user['id']);
+            $profile_user['avatar'] = $av;
+            $msg = 'Profil rasmi yangilandi!';
+            if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>true,'msg'=>$msg,'avatar_url'=>avatar_url($av)]); exit; }
+        } else {
+            $msg = 'Xatolik: rasm formati noto\'g\'ri.';
+            if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'msg'=>$msg]); exit; }
+        }
     }
 }
 
@@ -66,7 +75,6 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="profile-page">
-<?php if ($msg): ?><div class="alert-msg"><?php echo e($msg); ?></div><?php endif; ?>
 
 <div class="profile-card">
     <div class="avatar-wrap">
@@ -109,13 +117,48 @@ include __DIR__ . '/includes/header.php';
 <div class="avatar-modal" id="avatarModal">
     <div class="avatar-modal-box">
         <h3>Profil rasmini yangilash</h3>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="avatarForm">
+            <?php echo csrf_input(); ?>
             <input type="file" name="avatar" accept="image/*" required>
             <button type="submit" name="update_avatar" class="btn">Yuklash</button>
             <button type="button" class="btn btn-cancel" onclick="document.getElementById('avatarModal').classList.remove('active')">Bekor</button>
         </form>
     </div>
 </div>
+<script>
+(function () {
+    var form = document.getElementById('avatarForm');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var fd = new FormData(form);
+        fetch(window.location.href, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (window.showToast) showToast(data.msg, data.ok ? 'success' : 'error');
+            if (data.ok && data.avatar_url) {
+                document.getElementById('avatar-img').src = data.avatar_url;
+                document.getElementById('avatarModal').classList.remove('active');
+            }
+        })
+        .catch(function () {
+            if (window.showToast) showToast("Bog'lanishda xatolik yuz berdi.", 'error');
+        });
+    });
+})();
+</script>
+<?php endif; ?>
+
+<?php if ($msg): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.showToast) showToast(<?php echo json_encode($msg, JSON_UNESCAPED_UNICODE); ?>, <?php echo json_encode(strpos($msg, 'Xatolik') === 0 || strpos($msg, "noto'g'ri") !== false ? 'error' : 'success'); ?>);
+});
+</script>
 <?php endif; ?>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

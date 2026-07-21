@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Nomi va kategoriyani to\'ldiring.';
     } else {
         // Poster yuklash
-        $poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp']);
+        $poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
         if ($poster === false) { $error = 'Poster rasm formati noto\'g\'ri (jpg, png, webp bo\'lishi kerak).'; }
 
         $video_type = null;
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cat_slug = $cat_stmt->fetch()['slug'] ?? 'kino';
             $content_code = generate_content_code($pdo, $cat_slug);
 
-            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, description, poster, category_id, release_year, rating, is_series, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,0,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, description, poster, category_id, release_year, rating, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([$content_code, $title, $description, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_premium, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $status]);
             $content_id = (int)$pdo->lastInsertId();
 

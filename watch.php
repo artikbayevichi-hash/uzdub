@@ -45,6 +45,18 @@ $stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? AND id != ? O
 $stmt->execute([$item['category_id'], $id]);
 $similar = $stmt->fetchAll();
 
+// ===== PREMIUM PAYWALL (server tomonidan majburiy tekshiruv) =====
+$is_locked = (bool)$item['is_premium'] && !has_premium_access($pdo);
+
+// ===== "Davom eting" — saqlangan pozitsiyani olish (faqat file turidagi videolar uchun) =====
+$resume_position = 0;
+if (is_user() && !$is_locked && $item['video_type'] === 'file') {
+    $rp = $pdo->prepare("SELECT position_seconds FROM watch_progress WHERE user_id = ? AND content_id = ?");
+    $rp->execute([$_SESSION['user_id'], $id]);
+    $row = $rp->fetch();
+    if ($row) $resume_position = (int)$row['position_seconds'];
+}
+
 include __DIR__ . '/includes/header.php';
 ?>
 <style>
@@ -55,13 +67,36 @@ include __DIR__ . '/includes/header.php';
 .watch-btn:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.1); }
 .watch-btn.active { background:var(--blue-primary); border-color:var(--blue-primary); }
 .premium-tag { background:linear-gradient(135deg,#f9a825,#ff6f00); color:#fff; font-size:11px; padding:3px 10px; border-radius:20px; font-weight:700; margin-left:8px; }
+.premium-lock { position:relative; border-radius:12px; overflow:hidden; min-height:320px; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px 20px; background:#0d1424; }
+.premium-lock .lock-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(18px) brightness(0.35); transform:scale(1.1); }
+.premium-lock .lock-content { position:relative; z-index:1; max-width:420px; }
+.premium-lock .lock-icon { font-size:48px; margin-bottom:14px; }
+.premium-lock h3 { font-size:22px; margin-bottom:10px; color:#fff; }
+.premium-lock p { color:var(--text-muted); margin-bottom:20px; font-size:14px; }
+.premium-lock .btn-unlock { display:inline-block; padding:12px 28px; background:linear-gradient(135deg,#f9a825,#ff6f00); color:#fff; border-radius:8px; text-decoration:none; font-weight:700; }
 </style>
 
 <div class="detail-wrap">
 
     <div class="watch-player-section">
         <span class="content-id-tag">🆔 <?php echo e($item['content_code'] ?? ('ID' . $item['id'])); ?></span>
+        <?php if ($is_locked): ?>
+        <div class="premium-lock">
+            <div class="lock-bg" style="background-image:url('<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : ''; ?>');"></div>
+            <div class="lock-content">
+                <div class="lock-icon">🔒</div>
+                <h3>Bu — Premium kontent</h3>
+                <p>"<?php echo e($item['title']); ?>" ni tomosha qilish uchun Premium obuna kerak.</p>
+                <?php if (is_user()): ?>
+                <a href="premium.php" class="btn-unlock">⭐ Premium olish</a>
+                <?php else: ?>
+                <a href="auth/login.php?redirect=<?php echo urlencode('/uzdub/watch.php?id=' . $id); ?>" class="btn-unlock">Kirish va Premium olish</a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php else: ?>
         <?php echo render_player($item['video_type'], $item['video_url'], 'uploads/videos/'); ?>
+        <?php endif; ?>
     </div>
 
     <div class="watch-action-bar">
@@ -137,7 +172,7 @@ function toggleWatchlist(contentId) {
     fetch('watch.php?id=<?php echo $id; ?>', {method:'POST', body:fd})
         .then(r => r.json())
         .then(r => {
-            if (!r.ok) return;
+            if (!r.ok) { if (window.showToast) showToast(r.msg || 'Xatolik yuz berdi', 'error'); return; }
             var btn = document.getElementById('watchlistBtn');
             var icon = document.getElementById('wlIcon');
             var text = document.getElementById('wlText');
@@ -145,13 +180,65 @@ function toggleWatchlist(contentId) {
                 btn.classList.add('active');
                 icon.textContent = '✅';
                 text.textContent = "Ro'yxatda";
+                if (window.showToast) showToast("Ro'yxatga qo'shildi", 'success');
             } else {
                 btn.classList.remove('active');
                 icon.textContent = '➕';
                 text.textContent = 'Keyinroq ko\'rish';
+                if (window.showToast) showToast("Ro'yxatdan olib tashlandi", 'info');
             }
         });
 }
 </script>
+
+<?php if (is_user() && !$is_locked && $item['video_type'] === 'file'): ?>
+<script>
+(function () {
+    var video = document.querySelector('.watch-player-section video');
+    if (!video) return;
+    var contentId = <?php echo (int)$id; ?>;
+    var resumeAt = <?php echo (int)$resume_position; ?>;
+    var csrfToken = <?php echo json_encode(csrf_token()); ?>;
+    var lastSaved = 0;
+
+    if (resumeAt > 5) {
+        video.addEventListener('loadedmetadata', function onMeta() {
+            if (resumeAt < video.duration - 5) {
+                video.currentTime = resumeAt;
+                if (window.showToast) {
+                    var mins = Math.floor(resumeAt / 60);
+                    showToast("Siz to'xtagan joydan davom etyapti (" + mins + " daq.)", 'info');
+                }
+            }
+            video.removeEventListener('loadedmetadata', onMeta);
+        });
+    }
+
+    function saveProgress(useBeacon) {
+        if (!video.duration || isNaN(video.duration)) return;
+        var pos = Math.floor(video.currentTime);
+        if (!useBeacon && Math.abs(pos - lastSaved) < 8) return; // har ~8 soniyada bir marta saqlash
+        lastSaved = pos;
+        var payload = JSON.stringify({
+            content_id: contentId,
+            position: pos,
+            duration: Math.floor(video.duration),
+            csrf_token: csrfToken
+        });
+        if (useBeacon && navigator.sendBeacon) {
+            navigator.sendBeacon('/uzdub/api/save-progress.php', new Blob([payload], { type: 'application/json' }));
+        } else {
+            fetch('/uzdub/api/save-progress.php', { method: 'POST', body: payload }).catch(function () {});
+        }
+    }
+
+    video.addEventListener('timeupdate', function () { saveProgress(false); });
+    window.addEventListener('pagehide', function () { saveProgress(true); });
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') saveProgress(true);
+    });
+})();
+</script>
+<?php endif; ?>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

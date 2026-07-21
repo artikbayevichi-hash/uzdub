@@ -7,22 +7,30 @@ $message = '';
 
 // Premium berish
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grant_premium'])) {
-    $user_db_id = (int)$_POST['user_db_id'];
-    $plan = $_POST['plan'] ?? '';
-    $plans = PREMIUM_PLANS;
-    if (isset($plans[$plan])) {
-        $expires = date('Y-m-d H:i:s', strtotime('+' . $plans[$plan]['days'] . ' days'));
-        $pdo->prepare("UPDATE users SET is_premium=1, premium_expires_at=? WHERE id=?")->execute([$expires, $user_db_id]);
-        $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, status, expires_at) VALUES (?,?,0,'approved',?)")->execute([$user_db_id, $plan, $expires]);
-        $message = 'Premium muvaffaqiyatli berildi! Tugash sanasi: ' . date('d.m.Y', strtotime($expires));
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+        $message = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+    } else {
+        $user_db_id = (int)$_POST['user_db_id'];
+        $plan = $_POST['plan'] ?? '';
+        $plans = PREMIUM_PLANS;
+        if (isset($plans[$plan])) {
+            $expires = date('Y-m-d H:i:s', strtotime('+' . $plans[$plan]['days'] . ' days'));
+            $pdo->prepare("UPDATE users SET is_premium=1, premium_expires_at=? WHERE id=?")->execute([$expires, $user_db_id]);
+            $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, status, expires_at) VALUES (?,?,0,'approved',?)")->execute([$user_db_id, $plan, $expires]);
+            $message = 'Premium muvaffaqiyatli berildi! Tugash sanasi: ' . date('d.m.Y', strtotime($expires));
+        }
     }
 }
 
-// Premiumni bekor qilish
-if (isset($_GET['revoke'])) {
-    $pdo->prepare("UPDATE users SET is_premium=0, premium_expires_at=NULL WHERE id=?")->execute([(int)$_GET['revoke']]);
-    header('Location: users.php');
-    exit;
+// Premiumni bekor qilish — endi faqat POST + CSRF token orqali (GET orqali oldin CSRF hujumiga ochiq edi)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['revoke_premium'])) {
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+        $message = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+    } else {
+        $pdo->prepare("UPDATE users SET is_premium=0, premium_expires_at=NULL WHERE id=?")->execute([(int)$_POST['revoke_premium']]);
+        header('Location: users.php');
+        exit;
+    }
 }
 
 $search = trim($_GET['q'] ?? '');
@@ -64,7 +72,11 @@ $plans = PREMIUM_PLANS;
         <td class="action-links">
             <a href="#" onclick="document.getElementById('grantModal<?php echo $u['id']; ?>').style.display='flex';return false;">Premium berish</a>
             <?php if ($u['is_premium']): ?>
-            <a href="users.php?revoke=<?php echo $u['id']; ?>" class="danger" onclick="return confirm('Premiumni bekor qilasizmi?');">Bekor qilish</a>
+            <form method="post" style="display:inline;" onsubmit="return confirm('Premiumni bekor qilasizmi?');">
+                <?php echo csrf_input(); ?>
+                <input type="hidden" name="revoke_premium" value="<?php echo $u['id']; ?>">
+                <button type="submit" class="danger" style="background:none;border:none;padding:0;font:inherit;text-decoration:underline;cursor:pointer;">Bekor qilish</button>
+            </form>
             <?php endif; ?>
         </td>
     </tr>
@@ -73,6 +85,7 @@ $plans = PREMIUM_PLANS;
         <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:26px;min-width:320px;">
             <h3 style="margin-bottom:14px;color:var(--blue-glow);">"<?php echo e($u['username']); ?>" ga Premium berish</h3>
             <form method="post">
+                <?php echo csrf_input(); ?>
                 <input type="hidden" name="user_db_id" value="<?php echo $u['id']; ?>">
                 <label>Tarif tanlang</label>
                 <select name="plan" required>

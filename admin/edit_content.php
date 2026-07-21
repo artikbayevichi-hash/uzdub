@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $post_genres = $_POST['genres'] ?? [];
 
     $poster = $item['poster'];
-    $new_poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp']);
+    $new_poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
     if ($new_poster) $poster = $new_poster;
 
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;

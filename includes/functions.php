@@ -46,6 +46,296 @@ function check_premium_expiry($pdo, $user_db_id) {
     }
 }
 
+// ===== Joriy foydalanuvchida faol premium bor-yo'qligini tekshirish (paywall uchun) =====
+function has_premium_access($pdo) {
+    if (!is_user()) return false;
+    check_premium_expiry($pdo, $_SESSION['user_id']);
+    refresh_user_session($pdo, $_SESSION['user_id']);
+    $u = current_user();
+    return (bool)($u && $u['is_premium']);
+}
+
+// ===== AI chat uchun so'rovlar navbati (bir vaqtda juda ko'p Ollama so'rovi yubormaslik uchun) =====
+function ai_queue_slot_path() {
+    return sys_get_temp_dir() . '/uzdub_ai_active.count';
+}
+
+function ai_queue_try_acquire() {
+    $path = ai_queue_slot_path();
+    $fp = @fopen($path, 'c+');
+    if (!$fp) return true; // fayl ochilmasa, cheklovsiz davom etamiz
+    flock($fp, LOCK_EX);
+    $count = (int)stream_get_contents($fp);
+    if ($count >= OLLAMA_MAX_CONCURRENT) {
+        flock($fp, LOCK_UN);
+        fclose($fp);
+        return false;
+    }
+    $count++;
+    rewind($fp);
+    ftruncate($fp, 0);
+    fwrite($fp, (string)$count);
+    fflush($fp);
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    return true;
+}
+
+function ai_queue_release() {
+    $path = ai_queue_slot_path();
+    $fp = @fopen($path, 'c+');
+    if (!$fp) return;
+    flock($fp, LOCK_EX);
+    $count = max(0, (int)stream_get_contents($fp) - 1);
+    rewind($fp);
+    ftruncate($fp, 0);
+    fwrite($fp, (string)$count);
+    fflush($fp);
+    flock($fp, LOCK_UN);
+    fclose($fp);
+}
+
+// ===== AI chat: foydalanuvchining ko'rish tarixini olish (shaxsiy tavsiyalar uchun) =====
+function ai_get_user_watch_history(PDO $pdo, int $userId, int $limit = 5): array {
+    $stmt = $pdo->prepare("
+        SELECT c.id, c.title, c.category_id, cat.name AS cat_name, c.rating
+        FROM watch_progress wp
+        JOIN content c ON wp.content_id = c.id
+        JOIN categories cat ON c.category_id = cat.id
+        WHERE wp.user_id = ?
+        GROUP BY c.id
+        ORDER BY MAX(wp.updated_at) DESC
+        LIMIT $limit
+    ");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// ===== AI chat: xabardan janr kalit so'zlarini aniqlash (UZ, RU, EN tillarida) =====
+function aiExtractGenreHints(string $message): array {
+    static $map = [
+        // O'zbekcha
+        'kulgili' => 'komediya', 'komediya' => 'komediya', 'komik' => 'komediya', 'hazil' => 'komediya', 'hazilkash' => 'komediya',
+        'romantik' => 'romantika', 'sevgi' => 'romantika', 'muhabbat' => 'romantika', 'romantika' => 'romantika', 'ishqiy' => 'romantika',
+        "qo'rqinchli" => 'qorqinchli', 'qorqinchli' => 'qorqinchli', 'xorror' => 'qorqinchli', 'horror' => 'qorqinchli', "qo'rqmoq" => 'qorqinchli', 'dahshat' => 'qorqinchli',
+        'jangari' => 'sarguzasht', 'aksiya' => 'sarguzasht', 'action' => 'sarguzasht', 'sarguzasht' => 'sarguzasht', 'jani' => 'sarguzasht',
+        'fantastik' => 'fantastika', 'fantastika' => 'fantastika', 'fantaziya' => 'fantastika', 'fentezi' => 'fantastika', 'fantasy' => 'fantastika',
+        'drama' => 'drama', 'dramatik' => 'drama',
+        'triller' => 'triller', 'thriller' => 'triller',
+        'harbiy' => 'harbiy', 'urush' => 'harbiy', 'vojenniy' => 'harbiy', 'war' => 'harbiy',
+        'tarixiy' => 'tarixiy', 'tarix' => 'tarixiy', 'istorik' => 'tarixiy', 'historical' => 'tarixiy',
+        'sport' => 'sport', 'sportiv' => 'sport',
+        'sehrgar' => 'sehrgar', 'sehrli' => 'sehrgar', 'sehr' => 'sehrgar', 'magiya' => 'sehrgar', 'magic' => 'sehrgar',
+        'isekai' => 'isekai',
+        'hayotiy' => 'hayotiy', 'hayot' => 'hayotiy', 'slife' => 'hayotiy', 'slice' => 'hayotiy',
+        'psixologik' => 'psixologik', 'psixologiya' => 'psixologik', 'psychological' => 'psixologik',
+        'detektiv' => 'detektiv', 'detective' => 'detektiv', 'sirli' => 'detektiv', 'sir' => 'detektiv',
+        'melodrama' => 'melodrama',
+        'kriminal' => 'kriminal', 'crime' => 'kriminal',
+        'mexa' => 'mecha', 'robot' => 'mecha',
+        'muzik' => 'muzikal', 'musical' => 'muzikal', 'musiqa' => 'muzikal',
+        'multfilm' => 'multfilm', 'animation' => 'multfilm', 'animated' => 'multfilm', 'anime' => 'anime',
+        // Русский
+        'смешной' => 'komediya', 'комедия' => 'komediya', 'юмор' => 'komediya',
+        'романтика' => 'romantika', 'любовь' => 'romantika', 'романтический' => 'romantika',
+        'страшный' => 'qorqinchli', 'ужасы' => 'qorqinchli', 'хоррор' => 'qorqinchli',
+        'боевик' => 'sarguzasht', 'экшн' => 'sarguzasht', 'приключения' => 'sarguzasht',
+        'фантастика' => 'fantastika', 'фэнтези' => 'fantastika',
+        'триллер' => 'triller',
+        'военный' => 'harbiy', 'война' => 'harbiy',
+        'исторический' => 'tarixiy', 'история' => 'tarixiy',
+        'спорт' => 'sport', 'спортивный' => 'sport',
+        'детектив' => 'detektiv',
+        'криминал' => 'kriminal',
+        'драма' => 'drama',
+        // English
+        'funny' => 'komediya', 'comedy' => 'komediya', 'humor' => 'komediya', 'humour' => 'komediya',
+        'romance' => 'romantika', 'romantic' => 'romantika', 'love' => 'romantika',
+        'scary' => 'qorqinchli', 'horror' => 'qorqinchli', 'fright' => 'qorqinchli',
+        'action' => 'sarguzasht', 'adventure' => 'sarguzasht',
+        'fantasy' => 'fantastika', 'sci-fi' => 'fantastika', 'scifi' => 'fantastika', 'science' => 'fantastika',
+        'thriller' => 'triller',
+        'military' => 'harbiy', 'war' => 'harbiy', 'army' => 'harbiy',
+        'historical' => 'tarixiy', 'history' => 'tarixiy',
+        'sport' => 'sport', 'sports' => 'sport',
+        'drama' => 'drama',
+        'detective' => 'detektiv', 'mystery' => 'detektiv',
+        'crime' => 'kriminal',
+        'psychological' => 'psixologik',
+    ];
+    $lower = mb_strtolower($message);
+    $hints = [];
+    foreach ($map as $needle => $slug) {
+        if (mb_strpos($lower, $needle) !== false) $hints[$slug] = true;
+    }
+    return array_keys($hints);
+}
+
+// ===== AI chat: ko'p tilli system prompt yaratish =====
+function ai_build_system_prompt(string $lang = 'uz'): string {
+    $prompts = [
+        'uz' => "Siz UZDUB.uz saytining AI yordamchisiz. Sayt kino, anime va multfilmlarni o'zbek tilida tomosha qilish imkonini beradi. "
+            . "Javob berishdan oldin foydalanuvchi aniq nimani so'rayotganini diqqat bilan aniqlang va faqat shu savolga javob boring — mavzudan chetga chiqmang. "
+            . "Agar savol noaniq bo'lsa, javob o'rniga qisqa aniqlashtiruvchi savol bering. "
+            . "Faqat o'zbek tilida, do'stona va qisqa (odatda 2-4 gap) javob bering. "
+            . "Agar quyida bazadan topilgan mos kontentlar ro'yxati berilsa, ulardan so'rovga eng mos kelganini nomi, yili va janri bilan tavsiya eting; mos kelmasa, umumiy javob bering. "
+            . "Kino/anime/multfilmga aloqasi bo'lmagan mavzularda muloyimlik bilan suhbatni saytga qaytaring.",
+        'ru' => "Вы AI-помощник сайта UZDUB.uz. Сайт позволяет смотреть фильмы, аниме и мультфильмы на узбекском языке. "
+            . "Внимательно определите, что именно спрашивает пользователь, и ответьте только на этот вопрос, не отклоняясь от темы. "
+            . "Если вопрос неясен, задайте короткий уточняющий вопрос вместо ответа. "
+            . "Отвечайте на русском языке, дружелюбно и кратко (обычно 2-4 предложения). "
+            . "Если ниже приведён список подходящего контента из базы, порекомендуйте наиболее подходящий по названию, году и жанру; если не подходит — дайте общий ответ. "
+            . "На темы, не связанные с кино/аниме/мультфильмами, вежливо верните разговор к сайту.",
+        'en' => "You are the AI assistant of UZDUB.uz. The site allows watching movies, anime and cartoons in Uzbek language. "
+            . "Carefully determine what exactly the user is asking and answer only that question — do not go off-topic. "
+            . "If the question is unclear, ask a short clarifying question instead of answering. "
+            . "Answer in English, friendly and brief (usually 2-4 sentences). "
+            . "If a list of matching content from the database is provided below, recommend the best match by name, year and genre; if nothing matches, give a general answer. "
+            . "For topics unrelated to movies/anime/cartoons, politely steer the conversation back to the site.",
+    ];
+    return $prompts[$lang] ?? $prompts['uz'];
+}
+
+// ===== AI chat: foydalanuvchi kontekstini (tarix + shaxsiy ma'lumot) yig'ish =====
+function ai_build_user_context(PDO $pdo, ?int $userId, string $lang = 'uz'): string {
+    $parts = [];
+    if ($userId) {
+        $history = ai_get_user_watch_history($pdo, $userId, 4);
+        if (!empty($history)) {
+            $labels = [
+                'uz' => "Foydalanuvchining yaqinda ko'rgan kontentlari:",
+                'ru' => "Недавно просмотренный контент пользователя:",
+                'en' => "User's recently watched content:",
+            ];
+            $parts[] = ($labels[$lang] ?? $labels['uz']);
+            foreach ($history as $h) {
+                $parts[] = "- {$h['title']} ({$h['cat_name']})";
+            }
+        }
+    }
+    return !empty($parts) ? "\n\n" . implode("\n", $parts) : '';
+}
+
+// ===== AI chat uchun bazadan mos keladigan kontentni topish (bir nechta nomzod) =====
+// Qaytaradi: ['matched' => bool, 'rows' => [...]]
+// matched=false bo'lsa, 'rows' faqat suhbat uchun umumiy kontekst (eng ko'p ko'rilganlar),
+// chatda tavsiya kartochkasi sifatida ko'rsatilmaydi — chunki so'rovga chindan mos kelmagan.
+// $userId berilsa, foydalanuvchi yaqinda ko'rgan kategoriyalardagi kontentlar yuqoriroq ko'rinadi.
+function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId = null): array {
+    $cols = "c.id, c.title, c.description, c.poster, c.release_year, c.rating, c.is_premium, cat.name AS cat_name";
+
+    // Umumiy fallback (odatiy tartibda eng ko'p ko'rilganlar)
+    $fallback = function () use ($pdo, $cols, $limit, $userId) {
+        if ($userId) {
+            // Foydalanuvchi ko'rgan kategoriyalardan kontentlarni birinchi o'ringa qo'yish
+            $stmt = $pdo->prepare("SELECT $cols, IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp JOIN content c2 ON wp.content_id=c2.id JOIN categories cat2 ON c2.category_id=cat2.id WHERE wp.user_id=?), 1, 0) AS pref
+                FROM content c
+                JOIN categories cat ON c.category_id = cat.id
+                ORDER BY pref DESC, c.views DESC
+                LIMIT $limit");
+            $stmt->execute([$userId]);
+        } else {
+            $stmt = $pdo->query("SELECT $cols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id ORDER BY c.views DESC LIMIT $limit");
+        }
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    };
+
+    // 1) Janr bo'yicha so'rov (masalan: "kulgili anime tavsiya qiling")
+    $genreHints = aiExtractGenreHints($message);
+    if ($genreHints) {
+        try {
+            $ph = implode(',', array_fill(0, count($genreHints), '?'));
+            $extraSelect = ', 0 AS pref'; $extraParams = [];
+            if ($userId) {
+                $extraSelect = ', IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp2 JOIN content c3 ON wp2.content_id=c3.id JOIN categories cat2 ON c3.category_id=cat2.id WHERE wp2.user_id=?), 1, 0) AS pref';
+                $extraParams = [$userId];
+            }
+            $stmt = $pdo->prepare("SELECT DISTINCT $cols $extraSelect
+                    FROM content c
+                    JOIN categories cat ON c.category_id = cat.id
+                    JOIN content_genres cg ON cg.content_id = c.id
+                    JOIN genres g ON g.id = cg.genre_id
+                    WHERE g.slug IN ($ph)
+                    ORDER BY pref DESC, c.rating DESC, c.views DESC
+                    LIMIT $limit");
+            $allParams = array_merge($genreHints, $extraParams);
+            $stmt->execute($allParams);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($rows) return ['matched' => true, 'rows' => $rows];
+        } catch (PDOException $e) {
+            // genres/content_genres jadvallari hali o'rnatilmagan bo'lishi mumkin — pastga tushamiz
+        }
+    }
+
+    // 2) Kalit so'zlar bo'yicha sarlavha/tavsif ustidan qidiruv (sarlavha mosligi og'irroq baholanadi)
+    $words = preg_split('/\s+/u', mb_strtolower($message));
+    $words = array_values(array_filter($words, fn($w) => mb_strlen($w) >= 3));
+
+    if (empty($words)) {
+        return ['matched' => false, 'rows' => $fallback()];
+    }
+
+    $titleConds = []; $descConds = []; $params = [];
+    foreach ($words as $i => $w) {
+        $titleConds[] = "(c.title LIKE :t{$i})";
+        $descConds[]  = "(c.description LIKE :d{$i})";
+        $params[":t{$i}"] = '%' . $w . '%';
+        $params[":d{$i}"] = '%' . $w . '%';
+    }
+    $scoreSql = implode(' + ', array_map(fn($c) => "IF($c, 3, 0)", $titleConds))
+              . ' + ' . implode(' + ', array_map(fn($c) => "IF($c, 1, 0)", $descConds));
+
+    if ($userId) {
+        $params[':uid'] = $userId;
+        $prefSql = "IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp JOIN content c2 ON wp.content_id=c2.id JOIN categories cat2 ON c2.category_id=cat2.id WHERE wp.user_id=:uid), 10, 0)";
+    } else {
+        $prefSql = '0';
+    }
+
+    $stmt = $pdo->prepare("SELECT $cols, ($scoreSql) AS score, ($prefSql) AS pref
+            FROM content c
+            JOIN categories cat ON c.category_id = cat.id
+            HAVING score > 0
+            ORDER BY pref DESC, score DESC, c.views DESC
+            LIMIT $limit");
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($rows) return ['matched' => true, 'rows' => $rows];
+    return ['matched' => false, 'rows' => $fallback()];
+}
+
+// ===== Ollama uchun matn ko'rinishidagi kontekst (nomzod kontentlar) tayyorlash =====
+function ai_build_context_text(array $rows): string {
+    if (!$rows) return '';
+    $lines = [];
+    foreach ($rows as $r) {
+        $desc = !empty($r['description']) ? mb_substr(trim(strip_tags($r['description'])), 0, 120) : '';
+        $year = $r['release_year'] ?: '?';
+        $rating = $r['rating'] !== null ? $r['rating'] : '?';
+        $lines[] = "- \"{$r['title']}\" ({$r['cat_name']}, {$year}-yil, reyting {$rating}) {$desc}";
+    }
+    return "\n\n[Bazadagi mos kontentlar — mos kelsa nomi bilan tavsiya qiling, mos kelmasa e'tiborsiz qoldiring:]\n" . implode("\n", $lines);
+}
+
+// ===== Frontendda tavsiya kartochkasi sifatida ko'rsatish uchun tuzilgan ma'lumot =====
+function ai_build_recommendations(array $rows): array {
+    $out = [];
+    foreach ($rows as $r) {
+        $out[] = [
+            'id'         => (int)$r['id'],
+            'title'      => $r['title'],
+            'year'       => $r['release_year'],
+            'rating'     => $r['rating'] !== null ? (float)$r['rating'] : null,
+            'category'   => $r['cat_name'] ?? null,
+            'is_premium' => !empty($r['is_premium']),
+            'poster'     => $r['poster'] ? '/uzdub/uploads/posters/' . $r['poster'] : null,
+            'url'        => '/uzdub/watch.php?id=' . (int)$r['id'],
+        ];
+    }
+    return $out;
+}
+
 function refresh_user_session($pdo, $user_db_id) {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$user_db_id]);
@@ -87,19 +377,65 @@ function get_youtube_id($url) {
 }
 
 // ===== Fayl yuklash =====
-function upload_file($file_input_name, $target_dir, $allowed_ext) {
+// $allowed_mimes berilsa, kengaytmadan tashqari haqiqiy fayl MIME turi ham tekshiriladi
+// (masalan .jpg deb nomlangan zararli faylning oldini olish uchun)
+function upload_file($file_input_name, $target_dir, $allowed_ext, $allowed_mimes = null) {
     if (!isset($_FILES[$file_input_name]) || $_FILES[$file_input_name]['error'] !== UPLOAD_ERR_OK) return null;
     $file = $_FILES[$file_input_name];
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowed_ext)) return false;
+
+    if ($allowed_mimes !== null) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $real_mime = $finfo ? finfo_file($finfo, $file['tmp_name']) : false;
+        if ($finfo) finfo_close($finfo);
+        if (!$real_mime || !in_array($real_mime, $allowed_mimes)) return false;
+    }
+
     $new_name = uniqid('f_', true) . '.' . $ext;
     $target_path = $target_dir . $new_name;
     if (move_uploaded_file($file['tmp_name'], $target_path)) return $new_name;
     return false;
 }
 
-// ===== Video player =====
-function render_player($video_type, $video_url, $base_path = 'uploads/videos/') {
+// ===== Foydalanuvchi IP manzilini olish =====
+function client_ip() {
+    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+}
+
+// ===== Brute-force himoyasi (login urinishlari) =====
+define('LOGIN_MAX_ATTEMPTS', 5);
+define('LOGIN_LOCKOUT_MINUTES', 15);
+
+// $identifier masalan: 'user:1.2.3.4:ali123' yoki 'admin:1.2.3.4:admin'
+function login_is_locked($pdo, $identifier) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE identifier = ? AND attempted_at > (NOW() - INTERVAL " . LOGIN_LOCKOUT_MINUTES . " MINUTE)");
+    $stmt->execute([$identifier]);
+    return (int)$stmt->fetchColumn() >= LOGIN_MAX_ATTEMPTS;
+}
+
+function login_register_failed($pdo, $identifier) {
+    $pdo->prepare("INSERT INTO login_attempts (identifier) VALUES (?)")->execute([$identifier]);
+    // Eski yozuvlarni vaqti-vaqti bilan tozalash (jadval shishib ketmasligi uchun)
+    if (mt_rand(1, 50) === 1) {
+        $pdo->exec("DELETE FROM login_attempts WHERE attempted_at < (NOW() - INTERVAL 1 DAY)");
+    }
+}
+
+function login_clear_attempts($pdo, $identifier) {
+    $pdo->prepare("DELETE FROM login_attempts WHERE identifier = ?")->execute([$identifier]);
+}
+
+// ===== Video player (subtitrlar bilan) =====
+function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo') {
+    $subs_html = '';
+    foreach ($subtitles as $sub) {
+        $src = '/uzdub/uploads/subtitles/' . e($sub['file_path']);
+        $label = e($sub['label'] ?? $sub['language']);
+        $lang = e($sub['language'] ?? 'uz');
+        $subs_html .= '<track kind="subtitles" src="' . $src . '" srclang="' . $lang . '" label="' . $label . '">';
+    }
+
     if ($video_type === 'youtube') {
         $yt_id = get_youtube_id($video_url);
         if ($yt_id) return '<div class="player-wrap"><iframe src="https://www.youtube.com/embed/' . e($yt_id) . '" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>';
@@ -107,10 +443,127 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/') 
     } elseif ($video_type === 'cloud') {
         return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen></iframe></div>';
     } elseif ($video_type === 'file') {
-        return '<div class="player-wrap"><video controls autoplay src="' . e($base_path) . e($video_url) . '"></video></div>';
+        return '<div class="player-wrap"><video id="' . e($player_id) . '" controls autoplay crossorigin="anonymous" src="' . e($base_path) . e($video_url) . '">' . $subs_html . '</video></div>';
     }
     return '';
 }
+
+function get_content_subtitles(PDO $pdo, int $content_id, ?int $episode_id = null): array {
+    try {
+        if ($episode_id) {
+            $stmt = $pdo->prepare("SELECT * FROM content_subtitles WHERE content_id = ? AND (episode_id = ? OR episode_id IS NULL) ORDER BY episode_id DESC");
+            $stmt->execute([$content_id, $episode_id]);
+        } else {
+            $stmt = $pdo->prepare("SELECT * FROM content_subtitles WHERE content_id = ? AND episode_id IS NULL");
+            $stmt->execute([$content_id]);
+        }
+        return $stmt->fetchAll() ?: [];
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
+function get_user_rating(PDO $pdo, int $user_id, int $content_id): ?int {
+    try {
+        $stmt = $pdo->prepare("SELECT rating FROM content_ratings WHERE user_id = ? AND content_id = ?");
+        $stmt->execute([$user_id, $content_id]);
+        $r = $stmt->fetchColumn();
+        return $r !== false ? (int)$r : null;
+    } catch (PDOException $e) {
+        return null;
+    }
+}
+
+function get_avg_user_rating(PDO $pdo, int $content_id): ?float {
+    try {
+        $stmt = $pdo->prepare("SELECT ROUND(AVG(rating), 1) FROM content_ratings WHERE content_id = ?");
+        $stmt->execute([$content_id]);
+        $v = $stmt->fetchColumn();
+        return $v !== null ? (float)$v : null;
+    } catch (PDOException $e) {
+        return null;
+    }
+}
+
+function is_content_watched(PDO $pdo, int $user_id, int $content_id): bool {
+    try {
+        $stmt = $pdo->prepare("SELECT id FROM watched_content WHERE user_id = ? AND content_id = ?");
+        $stmt->execute([$user_id, $content_id]);
+        return (bool)$stmt->fetch();
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
+function mark_content_watched(PDO $pdo, int $user_id, int $content_id, ?int $episode_id = null): void {
+    try {
+        $pdo->prepare("INSERT INTO watched_content (user_id, content_id, episode_id) VALUES (?,?,?)
+            ON DUPLICATE KEY UPDATE completed_at = CURRENT_TIMESTAMP, episode_id = VALUES(episode_id)")
+            ->execute([$user_id, $content_id, $episode_id]);
+        $pdo->prepare("UPDATE watch_progress SET is_completed = 1 WHERE user_id = ? AND content_id = ?")
+            ->execute([$user_id, $content_id]);
+    } catch (PDOException $e) {}
+}
+
+function get_content_episodes(PDO $pdo, int $content_id): array {
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM episodes WHERE content_id = ? ORDER BY season ASC, episode_number ASC");
+        $stmt->execute([$content_id]);
+        return $stmt->fetchAll() ?: [];
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
+function get_next_episode(PDO $pdo, int $content_id, int $current_episode_id): ?array {
+    $episodes = get_content_episodes($pdo, $content_id);
+    $found = false;
+    foreach ($episodes as $ep) {
+        if ($found) return $ep;
+        if ((int)$ep['id'] === $current_episode_id) $found = true;
+    }
+    return null;
+}
+
+// ===== API rate limiting =====
+function rate_limit_check(PDO $pdo, string $endpoint, int $max_hits = 30, int $window_seconds = 60): bool {
+    $identifier = client_ip() . ':' . ($endpoint);
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM rate_limits WHERE identifier = ? AND endpoint = ? AND hit_at > (NOW() - INTERVAL ? SECOND)");
+        $stmt->execute([$identifier, $endpoint, $window_seconds]);
+        if ((int)$stmt->fetchColumn() >= $max_hits) return false;
+        $pdo->prepare("INSERT INTO rate_limits (identifier, endpoint) VALUES (?,?)")->execute([$identifier, $endpoint]);
+        if (mt_rand(1, 100) === 1) {
+            $pdo->exec("DELETE FROM rate_limits WHERE hit_at < (NOW() - INTERVAL 1 DAY)");
+        }
+        return true;
+    } catch (PDOException $e) {
+        return true;
+    }
+}
+
+function rate_limit_deny_json(): void {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(429);
+    echo json_encode(['error' => 'Juda ko\'p so\'rov. Biroz kuting.']);
+    exit;
+}
+
+// ===== Open Graph meta =====
+function og_meta_tags(string $title, string $description = '', ?string $image = null, ?string $url = null): string {
+    $site = defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub';
+    $desc = mb_strimwidth(strip_tags($description), 0, 200, '...');
+    $img = $image ? (strpos($image, 'http') === 0 ? $image : $site . '/' . ltrim($image, '/')) : $site . '/assets/cat.png';
+    $page_url = $url ?: ($site . $_SERVER['REQUEST_URI']);
+    return '<meta name="description" content="' . e($desc) . '">' . "\n"
+        . '<meta property="og:title" content="' . e($title) . '">' . "\n"
+        . '<meta property="og:description" content="' . e($desc) . '">' . "\n"
+        . '<meta property="og:image" content="' . e($img) . '">' . "\n"
+        . '<meta property="og:url" content="' . e($page_url) . '">' . "\n"
+        . '<meta property="og:type" content="website">' . "\n"
+        . '<meta name="twitter:card" content="summary_large_image">';
+}
+
 
 // ===== Avatar URL =====
 function avatar_url($avatar, $base = '/uzdub/') {

@@ -3,10 +3,21 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $q = trim($_GET['q'] ?? '');
+$cat_filter = $_GET['cat'] ?? '';
 $page_title = 'Qidiruv: ' . $q;
 $items = [];
 $found_user = null;
 $found_content = null;
+
+// AJAX - avtotugallash (autocomplete) so'rovlari
+if (isset($_GET['ajax_autocomplete']) && $q !== '') {
+    header('Content-Type: application/json');
+    $stmt = $pdo->prepare("SELECT id, title, poster, release_year, rating, content_code FROM content WHERE title LIKE ? ORDER BY views DESC, rating DESC LIMIT 6");
+    $stmt->execute(['%' . $q . '%']);
+    $results = $stmt->fetchAll();
+    echo json_encode($results, JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if ($q !== '') {
     // Agar 8 xonali raqam bo'lsa -> foydalanuvchi ID
@@ -22,9 +33,14 @@ if ($q !== '') {
         $found_content = $stmt->fetch();
     }
 
-    // Umumiy kontent qidiruvi (nomi yoki kodi bo'yicha)
-    $stmt = $pdo->prepare("SELECT * FROM content WHERE title LIKE ? OR content_code LIKE ? ORDER BY created_at DESC");
-    $stmt->execute(['%' . $q . '%', '%' . $q . '%']);
+    // Kategoriya filtri bilan qidiruv
+    if ($cat_filter && in_array($cat_filter, ['kino', 'anime', 'multfilm'])) {
+        $stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE cat.slug = ? AND (c.title LIKE ? OR c.content_code LIKE ?) ORDER BY c.views DESC, c.rating DESC");
+        $stmt->execute([$cat_filter, '%' . $q . '%', '%' . $q . '%']);
+    } else {
+        $stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.title LIKE ? OR c.content_code LIKE ? ORDER BY c.views DESC, c.rating DESC");
+        $stmt->execute(['%' . $q . '%', '%' . $q . '%']);
+    }
     $items = $stmt->fetchAll();
 }
 
@@ -40,7 +56,20 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="content-section" style="margin-top: 90px;">
-    <h2>"<?php echo e($q); ?>" bo'yicha natijalar</h2>
+    <h2>🔍 "<?php echo e($q ?: 'Barcha kontent'); ?>" bo'yicha natijalar</h2>
+    
+    <!-- Kategoriya filtrlari -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 8px;">
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter ? 'rgba(33,150,243,0.15)' : 'var(--blue-primary)'; ?>;border-radius:20px;">🏠 Barchasi</a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=kino" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='kino' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🎬 Kino</a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=anime" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='anime' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🎌 Anime</a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=multfilm" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='multfilm' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🧸 Multfilm</a>
+    </div>
+</div>
+
+<div style="padding:0 40px;font-size:12px;color:var(--text-muted);">
+    <?php echo count($items) . ' ta kontent topildi'; ?>
+    <?php if ($found_user): ?> · 1 ta foydalanuvchi topildi<?php endif; ?>
 </div>
 
 <?php if ($found_user): ?>

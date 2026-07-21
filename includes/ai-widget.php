@@ -33,7 +33,9 @@
 
   <div class="aic-chat-view" id="aic-chat-view" style="display:none;">
     <div class="aic-log" id="aic-log"></div>
-    <div class="aic-typing" id="aic-typing" style="display:none;">yozmoqda...</div>
+    <div class="aic-typing" id="aic-typing" style="display:none;">
+      <span class="aic-typing-dots"><span></span><span></span><span></span></span>
+    </div>
     <div class="aic-inputbar">
       <input type="text" id="aic-input" class="aic-input" placeholder="Filmlar haqida so'rang...">
       <button class="aic-send" id="aic-send" aria-label="Yuborish">
@@ -45,5 +47,7 @@
 
 <script>
   window.aicCsrfToken = <?php echo json_encode(csrf_token()); ?>;
+  window.aicIsLoggedIn = <?php echo json_encode(function_exists('is_user') && is_user()); ?>;
+  window.aicLang = <?php echo json_encode(current_lang()); ?>;
 </script>
 <script src="/uzdub/js/ai-chat.js" defer></script>

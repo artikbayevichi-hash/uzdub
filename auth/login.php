@@ -14,12 +14,18 @@ if (!preg_match('#^/uzdub/[^/\\\\].*#', $redirect) && $redirect !== '/uzdub/inde
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login    = trim($_POST['login'] ?? '');
     $password = $_POST['password'] ?? '';
+    $attempt_id = 'user:' . client_ip() . ':' . mb_strtolower($login);
+
+    if (login_is_locked($pdo, $attempt_id)) {
+        $error = 'Juda ko\'p muvaffaqiyatsiz urinish. ' . LOGIN_LOCKOUT_MINUTES . ' daqiqadan so\'ng qayta urinib ko\'ring.';
+    } else {
 
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username=? OR email=?");
     $stmt->execute([$login, $login]);
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password'])) {
+        login_clear_attempts($pdo, $attempt_id);
         check_premium_expiry($pdo, $user['id']);
         refresh_user_session($pdo, $user['id']);
         header('Location: ' . $redirect);
@@ -32,13 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $admin = $admin_stmt->fetch();
 
     if ($admin && password_verify($password, $admin['password'])) {
+        login_clear_attempts($pdo, $attempt_id);
         $_SESSION['admin_id'] = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
         header('Location: /uzdub/admin/dashboard.php');
         exit;
     }
 
+    login_register_failed($pdo, $attempt_id);
     $error = 'Login yoki parol noto\'g\'ri.';
+    }
 }
 ?>
 <!DOCTYPE html>

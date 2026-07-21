@@ -1,0 +1,32 @@
+/* ============================================================
+   css/skeleton.css - Yuklanish effektlari
+   ============================================================ */
+
+.skeleton {
+    background: linear-gradient(90deg, #121a2b 25%, #1d283d 50%, #121a2b 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    width: 200px;
+    height: 300px;
+    margin: 10px;
+    display: inline-block;
+}
+
+.skeleton-text {
+    height: 20px;
+    margin-top: 10px;
+    width: 80%;
+}
+
+.skeleton-text.short {
+    width: 40%;
+}

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 INSERT INTO admins (username, password) VALUES
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
+('doniyorbek0998', '$2y$10$wgrUJG8raPpFoYXolfyWJu/fHvJ0O2ffwAzT2hIy2Hn5XI/8WGo2O')
 ON DUPLICATE KEY UPDATE username=username;
 
 CREATE TABLE IF NOT EXISTS categories (
@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS content (
     category_id INT NOT NULL,
     release_year INT DEFAULT NULL,
     rating DECIMAL(3,1) DEFAULT 0,
-    is_series TINYINT(1) DEFAULT 0,
     is_premium TINYINT(1) DEFAULT 0,
     video_type ENUM('youtube','cloud','file') DEFAULT NULL,
     video_url VARCHAR(500) DEFAULT NULL,
@@ -38,8 +37,7 @@ CREATE TABLE IF NOT EXISTS content (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
     INDEX idx_category (category_id),
-    INDEX idx_views (views),
-    INDEX idx_series (is_series)
+    INDEX idx_views (views)
 );
 
 CREATE TABLE IF NOT EXISTS watchlist (
@@ -157,17 +155,24 @@ CREATE TABLE IF NOT EXISTS private_messages (
     INDEX idx_created (created_at)
 );
 
--- Admin foydalanuvchi: doniyorbek0998 / 12341234d
--- Eslatma: Parol haqiqiy loyihada xeshlangan bo'lishi mumkin, 
--- lekin hozircha tekshirish uchun oddiy holatda qoldiramiz.
--- Agar tizim password_hash ishlatса, PHP orqali ro'yxatdan o'tish kerak bo'ladi.
--- Quyidagi kodni database.sql oxiriga qo'shing:
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    identifier VARCHAR(191) NOT NULL,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_identifier_time (identifier, attempted_at)
+);
 
-INSERT INTO users (user_id, username, email, password, role, premium_status, created_at) 
-VALUES ('doniyorbek0998', 'admin', 'admin@uzdub.uz', '12341234d', 'admin', 1, NOW())
-ON DUPLICATE KEY UPDATE 
-username='admin', 
-email='admin@uzdub.uz', 
-password='12341234d', 
-role='admin', 
-premium_status=1;
+CREATE TABLE IF NOT EXISTS watch_progress (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_id INT NOT NULL,
+    position_seconds INT DEFAULT 0,
+    duration_seconds INT DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
+    UNIQUE KEY uniq_user_content (user_id, content_id),
+    INDEX idx_user_updated (user_id, updated_at)
+);
+
+-- Admin login ma'lumotlari admins jadvalida yuqorida ('doniyorbek0998' / '12341234d', bcrypt bilan xeshlangan) o'rnatilgan.

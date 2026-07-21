@@ -254,6 +254,102 @@
 .aic-send:hover { color: var(--aic-text); border-color: var(--aic-accent); }
 .aic-send svg { width: 15px; height: 15px; fill: currentColor; }
 
+/* ===== Animatsiyali "yozmoqda..." nuqtalari ===== */
+.aic-typing-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  padding: 8px 11px;
+  background: #1a1f38;
+  border: 1px solid var(--aic-border);
+  border-radius: 10px;
+  align-self: flex-start;
+}
+.aic-typing-dots span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--aic-text-dim);
+  animation: aic-bounce 1.1s infinite ease-in-out both;
+}
+.aic-typing-dots span:nth-child(1) { animation-delay: -0.24s; }
+.aic-typing-dots span:nth-child(2) { animation-delay: -0.12s; }
+@keyframes aic-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== Tezkor takliflar (chip tugmalari) ===== */
+.aic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0 4px;
+}
+.aic-chip {
+  background: rgba(124, 92, 255, 0.12);
+  border: 1px solid var(--aic-border);
+  color: var(--aic-text);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.aic-chip:hover { background: rgba(124, 92, 255, 0.25); border-color: var(--aic-accent); }
+
+/* ===== Kontent tavsiya kartochkalari ===== */
+.aic-reco-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: flex-start;
+  max-width: 90%;
+}
+.aic-reco-card {
+  display: flex;
+  gap: 10px;
+  background: #1a1f38;
+  border: 1px solid var(--aic-border);
+  border-radius: 10px;
+  padding: 8px;
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.aic-reco-card:hover { border-color: var(--aic-accent); transform: translateY(-1px); }
+.aic-reco-poster {
+  width: 42px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: #0b0e17;
+}
+.aic-reco-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.aic-reco-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--aic-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.aic-reco-meta { font-size: 11px; color: var(--aic-text-dim); }
+.aic-reco-premium { color: #ffb74d; }
+
+/* ===== Mehmon foydalanuvchi uchun ro'yxatdan o'tish taklifi ===== */
+.aic-guest-banner {
+  font-size: 11.5px;
+  color: var(--aic-text-dim);
+  background: rgba(124, 92, 255, 0.08);
+  border: 1px solid var(--aic-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  text-align: center;
+}
+.aic-guest-banner a { color: var(--aic-accent-2); text-decoration: none; }
+.aic-guest-banner a:hover { text-decoration: underline; }
+
 @media (max-width: 480px) {
   .aic-panel { right: 16px; bottom: 88px; }
   .aic-fab { right: 16px; bottom: 16px; }

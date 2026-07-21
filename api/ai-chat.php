@@ -42,36 +42,23 @@ if (!validate_csrf($input['csrf_token'] ?? $_POST['csrf_token'] ?? $_SERVER['HTT
     exit;
 }
 
-/* ------------------------------------------------------------
-   1) Bazadan 1 ta eng yaxshi mos keladigan kontentni topish
-   ------------------------------------------------------------ */
-function findBestMatch(PDO $pdo, string $message): ?array {
-    $words = preg_split('/\s+/u', mb_strtolower($message));
-    $words = array_values(array_filter($words, fn($w) => mb_strlen($w) >= 3));
-
-    if (empty($words)) {
-        $stmt = $pdo->query("SELECT title, name AS cat_name FROM content c JOIN categories cat ON c.category_id = cat.id ORDER BY views DESC LIMIT 1");
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    $conditions = [];
-    $params = [];
-    foreach ($words as $i => $w) {
-        $conditions[] = "(c.title LIKE :w{$i})";
-        $params[":w{$i}"] = '%' . $w . '%';
-    }
-
-    $sql = "SELECT c.title, cat.name AS cat_name
-            FROM content c
-            JOIN categories cat ON c.category_id = cat.id
-            WHERE " . implode(' OR ', $conditions) . "
-            ORDER BY c.views DESC LIMIT 1";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+// Server bir vaqtda judа ko'p Ollama so'rovi bilan yuklanib qolmasligi uchun oddiy navbat
+if (!ai_queue_try_acquire()) {
+    echo json_encode(['error' => 'busy', 'busy' => true]);
+    exit;
 }
+register_shutdown_function('ai_queue_release');
 
-$best = findBestMatch($pdo, $userMessage);
+/* ------------------------------------------------------------
+   1) Bazadan so'rovga mos keladigan bir nechta kontentni topish
+   ------------------------------------------------------------ */
+// Foydalanuvchi tilini aniqlash (frontend yuborgan yoki sessiyadan)
+$inputLang = isset($input['lang']) ? trim($input['lang']) : '';
+$userLang = $inputLang ?: ($_SESSION['lang'] ?? 'uz');
+if (!in_array($userLang, ['uz', 'ru', 'en'])) $userLang = 'uz';
+
+$match = findBestMatches($pdo, $userMessage, AI_MAX_RECOMMENDATIONS, $userId);
+$recommendations = $match['matched'] ? ai_build_recommendations($match['rows']) : [];
 
 /* ------------------------------------------------------------
     2) Foydalanuvchi haqida ma'lumot yig'ish
@@ -81,39 +68,46 @@ if ($userId) {
     $stmt = $pdo->prepare("SELECT username, is_premium FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $u = $stmt->fetch(PDO::FETCH_ASSOC);
-    
     if ($u) {
         $userInfo = $u['username'] . ' (' . ($u['is_premium'] ? 'premium' : 'oddiy') . ')';
     }
 }
 
 /* ------------------------------------------------------------
-    3) Prompt tayyorlash
+    3) Prompt tayyorlash — ko'p tilli system prompt + shaxsiy kontekst
     ------------------------------------------------------------ */
-$context = '';
-if ($best) {
-    $context = "\n[Malumot: Bazada '{$best['title']}' ({$best['cat_name']}) bor. Kerak bo'lsa shuni tavsiya et.]";
-}
+$systemPrompt = ai_build_system_prompt($userLang);
+$context = ai_build_context_text($match['rows']);
+$userContext = ai_build_user_context($pdo, $userId, $userLang);
 
-$systemPrompt = "Siz UZDUB AI yordamchisiz. Siz faqat o'zbek tilida javob berasiz. Har qanday savolga o'zbek tilida, tushunarli va qisqa javob bering. Kino, anime va multfilmlar haqida savollarga javob berasiz.";
-
+/* ------------------------------------------------------------
+    4) Suhbat tarixi — MUHIM: faqat shu chat sessiyasiga tegishli xabarlar olinadi
+    (avval user_id bo'yicha olinardi, bu esa turli chatlar tarixini aralashtirib yuborardi)
+    ------------------------------------------------------------ */
 $history = [];
 if ($userId) {
-    $stmt = $pdo->prepare("SELECT role, message FROM ai_chat_messages WHERE user_id = :uid ORDER BY id DESC LIMIT 2");
-    $stmt->execute(['uid' => $userId]);
+    $stmt = $pdo->prepare("SELECT role, message FROM ai_chat_messages WHERE user_id = :uid AND session_id = :sid ORDER BY id DESC LIMIT :lim");
+    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':sid', $sessionId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', AI_HISTORY_MESSAGES, PDO::PARAM_INT);
+    $stmt->execute();
     $history = array_reverse($stmt->fetchAll(PDO::FETCH_ASSOC));
 } else {
+    // Mehmon: agar frontend yangi (boshqa) session_id yuborsa — bu yangi suhbat, tarixni tozalaymiz
+    if (!isset($_SESSION['ai_guest_session_id']) || $_SESSION['ai_guest_session_id'] != $sessionId) {
+        $_SESSION['ai_guest_session_id'] = $sessionId;
+        $_SESSION['ai_guest_history'] = [];
+    }
     $_SESSION['ai_guest_history'] = $_SESSION['ai_guest_history'] ?? [];
-    $history = $_SESSION['ai_guest_history'];
+    $history = array_slice($_SESSION['ai_guest_history'], -AI_HISTORY_MESSAGES);
 }
 
 $messages = [];
-if (!empty($history)) {
-    foreach ($history as $h) {
-        $messages[] = ['role' => $h['role'] === 'assistant' ? 'assistant' : 'user', 'content' => $h['message']];
-    }
+$messages[] = ['role' => 'system', 'content' => $systemPrompt];
+foreach ($history as $h) {
+    $messages[] = ['role' => $h['role'] === 'assistant' ? 'assistant' : 'user', 'content' => $h['message']];
 }
-$messages[] = ['role' => 'user', 'content' => $systemPrompt . "\n\n" . $userMessage . $context];
+$messages[] = ['role' => 'user', 'content' => $userMessage . $context . $userContext];
 
 /* ------------------------------------------------------------
    5) Ollama'ga so'rov
@@ -123,9 +117,10 @@ $payload = [
     'messages' => $messages,
     'stream' => false,
     'options' => [
-        'temperature' => 0.8,
-        'num_ctx' => 1024,
-        'num_predict' => 200,
+        'temperature' => 0.4,
+        'num_ctx' => OLLAMA_NUM_CTX,
+        'num_predict' => OLLAMA_NUM_PREDICT,
+        'num_thread' => OLLAMA_NUM_THREAD,
     ],
 ];
 
@@ -145,7 +140,8 @@ $curlError = curl_error($ch);
 curl_close($ch);
 
 if ($response === false || $httpCode !== 200) {
-    echo json_encode(['error' => "AI xatolik: $curlError (HTTP $httpCode)"]);
+    error_log("UZDUB AI xatolik (ai-chat.php): HTTP $httpCode, curl: $curlError");
+    echo json_encode(['error' => "AI hozircha javob bera olmadi. Birozdan so'ng qaytadan urinib ko'ring."]);
     exit;
 }
 
@@ -187,7 +183,7 @@ if ($userId && $sessionId) {
 } else {
     $_SESSION['ai_guest_history'][] = ['role' => 'user', 'message' => $userMessage];
     $_SESSION['ai_guest_history'][] = ['role' => 'assistant', 'message' => $aiText];
-    $_SESSION['ai_guest_history'] = array_slice($_SESSION['ai_guest_history'], -4);
+    $_SESSION['ai_guest_history'] = array_slice($_SESSION['ai_guest_history'], -AI_HISTORY_MESSAGES);
 }
 
-echo json_encode(['reply' => $aiText], JSON_UNESCAPED_UNICODE);
+echo json_encode(['reply' => $aiText, 'recommendations' => $recommendations], JSON_UNESCAPED_UNICODE);

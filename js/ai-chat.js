@@ -1,6 +1,7 @@
 /* ============================================================
    js/ai-chat.js
-   UZDUB AI Yordamchi — chat tarixi bilan
+   UZDUB AI Yordamchi — chat tarixi, mehmon rejimi,
+   tezkor takliflar va kontent tavsiya kartochkalari bilan
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -18,17 +19,71 @@ document.addEventListener('DOMContentLoaded', function () {
   const sendBtn = document.getElementById('aic-send');
   const typing = document.getElementById('aic-typing');
   const csrfToken = window.aicCsrfToken || '';
+  const isGuest = !window.aicIsLoggedIn;
+  const lang = window.aicLang || 'uz';
 
   if (!fab || !panel) return;
 
+  // Ko'p tilli greeting va tezkor takliflar
+  const LANG_TEXTS = {
+    uz: {
+      greeting: "Assalomu alaykum! Men UZDUB AI yordamchiman. Kino, anime yoki multfilm haqida so'rang.",
+      prompts: [
+        { label: "🔥 Eng ko'p ko'rilganlar", text: "Eng ko'p ko'rilgan filmlarni tavsiya qiling" },
+        { label: '😂 Kulgili film', text: 'Kulgili film tavsiya qiling' },
+        { label: '👻 Qo\u2018rqinchli anime', text: 'Qo\u2018rqinchli anime bormi?' },
+        { label: '🧙 Sehrli / fantastik', text: 'Sehrli yoki fantastik anime tavsiya qiling' },
+        { label: '💥 Jangari kino', text: 'Jangari kino tavsiya qiling' },
+        { label: '🎭 Drama film', text: 'Drama film tavsiya qiling' }
+      ]
+    },
+    ru: {
+      greeting: 'Ассаламу алейкум! Я UZDUB AI помощник. Спрашивайте о фильмах, аниме или мультфильмах.',
+      prompts: [
+        { label: '🔥 Популярные', text: 'Посоветуйте популярные фильмы' },
+        { label: '😂 Комедия', text: 'Посоветуйте комедию' },
+        { label: '👻 Ужасы', text: 'Посоветуйте ужасы или хоррор аниме' },
+        { label: '🧙 Фэнтези', text: 'Посоветуйте фэнтези аниме' },
+        { label: '💥 Боевик', text: 'Посоветуйте боевик' },
+        { label: '🎭 Драма', text: 'Посоветуйте драму' }
+      ]
+    },
+    en: {
+      greeting: 'Assalamu alaykum! I am UZDUB AI assistant. Ask me about movies, anime or cartoons.',
+      prompts: [
+        { label: '🔥 Trending', text: 'Recommend trending movies' },
+        { label: '😂 Comedy', text: 'Recommend a comedy movie' },
+        { label: '👻 Horror', text: 'Is there a horror anime?' },
+        { label: '🧙 Fantasy', text: 'Recommend fantasy anime' },
+        { label: '💥 Action', text: 'Recommend an action movie' },
+        { label: '🎭 Drama', text: 'Recommend a drama' }
+      ]
+    }
+  };
+
+  const texts = LANG_TEXTS[lang] || LANG_TEXTS.uz;
+  const GREETING = texts.greeting;
+  const QUICK_PROMPTS = texts.prompts;
+
   let greeted = false;
   let currentSessionId = null;
+  let isSending = false;
+  let pendingQueue = [];
+
+  // Mehmon foydalanuvchida chatlar ro'yxati mavjud emas (tarix saqlanmaydi) —
+  // shu sabab ro'yxat ekranini butunlay yashiramiz va to'g'ridan-to'g'ri suhbatga o'tamiz.
+  if (isGuest) {
+    backBtn.style.display = 'none';
+  }
 
   fab.addEventListener('click', function () {
     panel.classList.toggle('aic-open');
-    if (panel.classList.contains('aic-open') && !greeted) {
+    if (!panel.classList.contains('aic-open') || greeted) return;
+    greeted = true;
+    if (isGuest) {
+      startGuestChat();
+    } else {
       loadChatList();
-      greeted = true;
     }
   });
 
@@ -41,11 +96,11 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   newChatBtn.addEventListener('click', function () {
-    createNewChat();
+    if (isGuest) { startGuestChat(); } else { createNewChat(); }
   });
 
   newChatBtnTop.addEventListener('click', function () {
-    createNewChat();
+    if (isGuest) { startGuestChat(); } else { createNewChat(); }
   });
 
   function showChatList() {
@@ -59,7 +114,51 @@ document.addEventListener('DOMContentLoaded', function () {
   function showChatView() {
     chatList.style.display = 'none';
     chatView.style.display = 'flex';
-    backBtn.style.display = 'block';
+    if (!isGuest) backBtn.style.display = 'block';
+  }
+
+  // ---- Mehmon rejimi: tizimga kirmasdan to'g'ridan-to'g'ri suhbat ----
+  function startGuestChat() {
+    // Yangi (client tomonida yaratilgan) sessiya raqami — backend buni ko'rib,
+    // avvalgi mehmon suhbati tarixini avtomatik tozalaydi.
+    currentSessionId = Date.now();
+    showChatView();
+    log.innerHTML = '';
+    addMessage(GREETING, 'bot');
+    addGuestBanner();
+    renderQuickChips();
+  }
+
+  function addGuestBanner() {
+    const div = document.createElement('div');
+    div.className = 'aic-guest-banner';
+    div.innerHTML = 'Suhbat tarixini saqlash uchun <a href="/uzdub/auth/register.php">ro\u2018yxatdan o\u2018ting</a>';
+    log.appendChild(div);
+  }
+
+  function renderQuickChips() {
+    const wrap = document.createElement('div');
+    wrap.className = 'aic-chips';
+    wrap.id = 'aic-quick-chips';
+    QUICK_PROMPTS.forEach(function (p) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'aic-chip';
+      btn.textContent = p.label;
+      btn.addEventListener('click', function () {
+        removeQuickChips();
+        addMessage(p.text, 'user');
+        sendToAI(p.text);
+      });
+      wrap.appendChild(btn);
+    });
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function removeQuickChips() {
+    const el = document.getElementById('aic-quick-chips');
+    if (el) el.remove();
   }
 
   function loadChatList() {
@@ -126,7 +225,8 @@ document.addEventListener('DOMContentLoaded', function () {
             addMessage(msg.message, msg.role);
           });
         } else {
-          addMessage("Assalomu alaykum! Men UZDUB AI yordamchiman. Kino, anime yoki multfilm haqida so'rang.", 'bot');
+          addMessage(GREETING, 'bot');
+          renderQuickChips();
         }
       })
       .catch(function () {
@@ -149,7 +249,8 @@ document.addEventListener('DOMContentLoaded', function () {
         currentSessionId = data.session_id;
         showChatView();
         log.innerHTML = '';
-        addMessage("Assalomu alaykum! Men UZDUB AI yordamchiman. Kino, anime yoki multfilm haqida so'rang.", 'bot');
+        addMessage(GREETING, 'bot');
+        renderQuickChips();
       })
       .catch(function () {
         alert('Xatolik yuz berdi');
@@ -180,81 +281,190 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  let userScrolledUp = false;
+
+  log.addEventListener('scroll', function () {
+    // Agar foydalanuvchi yuqoriga scroll qilgan bo'lsa, avtoscrollni to'xtatamiz
+    const threshold = 60;
+    userScrolledUp = log.scrollHeight - log.scrollTop - log.clientHeight > threshold;
+  });
+
+  function scrollToBottom(force) {
+    if (!force && userScrolledUp) return;
+    log.scrollTop = log.scrollHeight;
+    // Scroll qilingandan so'ng, agar foydalanuvchi eng pastda bo'lsa, avtoscrollni qayta yoqamiz
+    setTimeout(function () {
+      const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+      if (atBottom) userScrolledUp = false;
+    }, 100);
+  }
+
   function addMessage(text, from) {
     const div = document.createElement('div');
     div.className = 'aic-msg ' + (from === 'user' ? 'aic-user' : 'aic-bot');
     div.textContent = text;
     log.appendChild(div);
-    log.scrollTop = log.scrollHeight;
+    scrollToBottom(true);
     return div;
   }
 
-  function typeText(element, text, speed, callback) {
-    let i = 0;
-    element.textContent = '';
-    const cursor = document.createElement('span');
-    cursor.className = 'typing-cursor';
-    cursor.textContent = '|';
-    element.appendChild(cursor);
+  function renderRecommendations(list) {
+    if (!list || !list.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'aic-reco-list';
+    list.forEach(function (item) {
+      const a = document.createElement('a');
+      a.className = 'aic-reco-card';
+      a.href = item.url;
 
-    const interval = setInterval(function () {
-      if (i < text.length) {
-        element.insertBefore(document.createTextNode(text.charAt(i)), cursor);
-        i++;
-        log.scrollTop = log.scrollHeight;
-      } else {
-        clearInterval(interval);
-        if (cursor.parentNode) cursor.parentNode.removeChild(cursor);
-        if (callback) callback();
+      const img = document.createElement('img');
+      img.className = 'aic-reco-poster';
+      img.loading = 'lazy';
+      img.src = item.poster || 'https://via.placeholder.com/84x120/121a2b/2196f3?text=' + encodeURIComponent(item.title.slice(0, 1));
+      img.alt = item.title;
+
+      const info = document.createElement('div');
+      info.className = 'aic-reco-info';
+
+      const title = document.createElement('div');
+      title.className = 'aic-reco-title';
+      title.textContent = item.title;
+
+      const meta = document.createElement('div');
+      meta.className = 'aic-reco-meta';
+      const parts = [];
+      if (item.category) parts.push(item.category);
+      if (item.year) parts.push(item.year);
+      if (item.rating) parts.push('\u2605 ' + item.rating);
+      meta.textContent = parts.join(' \u00b7 ');
+      if (item.is_premium) {
+        const premiumSpan = document.createElement('span');
+        premiumSpan.className = 'aic-reco-premium';
+        premiumSpan.textContent = ' \u2022 Premium';
+        meta.appendChild(premiumSpan);
       }
-    }, speed);
-    return interval;
+
+      info.appendChild(title);
+      info.appendChild(meta);
+      a.appendChild(img);
+      a.appendChild(info);
+      wrap.appendChild(a);
+    });
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
   }
 
   function send() {
     const text = input.value.trim();
     if (!text || !currentSessionId) return;
+    input.value = '';
+    removeQuickChips();
+
+    if (isSending) {
+      // AI hali oldingi xabarga javob berayotgan bo'lsa, navbatga qo'yamiz
+      addMessage(text, 'user');
+      pendingQueue.push(text);
+      if (window.showToast) showToast("Xabaringiz navbatga qo'yildi, hozir yuboriladi...", 'info', 2500);
+      return;
+    }
 
     addMessage(text, 'user');
-    input.value = '';
+    sendToAI(text);
+  }
+
+  function sendToAI(text) {
+    isSending = true;
     input.disabled = true;
     sendBtn.disabled = true;
     typing.style.display = 'block';
 
-    fetch('/uzdub/api/ai-chat.php', {
+    const botDiv = addMessage('', 'bot');
+    let accumulated = '';
+    let gotFirstToken = false;
+    let turnFinished = false;
+
+    function finishTurn() {
+      if (turnFinished) return;
+      turnFinished = true;
+      isSending = false;
+      typing.style.display = 'none';
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+
+      if (currentSessionId && !isGuest) {
+        updateSessionTitle(currentSessionId, text);
+        setTimeout(loadChatList, 500);
+      }
+
+      if (pendingQueue.length) {
+        const next = pendingQueue.shift();
+        sendToAI(next);
+      }
+    }
+
+    fetch('/uzdub/api/stream.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, session_id: currentSessionId, csrf_token: csrfToken }),
+      body: JSON.stringify({ message: text, session_id: currentSessionId, csrf_token: csrfToken, lang: lang }),
     })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        typing.style.display = 'none';
-        input.disabled = false;
-        sendBtn.disabled = false;
-        input.focus();
-
-        const botDiv = addMessage('', 'bot');
-
-        if (data.error) {
-          botDiv.textContent = data.error;
-        } else {
-          typeText(botDiv, data.reply, 30, function () {
-            log.scrollTop = log.scrollHeight;
+      .then(function (response) {
+        if (!response.body || !response.body.getReader) {
+          // Eski brauzer / streaming qo'llab-quvvatlanmasa
+          return response.json().then(function (data) {
+            botDiv.textContent = data.reply || data.error || "Javob olinmadi.";
+            if (data.recommendations) renderRecommendations(data.recommendations);
+            finishTurn();
           });
         }
 
-        // Chat sarlavhasini yangilash
-        if (currentSessionId) {
-          updateSessionTitle(currentSessionId, text);
-          // Chat ro'yxatini yangilash
-          setTimeout(loadChatList, 500);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        function pump() {
+          return reader.read().then(function (result) {
+            if (result.done) { finishTurn(); return; }
+            buffer += decoder.decode(result.value, { stream: true });
+
+            let idx;
+            while ((idx = buffer.indexOf('\n\n')) !== -1) {
+              const rawEvent = buffer.slice(0, idx);
+              buffer = buffer.slice(idx + 2);
+              const line = rawEvent.replace(/^data:\s*/, '').trim();
+              if (!line) continue;
+
+              let obj;
+              try { obj = JSON.parse(line); } catch (e) { continue; }
+
+              if (obj.busy) {
+                botDiv.textContent = obj.msg || 'AI hozir band, biroz kuting...';
+                if (window.showToast) showToast(obj.msg || 'AI hozir band', 'warning');
+                finishTurn();
+                return;
+              }
+              if (obj.error) {
+                botDiv.textContent = obj.error;
+                continue;
+              }
+              if (obj.delta) {
+                if (!gotFirstToken) { gotFirstToken = true; typing.style.display = 'none'; }
+                accumulated += obj.delta;
+                botDiv.textContent = accumulated;
+                log.scrollTop = log.scrollHeight;
+              }
+              if (obj.recommendations) {
+                renderRecommendations(obj.recommendations);
+              }
+            }
+            return pump();
+          });
         }
+        return pump();
       })
       .catch(function () {
-        typing.style.display = 'none';
-        input.disabled = false;
-        sendBtn.disabled = false;
-        addMessage("Bog'lanishda xatolik yuz berdi. Birozdan keyin urinib ko'ring.", 'bot');
+        if (!gotFirstToken) botDiv.textContent = "Bog'lanishda xatolik yuz berdi. Birozdan keyin urinib ko'ring.";
+        finishTurn();
       });
   }
 

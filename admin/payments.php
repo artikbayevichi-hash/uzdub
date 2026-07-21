@@ -5,28 +5,33 @@ include __DIR__ . '/includes/admin_header.php';
 
 $message = '';
 
-// To'lovni tasdiqlash -> Premiumni yoqish
-if (isset($_GET['approve'])) {
-    $pid = (int)$_GET['approve'];
-    $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE id = ?");
-    $stmt->execute([$pid]);
-    $payment = $stmt->fetch();
-    if ($payment && $payment['status'] === 'pending') {
-        // Muddatni HOZIRDAN boshlab hisoblash (tasdiqlangan kundan)
-        $plans = PREMIUM_PLANS;
-        $days = $plans[$payment['plan']]['days'] ?? 30;
-        $expires = date('Y-m-d H:i:s', strtotime('+' . $days . ' days'));
+// To'lovni tasdiqlash yoki rad etish — ENDI FAQAT POST + CSRF TOKEN orqali
+// (avval GET orqali edi — CSRF hujumiga ochiq)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payment_action'])) {
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+        $message = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+    } else {
+        $pid = (int)($_POST['payment_id'] ?? 0);
+        $action = $_POST['payment_action']; // 'approve' yoki 'reject'
 
-        $pdo->prepare("UPDATE users SET is_premium=1, premium_expires_at=? WHERE id=?")->execute([$expires, $payment['user_id']]);
-        $pdo->prepare("UPDATE premium_payments SET status='approved', expires_at=? WHERE id=?")->execute([$expires, $pid]);
-        $message = "To'lov tasdiqlandi va Premium yoqildi!";
+        if ($action === 'approve') {
+            $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE id = ?");
+            $stmt->execute([$pid]);
+            $payment = $stmt->fetch();
+            if ($payment && $payment['status'] === 'pending') {
+                $plans = PREMIUM_PLANS;
+                $days = $plans[$payment['plan']]['days'] ?? 30;
+                $expires = date('Y-m-d H:i:s', strtotime('+' . $days . ' days'));
+
+                $pdo->prepare("UPDATE users SET is_premium=1, premium_expires_at=? WHERE id=?")->execute([$expires, $payment['user_id']]);
+                $pdo->prepare("UPDATE premium_payments SET status='approved', expires_at=? WHERE id=?")->execute([$expires, $pid]);
+                $message = "✅ To'lov tasdiqlandi va Premium yoqildi!";
+            }
+        } elseif ($action === 'reject') {
+            $pdo->prepare("UPDATE premium_payments SET status='rejected' WHERE id=?")->execute([$pid]);
+            $message = "❌ To'lov rad etildi.";
+        }
     }
-}
-
-// To'lovni rad etish
-if (isset($_GET['reject'])) {
-    $pdo->prepare("UPDATE premium_payments SET status='rejected' WHERE id=?")->execute([(int)$_GET['reject']]);
-    $message = "To'lov rad etildi.";
 }
 
 $payments = $pdo->query("SELECT p.*, u.username, u.user_id as uid FROM premium_payments p JOIN users u ON p.user_id = u.id ORDER BY (p.status='pending') DESC, p.created_at DESC")->fetchAll();
@@ -68,8 +73,16 @@ foreach ($payments as $p) if ($p['status'] === 'pending') $pending_count++;
         </td>
         <td class="action-links">
             <?php if ($p['status'] === 'pending'): ?>
-            <a href="payments.php?approve=<?php echo $p['id']; ?>" onclick="return confirm('Premiumni tasdiqlaysizmi?');">✅ Tasdiqlash</a>
-            <a href="payments.php?reject=<?php echo $p['id']; ?>" class="danger" onclick="return confirm('Rad etasizmi?');">❌ Rad etish</a>
+            <form method="post" style="display:inline;">
+                <?php echo csrf_input(); ?>
+                <input type="hidden" name="payment_id" value="<?php echo $p['id']; ?>">
+                <button type="submit" name="payment_action" value="approve" onclick="return confirm('Premiumni tasdiqlaysizmi?');" style="background:none;border:none;padding:0;font:inherit;text-decoration:underline;cursor:pointer;color:#4caf50;">✅ Tasdiqlash</button>
+            </form>
+            <form method="post" style="display:inline;">
+                <?php echo csrf_input(); ?>
+                <input type="hidden" name="payment_id" value="<?php echo $p['id']; ?>">
+                <button type="submit" name="payment_action" value="reject" onclick="return confirm('Rad etasizmi?');" style="background:none;border:none;padding:0;font:inherit;text-decoration:underline;cursor:pointer;color:#ef5350;">❌ Rad etish</button>
+            </form>
             <?php else: ?>
             <span style="color:var(--text-muted);">—</span>
             <?php endif; ?>
