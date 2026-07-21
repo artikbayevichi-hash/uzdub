@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config/env.php';
+require_once __DIR__ . '/env.php';
 
 define('DB_HOST', env('DB_HOST', 'localhost'));
 define('DB_NAME', env('DB_NAME', 'uzdub'));
