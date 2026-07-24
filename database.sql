@@ -1,4 +1,4 @@
--- UZDUB.UZ ma'lumotlar bazasi (TO'LIQ YANGILANGAN)
+-- UZDUB PLATFORM.UZ ma'lumotlar bazasi (TO'LIQ YANGILANGAN)
 CREATE DATABASE IF NOT EXISTS uzdub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE uzdub;
 
@@ -109,6 +109,8 @@ CREATE TABLE IF NOT EXISTS users (
     avatar VARCHAR(255) DEFAULT NULL,
     is_premium TINYINT(1) DEFAULT 0,
     premium_expires_at DATETIME DEFAULT NULL,
+    switch_token VARCHAR(64) DEFAULT NULL,
+    google_id VARCHAR(100) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

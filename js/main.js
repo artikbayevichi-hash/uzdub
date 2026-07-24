@@ -1,6 +1,6 @@
 /* ============================================================
    js/main.js
-   UZDUB — asosiy funksionallik: header, toast bildirishnomalar,
+   UZDUB PLATFORM — asosiy funksionallik: header, toast bildirishnomalar,
    qator navigatsiyasi, qidiruv, mobil skroll indikatori va boshqalar
    ============================================================ */
 

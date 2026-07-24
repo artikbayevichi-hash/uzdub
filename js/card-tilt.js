@@ -1,5 +1,5 @@
 // ================================================================
-// UZDUB — Kontent kartalari uchun haqiqiy 3D "tilt" (og'ish) effekti
+// UZDUB PLATFORM — Kontent kartalari uchun haqiqiy 3D "tilt" (og'ish) effekti
 // CSS (.card) allaqachon --rx/--ry/--mx/--my/--cs/--cy o'zgaruvchilariga
 // tayyor edi, lekin ularni hech kim o'rnatmagan edi — shu skript
 // sichqoncha holatiga qarab kartani haqiqiy 3D obyekt kabi burab beradi.

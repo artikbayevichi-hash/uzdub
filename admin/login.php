@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin kirish - UZDUB</title>
+<title>Admin kirish - UZDUB PLATFORM</title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <style>
 .auth-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; position:relative; overflow:hidden; }
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="auth-orb o2"></div>
 <div class="auth-wrap">
     <div class="auth-box">
-        <h1>🛡️ UZDUB Admin</h1>
+        <h1>🛡️ UZDUB PLATFORM Admin</h1>
         <h2>Boshqaruv paneliga kirish</h2>
         <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
         <form method="post">

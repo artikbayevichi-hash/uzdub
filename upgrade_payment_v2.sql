@@ -1,7 +1,7 @@
 -- ============================================================
 -- upgrade_payment_v2.sql
 -- Premium tizimi yangilanishlari uchun ma'lumotlar bazasi o'zgarishlari
--- phpMyAdmin -> uzdub bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
+-- phpMyAdmin -> UZDUB bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
 -- ============================================================
 
 USE uzdub;

@@ -1,5 +1,5 @@
 -- ANIHUB O'XSHASH FUNKSIYALAR UCHUN YANGILASH
--- phpMyAdmin -> uzdub bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
+-- phpMyAdmin -> UZDUB bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
 
 USE uzdub;
 

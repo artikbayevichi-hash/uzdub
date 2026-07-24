@@ -1,6 +1,6 @@
 <?php
 /**
- * UZDUB — Brauzer orqali ZIP yuklab olish skripti
+ * UZDUB PLATFORM — Brauzer orqali ZIP yuklab olish skripti
  *
  * Usul: PowerShell Compress-Archive (temp .ps1 fayl orqali)
  *
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📦 UZDUB ZIP yuklab olish</title>
+<title>📦 UZDUB PLATFORM ZIP yuklab olish</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -84,7 +84,7 @@ p { font-size:14px; color:#9e9e9e; margin-bottom:8px; line-height:1.6; }
 <body>
 <div class="card">
     <div class="icon">📦</div>
-    <h1>UZDUB — Loyiha ZIP</h1>
+    <h1>UZDUB PLATFORM — Loyiha ZIP</h1>
     <p>Barcha fayllarni ZIP formatida yuklab oling.</p>
     <?php if ($hasZipArch): ?>
         <div class="badge ok">✅ PHP ZipArchive</div>

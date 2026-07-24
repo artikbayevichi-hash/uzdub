@@ -1,7 +1,7 @@
 <?php
 /* ============================================================
    api/voice-command.php
-   "UZDUB AI" ovozli yordamchisi uchun buyruq (intent) tahlilchisi.
+   "UZDUB PLATFORM AI" ovozli yordamchisi uchun buyruq (intent) tahlilchisi.
    1) Avval oddiy saytga tegishli buyruqlarni (sahifaga o'tish,
       qidirish, kontentni ochish, video boshqaruvi) aniqlashga harakat qiladi
    2) Hech biriga mos kelmasa — umumiy suhbat uchun Ollama'ga murojaat qiladi
@@ -123,12 +123,12 @@ if (!$response) {
 
 /* ---------- 4) Salomlashish ---------- */
 if (!$response && contains($norm, ['salom', 'assalomu alaykum', 'vazifang nima', 'nima qila olasan'])) {
-    $response = ['action' => 'speak', 'speak' => "Salom! Men UZDUB AI. Sizga kino, anime yoki multfilm topishda, bo'limlarga o'tishda yordam bera olaman. Faqat buyruq bering."];
+    $response = ['action' => 'speak', 'speak' => "Salom! Men UZDUB PLATFORM AI. Sizga kino, anime yoki multfilm topishda, bo'limlarga o'tishda yordam bera olaman. Faqat buyruq bering."];
 }
 
 /* ---------- 5) Hech biriga mos kelmasa — umumiy suhbat AI'ga (Ollama) ---------- */
 if (!$response) {
-    $systemPrompt = "Siz UZDUB AI ovozli yordamchisiz. Faqat o'zbek tilida, juda qisqa (bitta-ikkita gap) va tabiiy tarzda javob bering, chunki javobingiz ovozda o'qib beriladi. Kino, anime, multfilm mavzusida yordam berasiz.";
+    $systemPrompt = "Siz UZDUB PLATFORM AI ovozli yordamchisiz. Faqat o'zbek tilida, juda qisqa (bitta-ikkita gap) va tabiiy tarzda javob bering, chunki javobingiz ovozda o'qib beriladi. Kino, anime, multfilm mavzusida yordam berasiz.";
 
     $payload = [
         'model' => OLLAMA_MODEL,

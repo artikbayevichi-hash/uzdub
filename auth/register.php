@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-if (is_user()) { header('Location: /uzdub/index.php'); exit; }
+$new_account = isset($_GET['new']);
+if (is_user() && !$new_account) { header('Location: /uzdub/index.php'); exit; }
 
 $error = '';
 $success = '';
@@ -34,7 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (user_id, username, email, password) VALUES (?,?,?,?)");
             $stmt->execute([$uid, $username, $email, $hash]);
-            $success = "Muvaffaqiyatli ro'yxatdan o'tdingiz! ID: <b>$uid</b><br><a href='login.php'>Kirish &rarr;</a>";
+            $new_id = $pdo->lastInsertId();
+            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$new_id]);
+            refresh_user_session($pdo, $new_id);
+            $token = generate_switch_token($pdo, $new_id);
+            $_SESSION['switch_token'] = $token;
+            $_SESSION['switch_user_id'] = $uid;
+            header('Location: /uzdub/auth/save-account.php');
+            exit;
         }
     }
 }
@@ -44,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ro'yxatdan o'tish - UZDUB</title>
+<title>Ro'yxatdan o'tish - UZDUB PLATFORM</title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <style>
 .auth-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; position:relative; overflow:hidden; }
@@ -76,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="auth-orb o2"></div>
 <div class="auth-wrap">
     <div class="auth-box">
-        <h1>🎬 UZDUB</h1>
+        <h1>🎬 UZDUB PLATFORM</h1>
         <h2 style="text-align:center;font-size:18px;margin-bottom:20px;color:var(--text-muted);">Ro'yxatdan o'tish</h2>
         <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
         <?php if ($success): ?><div class="alert alert-success"><?php echo $success; ?></div><?php else: ?>

@@ -1,6 +1,6 @@
 /* ============================================================
    js/ai-chat.js
-   UZDUB AI Yordamchi — chat tarixi, mehmon rejimi,
+   UZDUB PLATFORM AI Yordamchi — chat tarixi, mehmon rejimi,
    tezkor takliflar va kontent tavsiya kartochkalari bilan
    ============================================================ */
 
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Ko'p tilli greeting va tezkor takliflar
   const LANG_TEXTS = {
     uz: {
-      greeting: "Assalomu alaykum! Men UZDUB AI yordamchiman. Kino, anime yoki multfilm haqida so'rang.",
+      greeting: "Assalomu alaykum! Men UZDUB PLATFORM AI yordamchiman. Kino, anime yoki multfilm haqida so'rang.",
       prompts: [
         { label: "🔥 Eng ko'p ko'rilganlar", text: "Eng ko'p ko'rilgan filmlarni tavsiya qiling" },
         { label: '😂 Kulgili film', text: 'Kulgili film tavsiya qiling' },
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ]
     },
     ru: {
-      greeting: 'Ассаламу алейкум! Я UZDUB AI помощник. Спрашивайте о фильмах, аниме или мультфильмах.',
+      greeting: 'Ассаламу алейкум! Я UZDUB PLATFORM AI помощник. Спрашивайте о фильмах, аниме или мультфильмах.',
       prompts: [
         { label: '🔥 Популярные', text: 'Посоветуйте популярные фильмы' },
         { label: '😂 Комедия', text: 'Посоветуйте комедию' },
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ]
     },
     en: {
-      greeting: 'Assalamu alaykum! I am UZDUB AI assistant. Ask me about movies, anime or cartoons.',
+      greeting: 'Assalamu alaykum! I am UZDUB PLATFORM AI assistant. Ask me about movies, anime or cartoons.',
       prompts: [
         { label: '🔥 Trending', text: 'Recommend trending movies' },
         { label: '😂 Comedy', text: 'Recommend a comedy movie' },
@@ -88,7 +88,10 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   closeBtn.addEventListener('click', function () {
-    panel.classList.remove('aic-open');
+    panel.classList.add('aic-closing');
+    setTimeout(function() {
+      panel.classList.remove('aic-open', 'aic-closing');
+    }, 250);
   });
 
   backBtn.addEventListener('click', function () {
@@ -114,6 +117,9 @@ document.addEventListener('DOMContentLoaded', function () {
   function showChatView() {
     chatList.style.display = 'none';
     chatView.style.display = 'flex';
+    log.classList.remove('aic-fade-in');
+    void log.offsetWidth;
+    log.classList.add('aic-fade-in');
     if (!isGuest) backBtn.style.display = 'block';
   }
 
@@ -300,12 +306,50 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function addMessage(text, from) {
+    const wrap = document.createElement('div');
+    wrap.className = 'aic-msg-wrap ' + (from === 'user' ? 'aic-msg-user' : 'aic-msg-bot');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'aic-msg-avatar';
+    if (from === 'user') {
+      const initials = (window.aicUsername || 'U').charAt(0).toUpperCase();
+      avatar.textContent = initials;
+    } else {
+      avatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 3.6 19.33L22 22l-1.03-4.24A10 10 0 0 0 12 2zm0 2a8 8 0 1 1-4.24 14.79l-.4-.25-2.85.68.7-2.76-.27-.42A8 8 0 0 1 12 4z"/></svg>';
+    }
+
     const div = document.createElement('div');
-    div.className = 'aic-msg ' + (from === 'user' ? 'aic-user' : 'aic-bot');
-    div.textContent = text;
-    log.appendChild(div);
+    div.className = 'aic-msg';
+
+    if (from === 'bot' && text) {
+      div.innerHTML = formatBotMessage(text);
+    } else {
+      div.textContent = text;
+    }
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(div);
+    log.appendChild(wrap);
     scrollToBottom(true);
     return div;
+  }
+
+  // Bot xabaridagi URL'larni formatlash — "Ko'rish" tugmasi qo'shish
+  function formatBotMessage(text) {
+    let html = escapeHtml(text);
+    // /uzdub/watch.php?id=1 kabi havolalarni topish
+    html = html.replace(/(\/uzdub\/watch\.php\?id=\d+)/g, function(match) {
+      return '<a class="aic-watch-link" href="' + match + '" target="_blank">'
+           + '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:middle;margin-right:4px;"><path d="M8 5v14l11-7z"/></svg>'
+           + "Ko'rish"
+           + '</a>';
+    });
+    // Oddiy URL'larni ham formatlash
+    html = html.replace(/(https?:\/\/[^\s<]+)/g, function(match) {
+      if (match.indexOf('watch.php') !== -1) return match;
+      return '<a href="' + match + '" target="_blank" style="color:var(--aic-accent);text-decoration:underline;">' + match + '</a>';
+    });
+    return html;
   }
 
   function renderRecommendations(list) {
@@ -336,6 +380,12 @@ document.addEventListener('DOMContentLoaded', function () {
       if (item.category) parts.push(item.category);
       if (item.year) parts.push(item.year);
       if (item.rating) parts.push('\u2605 ' + item.rating);
+      if (item.status) {
+        const statusMap = { ongoing: 'Davom etmoqda', completed: 'Tugagan', upcoming: 'Kelayotgan' };
+        parts.push(statusMap[item.status] || item.status);
+      }
+      if (item.episodes) parts.push(item.episodes + ' ep.');
+      if (item.duration) parts.push(item.duration);
       meta.textContent = parts.join(' \u00b7 ');
       if (item.is_premium) {
         const premiumSpan = document.createElement('span');
@@ -346,6 +396,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
       info.appendChild(title);
       info.appendChild(meta);
+
+      if (item.genres) {
+        const genres = document.createElement('div');
+        genres.className = 'aic-reco-genres';
+        genres.textContent = item.genres;
+        info.appendChild(genres);
+      }
+
+      if (item.description) {
+        const desc = document.createElement('div');
+        desc.className = 'aic-reco-desc';
+        desc.textContent = item.description;
+        info.appendChild(desc);
+      }
+
       a.appendChild(img);
       a.appendChild(info);
       wrap.appendChild(a);
@@ -354,6 +419,97 @@ document.addEventListener('DOMContentLoaded', function () {
     log.scrollTop = log.scrollHeight;
   }
 
+  // Oddiy salomlashuv va tez javoblar — serverga yubormasdan darhol javob
+  const QUICK_REPLIES = {
+    uz: {
+      greetings: { re: /^(assalomu?\s*alaykum|salom|selom|salomu|salam|hi|hey|hello|privet|salomlar)$/i, items: [
+        "Assalomu alaykum! UZDUB AI yordamchisiman. Kino, anime yoki multfilm haqida nima bilmoqchisiz? 🎬",
+        "Salom! Qanday yordam bera olaman? Saytimizda ko'plab kino va anime mavjud! 😊",
+        "Alaykum assalom! Kino yoki anime tavsiya kerakmi? Menga yozing! 🎌",
+        "Salom salom! UZDUB platformasiga xush kelibsiz! Nima izlayapsiz? 🍿",
+      ]},
+      how: { re: /^(qalaysan|qalay|yaxshimisan|yaxshilik|qilyapsan|nima\s*qilyapsan|vazir?qin)$/i, items: [
+        "Yaxshiman, rahmat! 😊 Siz nima qilyapsiz? Kino yoki anime kerakmi?",
+        "Zo'r! UZDUB da yangi kontentlar qo'shildi, ko'rdingizmi? 🎬",
+      ]},
+      thanks: { re: /^(rahmat|rаhмат|thanks|thank\s*you|tashakkur|minnatdorman|cheers|katta\s*rahmat)$/i, items: [
+        "Arzimaydi! Agar boshqa savol bo'lsa — bemalol so'rang 😊",
+        "Biz doimo yordamga tayyormiz! Yana nima bilmoqchisiz? 🎬",
+        "Ko'mak berishdan xursandmiz! Boshqa kino/anime kerak bo'lsa, ayting 🔥",
+      ]},
+      ok: { re: /^(ok|okay|tushundim|rоzi|mayli|yaxshi|ha|yo'?q|yoq|haa|хорошо|нормально|отлично|супер|класс|молодец)$/i, items: [
+        "Tushundim! Yana nima kerak? 😊",
+        "Ok! Boshqa savol bo'lsa, yozing 👍",
+        "Mayli! Qo'llab-quvvatlash uchun rahmat 🙌",
+      ]},
+      random: { re: null, items: [
+        "Qiziq savol! Lekin men asosan kino va anime haqida yaxshi bilaman 🎬 Saytimizdagi kontentlarni ko'rib chiqasizmi?",
+        "Men UZDUB AI yordamchiman — kino, anime va multfilmlar haqida javob bera olaman. Nima so'rashni istaysiz? 🤔",
+        "Hmm, bu haqida aniq bilmayman 😅 Lekin kino yoki anime haqida so'rasangiz, albatta yordam beraman!",
+      ]}
+    },
+    ru: {
+      greetings: { re: /^(привет|здравствуй|салам|хай|hello|приветик|приветствую)$/i, items: [
+        "Привет! Я AI-помощник UZDUB. Чем могу помочь? 🎬",
+        "Здравствуйте! Ищете фильм или аниме? Спрашивайте! 😊",
+        "Салам! На сайте много фильмов и аниме. Что ищете? 🍿",
+      ]},
+      how: { re: /^(как\s*дела|как\s*ты|как\s*поживаешь|что\s*как|норм|нормально|лол)$/i, items: [
+        "Хорошо, спасибо! А вы фильм искали? 🎬",
+        "Отлично! Помочь найти фильм или аниме? 😊",
+      ]},
+      thanks: { re: /^(спасибо|благодарю|сенкс|thanks|респект)$/i, items: [
+        "Пожалуйста! Если есть ещё вопросы — спрашивайте 😊",
+        "Рад помочь! Что ещё хотите узнать? 🎬",
+      ]},
+      ok: { re: /^(ок|окей|понял|хорошо|да|нет|ага|угу)$/i, items: [
+        "Понял! Если что — обращайтесь 👍",
+        "Хорошо! ещё вопросы есть? 😊",
+      ]},
+      random: { re: null, items: [
+        "Интересный вопрос! Но я больше разбираюсь в фильмах и аниме 🎬 Хотите посмотреть что-нибудь на сайте?",
+        "Я AI-помощник UZDUB — могу помочь с фильмами и аниме. Что спросить? 🤔",
+      ]}
+    },
+    en: {
+      greetings: { re: /^(hi|hey|hello|hola|sup|yo|howdy)$/i, items: [
+        "Hey! I'm UZDUB AI assistant. How can I help? 🎬",
+        "Hi there! Looking for a movie or anime? Ask away! 😊",
+        "Hello! Welcome to UZDUB! What are you looking for? 🍿",
+      ]},
+      how: { re: /^(how\s*are\s*you|what's\s*up|how's\s*it\s*going|what's\s*good)$/i, items: [
+        "I'm good, thanks! Looking for a movie? 🎬",
+        "Great! Need help finding something to watch? 😊",
+      ]},
+      thanks: { re: /^(thanks|thank\s*you|thx|cheers|appreciate)$/i, items: [
+        "You're welcome! Feel free to ask anything else 😊",
+        "Happy to help! Need more movie recommendations? 🎬",
+      ]},
+      ok: { re: /^(ok|okay|sure|got\s*it|alright|yep|yeah|no|nah)$/i, items: [
+        "Got it! Let me know if you need anything else 👍",
+        "Sure! Any other questions? 😊",
+      ]},
+      random: { re: null, items: [
+        "Interesting question! I mainly know about movies and anime though 🎬 Want to check out what's on the site?",
+        "I'm UZDUB AI — I can help with movies, anime and cartoons. What would you like to know? 🤔",
+      ]}
+    }
+  };
+
+  function getQuickReply(text) {
+    const t = text.trim().toLowerCase();
+    const langData = QUICK_REPLIES[lang] || QUICK_REPLIES.uz;
+
+    if (langData.greetings.re.test(t)) return pick(langData.greetings.items);
+    if (langData.how.re.test(t)) return pick(langData.how.items);
+    if (langData.thanks.re.test(t)) return pick(langData.thanks.items);
+    if (langData.ok.re.test(t)) return pick(langData.ok.items);
+
+    return null;
+  }
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
   function send() {
     const text = input.value.trim();
     if (!text || !currentSessionId) return;
@@ -361,7 +517,6 @@ document.addEventListener('DOMContentLoaded', function () {
     removeQuickChips();
 
     if (isSending) {
-      // AI hali oldingi xabarga javob berayotgan bo'lsa, navbatga qo'yamiz
       addMessage(text, 'user');
       pendingQueue.push(text);
       if (window.showToast) showToast("Xabaringiz navbatga qo'yildi, hozir yuboriladi...", 'info', 2500);
@@ -369,6 +524,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     addMessage(text, 'user');
+
+    // Oddiy javoblar — serverga yubormasdan darhol
+    const quick = getQuickReply(text);
+    if (quick) {
+      setTimeout(function() {
+        addMessage(quick, 'bot');
+      }, 300 + Math.random() * 400);
+      return;
+    }
+
     sendToAI(text);
   }
 
@@ -391,6 +556,11 @@ document.addEventListener('DOMContentLoaded', function () {
       input.disabled = false;
       sendBtn.disabled = false;
       input.focus();
+
+      // Streaming tugagandan keyin URL'larni formatlash
+      if (accumulated) {
+        botDiv.innerHTML = formatBotMessage(accumulated);
+      }
 
       if (currentSessionId && !isGuest) {
         updateSessionTitle(currentSessionId, text);

@@ -46,7 +46,7 @@
                 letter-spacing: 2px;
                 text-shadow: 0 0 20px rgba(79, 195, 247, 0.8);
                 animation: pulseText 1.5s ease-in-out infinite;
-            ">UZDUB</div>
+            ">UZDUB PLATFORM</div>
         </div>
         <style>
             @keyframes spin3d {

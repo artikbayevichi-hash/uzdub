@@ -1,5 +1,5 @@
 -- YANGILASH SKRIPTI: eski bazaga yangi jadvallarni qo'shadi
--- phpMyAdmin -> uzdub bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
+-- phpMyAdmin -> UZDUB bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
 
 USE uzdub;
 
@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS users (
     avatar VARCHAR(255) DEFAULT NULL,
     is_premium TINYINT(1) DEFAULT 0,
     premium_expires_at DATETIME DEFAULT NULL,
+    switch_token VARCHAR(64) DEFAULT NULL,
+    google_id VARCHAR(100) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -87,5 +89,22 @@ CREATE TABLE IF NOT EXISTS watchlist (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE
 );
+
+-- switch_token va google_id ustunlari (mavjud DB uchun)
+SET @dbname = DATABASE();
+SELECT COUNT(*) INTO @col_exists FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'users' AND COLUMN_NAME = 'switch_token';
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE users ADD COLUMN switch_token VARCHAR(64) DEFAULT NULL AFTER premium_expires_at', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @col_exists FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'users' AND COLUMN_NAME = 'google_id';
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE users ADD COLUMN google_id VARCHAR(100) DEFAULT NULL AFTER switch_token', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @col_exists FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'users' AND COLUMN_NAME = 'last_login_at';
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE users ADD COLUMN last_login_at DATETIME DEFAULT NULL AFTER google_id', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SELECT 'Yangilash muvaffaqiyatli yakunlandi!' AS natija;

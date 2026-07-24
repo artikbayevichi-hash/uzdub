@@ -1,5 +1,5 @@
 // ================================================================
-// UZDUB — 3D ko'p qatlamli yulduzlar foni
+// UZDUB PLATFORM — 3D ko'p qatlamli yulduzlar foni
 // Uch xil chuqurlikdagi qatlam (uzoq/o'rta/yaqin) + parallaks (sichqoncha
 // va gyroskop asosida) + vaqti-vaqti bilan uchib o'tuvchi "otilma yulduz"
 // haqiqiy 3D chuqurlik hissiyotini beradi.

@@ -1,5 +1,5 @@
 -- ============================================================
--- UZDUB — Xavfsizlik va yangi funksiyalar uchun upgrade skripti
+-- UZDUB PLATFORM — Xavfsizlik va yangi funksiyalar uchun upgrade skripti
 -- Agar sayt allaqachon o'rnatilgan bo'lsa (database.sql avval import
 -- qilingan bo'lsa), ushbu faylni phpMyAdmin orqali ishga tushiring.
 -- Yangi o'rnatishda bunga hojat yo'q — database.sql allaqachon yangilangan.

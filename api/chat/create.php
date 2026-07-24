@@ -21,6 +21,14 @@ if (!validate_csrf($_POST['csrf_token'] ?? '')) {
 }
 
 $userId = $_SESSION['user_id'];
+
+// Premium tekshirish
+$chk = $pdo->prepare("SELECT is_premium FROM users WHERE id = ?");
+$chk->execute([$userId]);
+if (!$chk->fetchColumn()) {
+    echo json_encode(['error' => 'AI chat faqat Premium foydalanuvchilar uchun.']);
+    exit;
+}
 $title = trim($_POST['title'] ?? 'Yangi chat');
 $firstMessage = trim($_POST['first_message'] ?? '');
 

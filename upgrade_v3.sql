@@ -1,6 +1,6 @@
 -- ============================================================
--- UZDUB v3 — Yangi funksiyalar (reyting, izoh, promo, subtitr, ko'rildi)
--- phpMyAdmin -> uzdub -> SQL -> import
+-- UZDUB PLATFORM v3 — Yangi funksiyalar (reyting, izoh, promo, subtitr, ko'rildi)
+-- phpMyAdmin -> UZDUB -> SQL -> import
 -- ============================================================
 
 USE uzdub;
@@ -101,5 +101,5 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Demo promo kod
 INSERT INTO promo_codes (code, discount_percent, free_days, max_uses, expires_at)
-SELECT 'UZDUB2026', 0, 7, 100, '2027-12-31 23:59:59'
-FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM promo_codes WHERE code='UZDUB2026');
+SELECT 'UZDUBPLATFORM2026', 0, 7, 100, '2027-12-31 23:59:59'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM promo_codes WHERE code='UZDUBPLATFORM2026');

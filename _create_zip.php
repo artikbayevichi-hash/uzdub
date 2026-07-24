@@ -1,6 +1,6 @@
 <?php
 /**
- * UZDUB — barcha o'zgartirilgan fayllarni ZIP-ga solish skripti
+ * UZDUB PLATFORM — barcha o'zgartirilgan fayllarni ZIP-ga solish skripti
  * 
  * Ishga tushirish:
  *   php _create_zip.php

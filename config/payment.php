@@ -2,7 +2,7 @@
 require_once __DIR__ . '/env.php';
 
 define('CARD_NUMBER', env('CARD_NUMBER', '8600XXXX0000XXXX'));
-define('CARD_OWNER', env('CARD_OWNER', 'UZDUB'));
+define('CARD_OWNER', env('CARD_OWNER', 'UZDUB PLATFORM'));
 define('TG_BOT_TOKEN', env('TG_BOT_TOKEN', ''));
 define('TG_CHAT_ID', env('TG_CHAT_ID', 'YOUR_CHAT_ID'));
 define('CLICK_MERCHANT_ID', env('CLICK_MERCHANT_ID', ''));

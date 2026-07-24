@@ -150,7 +150,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="card-num"><?php echo e(CARD_NUMBER); ?></div>
                 <div class="card-meta">
                     <span><?php echo e(CARD_OWNER); ?></span>
-                    <span>UZDUB Premium</span>
+                    <span>UZDUB PLATFORM Premium</span>
                 </div>
             </div>
             <ol class="steps">

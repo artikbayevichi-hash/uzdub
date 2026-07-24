@@ -16,6 +16,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = $_SESSION['user_id'];
+
+// Premium tekshirish
+$chk = $pdo->prepare("SELECT is_premium FROM users WHERE id = ?");
+$chk->execute([$userId]);
+if (!$chk->fetchColumn()) {
+    echo json_encode(['error' => 'AI chat faqat Premium foydalanuvchilar uchun.']);
+    exit;
+}
 $sessionId = (int)($_GET['session_id'] ?? 0);
 
 if (!$sessionId) {

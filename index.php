@@ -26,12 +26,13 @@ if (is_user()) {
 }
 
 include __DIR__ . '/includes/header.php';
+include __DIR__ . '/includes/splash.php';
 ?>
 
 <?php if (!empty($hero_items)): ?>
 <section class="hero-carousel">
     <?php foreach ($hero_items as $i => $hero): ?>
-    <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? 'uploads/posters/' . e($hero['poster']) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=UZDUB'; ?>');">
+    <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? 'uploads/posters/' . e($hero['poster']) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=UZDUB+PLATFORM'; ?>');">
         <div class="hero-content">
             <div class="hero-tags">
                 <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>

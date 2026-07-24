@@ -3,30 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB' : 'UZDUB - Kino, Anime, Multfilm'; ?></title>
+<title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : 'UZDUB PLATFORM - Kino, Anime, Multfilm'; ?></title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <link rel="stylesheet" href="/uzdub/css/skeleton.css">
+<link rel="stylesheet" href="/uzdub/css/splash.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/uzdub/js/3d-loader.js"></script>
 <script src="/uzdub/js/3d-effects.js"></script>
 <script src="/uzdub/js/3d-cards.js"></script>
 <script src="/uzdub/js/3d-hero.js"></script>
 <script src="/uzdub/js/3d-animations.js"></script>
-<script src="/uzdub/js/mini-player.js" defer></script>
-<style>
-    .pip-button {
-        position: absolute;
-        bottom: 20px;
-        right: 60px;
-        background: rgba(0,0,0,0.6);
-        border: none;
-        color: white;
-        padding: 8px;
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 10;
-    }
-</style>
 </head>
 <body>
 <div class="floating-orb"></div>
@@ -42,6 +28,8 @@
         <li><a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a></li>
         <li><a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a></li>
         <li><a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a></li>
+        <li><a href="/uzdub/random.php">🎲 Tasodifiy</a></li>
+        <li><a href="/uzdub/statistics.php">📊 Statistika</a></li>
         <li><a href="/uzdub/global_chat.php"><?php echo t('chat'); ?></a></li>
         <?php if (is_user()): ?>
         <li><a href="/uzdub/inbox.php"><?php echo t('messages'); ?></a></li>
@@ -210,12 +198,31 @@
 })();
 </script>
         <?php if (is_user()): $u = current_user(); ?>
-        <a href="/uzdub/profile.php?uid=<?php echo e($u['user_id']); ?>" style="display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--text-light);">
-            <img src="<?php echo avatar_url($u['avatar']); ?>" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-primary);" alt="">
-            <?php if ($u['is_premium']): ?><span style="font-size:12px;">⭐</span><?php endif; ?>
+        <a href="/uzdub/profile.php?uid=<?php echo e($u['user_id']); ?>" class="header-avatar-link">
+            <img src="<?php echo avatar_url($u['avatar']); ?>" class="header-avatar-img" alt="">
+            <?php if ($u['is_premium']): ?><span class="header-premium-badge">⭐</span><?php endif; ?>
         </a>
+        <div class="acc-switcher-wrap">
+            <button class="acc-switcher-btn" id="accSwitcherBtn" title="Akkauntlar">⋮</button>
+            <div class="acc-switcher-dropdown" id="accSwitcherDropdown">
+                <div class="acc-dropdown-current">
+                    <img src="<?php echo avatar_url($u['avatar']); ?>" class="acc-dd-avatar" alt="">
+                    <div class="acc-dd-info">
+                        <span class="acc-dd-name"><?php echo e($u['username']); ?></span>
+                        <?php if ($u['is_premium']): ?><span class="acc-dd-premium">⭐ Premium</span><?php endif; ?>
+                        <span class="acc-dd-id">ID: <?php echo e($u['user_id']); ?></span>
+                    </div>
+                </div>
+                <div class="acc-dropdown-divider"></div>
+                <div class="acc-dropdown-list" id="accDropdownList"></div>
+                <a href="/uzdub/auth/login.php?new=1" class="acc-dropdown-add">
+                    <span class="acc-add-icon">+</span>
+                    Akkaunt qo'shish
+                </a>
+            </div>
+        </div>
         <?php else: ?>
-        <a href="/uzdub/auth/login.php" style="padding:8px 16px;background:var(--blue-primary);color:#fff;border-radius:20px;text-decoration:none;font-size:13px;white-space:nowrap;"><?php echo t('login'); ?></a>
+        <a href="/uzdub/auth/login.php" class="header-login-btn"><?php echo t('login'); ?></a>
         <?php endif; ?>
     </div>
 </header>
@@ -254,4 +261,47 @@ document.addEventListener('click', function(e) {
 document.getElementById('navToggle').addEventListener('click', function() {
     document.getElementById('navLinks').classList.toggle('nav-open');
 });
+
+// Akkaunt switcher
+(function() {
+    var btn = document.getElementById('accSwitcherBtn');
+    var dd = document.getElementById('accSwitcherDropdown');
+    var list = document.getElementById('accDropdownList');
+    if (!btn || !dd || !list) return;
+
+    var currentUserId = <?php echo is_user() ? json_encode(current_user()['user_id']) : 'null'; ?>;
+
+    function getAccounts() {
+        try { return JSON.parse(localStorage.getItem('uzdub_accounts')) || []; } catch(e) { return []; }
+    }
+
+    function renderAccounts() {
+        var accounts = getAccounts();
+        list.innerHTML = '';
+        accounts.forEach(function(acc) {
+            if (String(acc.user_id) === String(currentUserId)) return;
+            var item = document.createElement('a');
+            item.className = 'acc-dd-item';
+            item.href = '/uzdub/auth/switch.php?uid=' + acc.user_id + '&token=' + encodeURIComponent(acc.switch_token || '');
+            item.innerHTML = '<img src="' + (acc.avatar || '/uzdub/uploads/avatars/default.png') + '" class="acc-dd-item-avatar" alt="">' +
+                '<div class="acc-dd-item-info">' +
+                    '<span class="acc-dd-item-name">' + (acc.username || '') + '</span>' +
+                    (acc.is_premium ? '<span class="acc-dd-item-premium">⭐ Premium</span>' : '') +
+                '</div>';
+            list.appendChild(item);
+        });
+    }
+
+    renderAccounts();
+
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dd.classList.toggle('open');
+        renderAccounts();
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!dd.contains(e.target) && e.target !== btn) dd.classList.remove('open');
+    });
+})();
 </script>

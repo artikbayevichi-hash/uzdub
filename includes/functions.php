@@ -174,24 +174,32 @@ function aiExtractGenreHints(string $message): array {
 // ===== AI chat: ko'p tilli system prompt yaratish =====
 function ai_build_system_prompt(string $lang = 'uz'): string {
     $prompts = [
-        'uz' => "Siz UZDUB.uz saytining AI yordamchisiz. Sayt kino, anime va multfilmlarni o'zbek tilida tomosha qilish imkonini beradi. "
-            . "Javob berishdan oldin foydalanuvchi aniq nimani so'rayotganini diqqat bilan aniqlang va faqat shu savolga javob boring — mavzudan chetga chiqmang. "
-            . "Agar savol noaniq bo'lsa, javob o'rniga qisqa aniqlashtiruvchi savol bering. "
-            . "Faqat o'zbek tilida, do'stona va qisqa (odatda 2-4 gap) javob bering. "
-            . "Agar quyida bazadan topilgan mos kontentlar ro'yxati berilsa, ulardan so'rovga eng mos kelganini nomi, yili va janri bilan tavsiya eting; mos kelmasa, umumiy javob bering. "
-            . "Kino/anime/multfilmga aloqasi bo'lmagan mavzularda muloyimlik bilan suhbatni saytga qaytaring.",
-        'ru' => "Вы AI-помощник сайта UZDUB.uz. Сайт позволяет смотреть фильмы, аниме и мультфильмы на узбекском языке. "
-            . "Внимательно определите, что именно спрашивает пользователь, и ответьте только на этот вопрос, не отклоняясь от темы. "
-            . "Если вопрос неясен, задайте короткий уточняющий вопрос вместо ответа. "
-            . "Отвечайте на русском языке, дружелюбно и кратко (обычно 2-4 предложения). "
-            . "Если ниже приведён список подходящего контента из базы, порекомендуйте наиболее подходящий по названию, году и жанру; если не подходит — дайте общий ответ. "
-            . "На темы, не связанные с кино/аниме/мультфильмами, вежливо верните разговор к сайту.",
-        'en' => "You are the AI assistant of UZDUB.uz. The site allows watching movies, anime and cartoons in Uzbek language. "
-            . "Carefully determine what exactly the user is asking and answer only that question — do not go off-topic. "
-            . "If the question is unclear, ask a short clarifying question instead of answering. "
-            . "Answer in English, friendly and brief (usually 2-4 sentences). "
-            . "If a list of matching content from the database is provided below, recommend the best match by name, year and genre; if nothing matches, give a general answer. "
-            . "For topics unrelated to movies/anime/cartoons, politely steer the conversation back to the site.",
+        'uz' => "Sen UZDUB AI yordamchisan. Kino, anime va multfilm tavsiya qilasan. "
+            . "Do'stona, qisqa (2-3 gap) va tabiiy javob ber. Emotikon ishlat. "
+            . "Faqat o'zbek tilida javob ber. Savol noaniq bo'lsa, aniqlashtirish so'ra.\n"
+            . "Agar bazadan kontentlar berilsa — eng mosini tavsiya qil, nomi, yili, janri va reytingini aytil. "
+            . "Har bir tavsiyani /uzdub/watch.php?id=<ID> havolasi bilan tugat — foydalanuvchi shu havola orqali to'g'ridan-to'g'ri ko'ra oladi. "
+            . "Havolani qisqa va tushunarli yoz, masalan: 'Ko'rish: /uzdub/watch.php?id=1'. "
+            . "Ro'yxat bo'sh bo'lsa — saytda hali yo'q deb ayting va boshqa janr taklif qil.\n"
+            . "Siyosat, din, huquq mavzularida javob bermaydi. Faqat UZDUB kontentini tavsiya qil.",
+
+        'ru' => "Ты AI-помощник UZDUB. Рекомендуешь фильмы, аниме и мультфильмы. "
+            . "Дружелюбно, кратко (2-3 предложения) и естественно отвечай. Используй эмодзи. "
+            . "Только на русском языке. Если вопрос неясен — уточни.\n"
+            . "Если из базы есть контент — порекомендуй лучший, укажи название, год, жанр, рейтинг. "
+            . "Каждую рекомендацию завершай ссылкой /uzdub/watch.php?id=<ID> — пользователь сможет сразу посмотреть. "
+            . "Пиши ссылку кратко, например: 'Смотреть: /uzdub/watch.php?id=1'. "
+            . "Если списка нет — скажи что контента пока нет и предложи другой жанр.\n"
+            . "Не отвечай на темы политики, религии, права. Только контент UZDUB.",
+
+        'en' => "You are UZDUB AI assistant. You recommend movies, anime and cartoons. "
+            . "Be friendly, brief (2-3 sentences) and natural. Use emojis. "
+            . "Answer only in English. If the question is unclear — ask for clarification.\n"
+            . "If there's content from the database — recommend the best, mention name, year, genre, rating. "
+            . "End each recommendation with a link /uzdub/watch.php?id=<ID> — the user can watch directly. "
+            . "Write the link briefly, e.g.: 'Watch: /uzdub/watch.php?id=1'. "
+            . "If the list is empty — say content isn't available yet and suggest another genre.\n"
+            . "Don't answer politics, religion, law topics. Only UZDUB content.",
     ];
     return $prompts[$lang] ?? $prompts['uz'];
 }
@@ -200,7 +208,7 @@ function ai_build_system_prompt(string $lang = 'uz'): string {
 function ai_build_user_context(PDO $pdo, ?int $userId, string $lang = 'uz'): string {
     $parts = [];
     if ($userId) {
-        $history = ai_get_user_watch_history($pdo, $userId, 4);
+        $history = ai_get_user_watch_history($pdo, $userId, 6);
         if (!empty($history)) {
             $labels = [
                 'uz' => "Foydalanuvchining yaqinda ko'rgan kontentlari:",
@@ -211,6 +219,13 @@ function ai_build_user_context(PDO $pdo, ?int $userId, string $lang = 'uz'): str
             foreach ($history as $h) {
                 $parts[] = "- {$h['title']} ({$h['cat_name']})";
             }
+            $parts[] = "";
+            $prefLabels = [
+                'uz' => "Foydalanuvchi ko'p ko'rgan kategoriyalarga asoslanib, shu janrdagi kontentlarni birinchi o'ringa qo'ying.",
+                'ru' => "Основываясь на недавно просмотренных категориях пользователя, рекомендуйте контент из этих жанров в первую очередь.",
+                'en' => "Based on the user's recently watched categories, prioritize content from those genres.",
+            ];
+            $parts[] = ($prefLabels[$lang] ?? $prefLabels['uz']);
         }
     }
     return !empty($parts) ? "\n\n" . implode("\n", $parts) : '';
@@ -222,20 +237,29 @@ function ai_build_user_context(PDO $pdo, ?int $userId, string $lang = 'uz'): str
 // chatda tavsiya kartochkasi sifatida ko'rsatilmaydi — chunki so'rovga chindan mos kelmagan.
 // $userId berilsa, foydalanuvchi yaqinda ko'rgan kategoriyalardagi kontentlar yuqoriroq ko'rinadi.
 function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId = null): array {
-    $cols = "c.id, c.title, c.description, c.poster, c.release_year, c.rating, c.is_premium, cat.name AS cat_name";
+    $cols = "c.id, c.title, c.description, c.poster, c.release_year, c.rating, c.is_premium, cat.name AS cat_name, "
+          . "c.studio, c.director, c.duration, c.status";
+
+    // Janrlarni birlashtirib olish (GROUP_CONCAT)
+    $genreJoin = "LEFT JOIN (SELECT cg.content_id, GROUP_CONCAT(g.name SEPARATOR ', ') AS genre_names "
+               . "FROM content_genres cg JOIN genres g ON g.id=cg.genre_id GROUP BY cg.content_id) gr ON gr.content_id=c.id";
+
+    // Epizodlar sonini olish
+    $epJoin = "LEFT JOIN (SELECT content_id, COUNT(*) AS episode_count FROM episodes GROUP BY content_id) ep ON ep.content_id=c.id";
 
     // Umumiy fallback (odatiy tartibda eng ko'p ko'rilganlar)
-    $fallback = function () use ($pdo, $cols, $limit, $userId) {
+    $fallback = function () use ($pdo, $cols, $limit, $userId, $genreJoin, $epJoin) {
+        $extraCols = ", gr.genre_names, ep.episode_count";
         if ($userId) {
-            // Foydalanuvchi ko'rgan kategoriyalardan kontentlarni birinchi o'ringa qo'yish
-            $stmt = $pdo->prepare("SELECT $cols, IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp JOIN content c2 ON wp.content_id=c2.id JOIN categories cat2 ON c2.category_id=cat2.id WHERE wp.user_id=?), 1, 0) AS pref
+            $stmt = $pdo->prepare("SELECT $cols $extraCols, IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp JOIN content c2 ON wp.content_id=c2.id JOIN categories cat2 ON c2.category_id=cat2.id WHERE wp.user_id=?), 1, 0) AS pref
                 FROM content c
                 JOIN categories cat ON c.category_id = cat.id
+                $genreJoin $epJoin
                 ORDER BY pref DESC, c.views DESC
                 LIMIT $limit");
             $stmt->execute([$userId]);
         } else {
-            $stmt = $pdo->query("SELECT $cols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id ORDER BY c.views DESC LIMIT $limit");
+            $stmt = $pdo->query("SELECT $cols $extraCols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin $epJoin ORDER BY c.views DESC LIMIT $limit");
         }
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     };
@@ -250,11 +274,13 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
                 $extraSelect = ', IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp2 JOIN content c3 ON wp2.content_id=c3.id JOIN categories cat2 ON c3.category_id=cat2.id WHERE wp2.user_id=?), 1, 0) AS pref';
                 $extraParams = [$userId];
             }
-            $stmt = $pdo->prepare("SELECT DISTINCT $cols $extraSelect
+            $extraCols = ", gr.genre_names, ep.episode_count";
+            $stmt = $pdo->prepare("SELECT DISTINCT $cols $extraCols $extraSelect
                     FROM content c
                     JOIN categories cat ON c.category_id = cat.id
                     JOIN content_genres cg ON cg.content_id = c.id
                     JOIN genres g ON g.id = cg.genre_id
+                    $genreJoin $epJoin
                     WHERE g.slug IN ($ph)
                     ORDER BY pref DESC, c.rating DESC, c.views DESC
                     LIMIT $limit");
@@ -269,7 +295,7 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
 
     // 2) Kalit so'zlar bo'yicha sarlavha/tavsif ustidan qidiruv (sarlavha mosligi og'irroq baholanadi)
     $words = preg_split('/\s+/u', mb_strtolower($message));
-    $words = array_values(array_filter($words, fn($w) => mb_strlen($w) >= 3));
+    $words = array_values(array_filter($words, fn($w) => mb_strlen($w) >= 2));
 
     if (empty($words)) {
         return ['matched' => false, 'rows' => $fallback()];
@@ -292,9 +318,11 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
         $prefSql = '0';
     }
 
-    $stmt = $pdo->prepare("SELECT $cols, ($scoreSql) AS score, ($prefSql) AS pref
+    $extraCols = ", gr.genre_names, ep.episode_count";
+    $stmt = $pdo->prepare("SELECT $cols $extraCols, ($scoreSql) AS score, ($prefSql) AS pref
             FROM content c
             JOIN categories cat ON c.category_id = cat.id
+            $genreJoin $epJoin
             HAVING score > 0
             ORDER BY pref DESC, score DESC, c.views DESC
             LIMIT $limit");
@@ -302,6 +330,38 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($rows) return ['matched' => true, 'rows' => $rows];
+
+    // 3) So'zlar mos kelmagan bo'lsa — title, description, director, studio ustidan LIKE qidiruv
+    $likeConds = [];
+    $likeParams = [];
+    foreach ($words as $i => $w) {
+        $likeConds[] = "(c.title LIKE :l{$i} OR c.description LIKE :dl{$i} OR c.director LIKE :dr{$i} OR c.studio LIKE :s{$i})";
+        $likeParams[":l{$i}"] = '%' . $w . '%';
+        $likeParams[":dl{$i}"] = '%' . $w . '%';
+        $likeParams[":dr{$i}"] = '%' . $w . '%';
+        $likeParams[":s{$i}"] = '%' . $w . '%';
+    }
+    if (!empty($likeConds)) {
+        $likeWhere = implode(' OR ', $likeConds);
+        $stmt = $pdo->prepare("SELECT $cols $extraCols, 1 AS score, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin $epJoin WHERE $likeWhere ORDER BY c.views DESC LIMIT $limit");
+        $stmt->execute($likeParams);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows) return ['matched' => true, 'rows' => $rows];
+    }
+
+    // 4) "eng yaxshi", "top", "mashhur" kabi so'zlar bo'lsa — reyting bo'yicha eng yuqorilarni qaytarish
+    $topWords = ['eng yaxshi', 'eng zo\'r', 'top', 'mashhur', 'mashhurlar', 'popular', 'best', 'top rated'];
+    $lowerMsg = mb_strtolower($message);
+    foreach ($topWords as $tw) {
+        if (mb_strpos($lowerMsg, $tw) !== false) {
+            $stmt = $pdo->prepare("SELECT $cols $extraCols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin $epJoin ORDER BY c.rating DESC, c.views DESC LIMIT $limit");
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($rows) return ['matched' => true, 'rows' => $rows];
+            break;
+        }
+    }
+
     return ['matched' => false, 'rows' => $fallback()];
 }
 
@@ -310,12 +370,20 @@ function ai_build_context_text(array $rows): string {
     if (!$rows) return '';
     $lines = [];
     foreach ($rows as $r) {
-        $desc = !empty($r['description']) ? mb_substr(trim(strip_tags($r['description'])), 0, 120) : '';
+        $desc = !empty($r['description']) ? mb_substr(trim(strip_tags($r['description'])), 0, 100) : '';
         $year = $r['release_year'] ?: '?';
         $rating = $r['rating'] !== null ? $r['rating'] : '?';
-        $lines[] = "- \"{$r['title']}\" ({$r['cat_name']}, {$year}-yil, reyting {$rating}) {$desc}";
+        $premium = !empty($r['is_premium']) ? ' [PREMIUM]' : '';
+        $genres = !empty($r['genre_names']) ? " [{$r['genre_names']}]" : '';
+        $studio = !empty($r['studio']) ? " ({$r['studio']})" : '';
+        $statusMap = ['ongoing' => 'Davom etmoqda', 'completed' => 'Tugagan', 'upcoming' => 'Kelayotgan'];
+        $status = !empty($r['status']) ? " " . ($statusMap[$r['status']] ?? $r['status']) : '';
+
+        $lines[] = "- \"{$r['title']}\" (ID:{$r['id']}, {$r['cat_name']}, {$year}, ★{$rating}{$premium}{$genres}{$studio}{$status})";
+        if ($desc) $lines[] = "  {$desc}";
     }
-    return "\n\n[Bazadagi mos kontentlar — mos kelsa nomi bilan tavsiya qiling, mos kelmasa e'tiborsiz qoldiring:]\n" . implode("\n", $lines);
+    return "\n[Bazadan:]\n" . implode("\n", $lines)
+        . "\n\nLink: /uzdub/watch.php?id=<ID>";
 }
 
 // ===== Frontendda tavsiya kartochkasi sifatida ko'rsatish uchun tuzilgan ma'lumot =====
@@ -331,6 +399,13 @@ function ai_build_recommendations(array $rows): array {
             'is_premium' => !empty($r['is_premium']),
             'poster'     => $r['poster'] ? '/uzdub/uploads/posters/' . $r['poster'] : null,
             'url'        => '/uzdub/watch.php?id=' . (int)$r['id'],
+            'genres'     => $r['genre_names'] ?? null,
+            'studio'     => $r['studio'] ?? null,
+            'director'   => $r['director'] ?? null,
+            'duration'   => $r['duration'] ?? null,
+            'status'     => $r['status'] ?? null,
+            'episodes'   => isset($r['episode_count']) ? (int)$r['episode_count'] : null,
+            'description'=> !empty($r['description']) ? mb_substr(trim(strip_tags($r['description'])), 0, 150) : null,
         ];
     }
     return $out;
@@ -344,6 +419,29 @@ function refresh_user_session($pdo, $user_db_id) {
         $_SESSION['user_id'] = $u['id'];
         $_SESSION['user_data'] = $u;
     }
+}
+
+function generate_switch_token($pdo, $user_db_id) {
+    $token = bin2hex(random_bytes(32));
+    $pdo->prepare("UPDATE users SET switch_token = ? WHERE id = ?")->execute([$token, $user_db_id]);
+    return $token;
+}
+
+function find_or_create_google_user($pdo, $google_id, $email, $name) {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE google_id = ? OR email = ?");
+    $stmt->execute([$google_id, $email]);
+    $u = $stmt->fetch();
+    if ($u) {
+        if (empty($u['google_id'])) {
+            $pdo->prepare("UPDATE users SET google_id = ? WHERE id = ?")->execute([$google_id, $u['id']]);
+        }
+        return $u['id'];
+    }
+    $uid = generate_user_id($pdo);
+    $avatar_name = 'default.png';
+    $pdo->prepare("INSERT INTO users (user_id, username, email, password, avatar, google_id) VALUES (?, ?, ?, '', ?, ?)")
+        ->execute([$uid, $name, $email, $avatar_name, $google_id]);
+    return $pdo->lastInsertId();
 }
 
 // ===== 8 xonali unikal ID yaratish =====

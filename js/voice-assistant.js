@@ -1,6 +1,6 @@
 /* ============================================================
    js/voice-assistant.js
-   "UZDUB AI" — nomi bilan chaqiriladigan, buyruq bajaradigan va
+   "UZDUB PLATFORM AI" — nomi bilan chaqiriladigan, buyruq bajaradigan va
    ovozda javob beradigan yordamchi (brauzerning Web Speech API'si
    asosida — Yandex Alisa uslubiga o'xshab)
    ============================================================ */
@@ -12,7 +12,7 @@
     const statusEl = document.getElementById('va-status');
     const transcriptEl = document.getElementById('va-transcript');
     const csrfToken = window.vaCsrfToken || '';
-    const WAKE_WORD = (window.vaWakeWord || 'uzdub ai').toLowerCase();
+    const WAKE_WORD = (window.vaWakeWord || 'uzdub platform ai').toLowerCase();
     const STORAGE_KEY = 'uzdub_voice_enabled';
 
     if (!widget || !toggleBtn) return;
@@ -187,7 +187,7 @@
                 setStatus('Bajarilmoqda...', said);
                 sendCommand(said);
             } else {
-                setStatus('"' + (window.vaWakeWord || 'uzdub ai') + '" deb chaqiring', '');
+                setStatus('"' + (window.vaWakeWord || 'uzdub platform ai') + '" deb chaqiring', '');
             }
             startPassiveListening();
         };
@@ -202,7 +202,7 @@
         armed = true;
         widget.classList.add('va-armed');
         localStorage.setItem(STORAGE_KEY, '1');
-        setStatus('"' + (window.vaWakeWord || 'uzdub ai') + '" deb chaqiring', '');
+        setStatus('"' + (window.vaWakeWord || 'uzdub platform ai') + '" deb chaqiring', '');
         startPassiveListening();
     }
 

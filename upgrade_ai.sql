@@ -1,5 +1,5 @@
 -- AI CHAT UCHUN YANGILASH SKRIPTI
--- phpMyAdmin -> uzdub bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
+-- phpMyAdmin -> UZDUB bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
 
 USE uzdub;
 

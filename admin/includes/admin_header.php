@@ -15,7 +15,7 @@ $current = basename($_SERVER['PHP_SELF']);
 <body>
 <div class="admin-wrap">
     <aside class="sidebar">
-        <h2>UZDUB Admin</h2>
+        <h2>UZDUB PLATFORM Admin</h2>
         <a href="dashboard.php" class="<?php echo $current=='dashboard.php'?'active':''; ?>">&#128202; Boshqaruv paneli</a>
         <a href="list_content.php" class="<?php echo $current=='list_content.php'?'active':''; ?>">&#127916; Barcha kontent</a>
         <a href="add_content.php" class="<?php echo $current=='add_content.php'?'active':''; ?>">&#10133; Kino/Anime/Multfilm qo'shish</a>
