@@ -153,7 +153,7 @@ include __DIR__ . '/includes/header.php';
 var lastId = 0;
 var currentUserId = <?php echo is_user() ? (int)$_SESSION['user_id'] : 'null'; ?>;
 var isPremium = <?php echo $is_premium_user ? 'true' : 'false'; ?>;
-var defaultAvatar = '/uzdub/assets/default-avatar.png';
+var defaultAvatar = '/uzdub/assets/default-avatar.svg';
 var selectedFile = null;
 
 function escHtml(str) {

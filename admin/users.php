@@ -58,7 +58,7 @@ $plans = PREMIUM_PLANS;
     <tr><th>Avatar</th><th>ID</th><th>Username</th><th>Email</th><th>Premium</th><th>Amallar</th></tr>
     <?php foreach ($users as $u): ?>
     <tr>
-        <td><img src="<?php echo $u['avatar'] ? '../uploads/avatars/'.e($u['avatar']) : '../assets/default-avatar.png'; ?>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"></td>
+        <td><img src="<?php echo $u['avatar'] ? '../uploads/avatars/'.e($u['avatar']) : '../assets/default-avatar.svg'; ?>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"></td>
         <td><?php echo e($u['user_id']); ?></td>
         <td><?php echo e($u['username']); ?></td>
         <td><?php echo e($u['email']); ?></td>

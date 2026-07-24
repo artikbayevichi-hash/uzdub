@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Barcha kontent';
+$page_title = t('admin_all_content');
 include __DIR__ . '/includes/admin_header.php';
 
 $items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC")->fetchAll();
@@ -11,17 +11,16 @@ foreach ($items as $it) {
 }
 ?>
 
-<h1>Barcha kontent (<?php echo count($items); ?>)</h1>
+<h1><?php echo t('admin_all_content'); ?> (<?php echo count($items); ?>)</h1>
 
 <div class="card-box" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="?export=csv" class="btn" style="background:#4caf50;font-size:13px;">📥 CSV eksport</a>
-        <a href="?export=json" class="btn" style="background:#2196f3;font-size:13px;">📥 JSON eksport</a>
+        <a href="?export=csv" class="btn" style="background:#4caf50;font-size:13px;">📥 CSV <?php echo t('export'); ?></a>
+        <a href="?export=json" class="btn" style="background:#2196f3;font-size:13px;">📥 JSON <?php echo t('export'); ?></a>
     </div>
 </div>
 
 <?php
-// CSV/JSON eksport
 $export = $_GET['export'] ?? '';
 if ($export) {
     $all = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.id")->fetchAll();
@@ -30,12 +29,12 @@ if ($export) {
         header('Content-Disposition: attachment; filename="uzdub_content_' . date('Y-m-d') . '.csv"');
         header('Pragma: no-cache');
         $out = fopen('php://output', 'w');
-        fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM
-        fputcsv($out, ['ID', 'Kod', 'Nomi', 'Tavsif', 'Kategoriya', 'Yil', 'Reyting', 'Premium', 'Video turi', 'Video URL', 'Ko\'rishlar', 'Holati', 'Yaratilgan']);
+        fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        fputcsv($out, ['ID', t('content_code'), t('content_title'), t('content_description'), t('content_category'), t('content_year'), t('content_rating'), t('content_premium'), t('content_video_type'), t('content_video_url'), t('content_views'), t('content_status'), t('content_created')]);
         foreach ($all as $r) {
             fputcsv($out, [
                 $r['id'], $r['content_code'], $r['title'], strip_tags($r['description'] ?? ''),
-                $r['cat_name'], $r['release_year'], $r['rating'], $r['is_premium'] ? 'Ha' : "Yo'q",
+                $r['cat_name'], $r['release_year'], $r['rating'], $r['is_premium'] ? t('yes') : t('no'),
                 $r['video_type'], $r['video_url'], $r['views'], $r['status'], $r['created_at']
             ]);
         }
@@ -53,30 +52,30 @@ if ($export) {
 <div class="card-box">
 <table>
     <tr>
-        <th>Poster</th><th>Nomi</th><th>Kategoriya</th><th>Janrlar</th><th>Yil</th><th>Turi</th><th>Ko'rishlar</th><th>Amallar</th>
+        <th><?php echo t('poster'); ?></th><th><?php echo t('content_title'); ?></th><th><?php echo t('content_category'); ?></th><th><?php echo t('genres'); ?></th><th><?php echo t('content_year'); ?></th><th><?php echo t('content_video_type'); ?></th><th><?php echo t('content_views'); ?></th><th><?php echo t('actions'); ?></th>
     </tr>
     <?php foreach ($items as $item): ?>
     <tr>
         <td><img src="<?php echo $item['poster'] ? '../uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/50x70/121a2b/2196f3'; ?>"></td>
-        <td><?php echo e($item['title']); ?></td>
+        <td><?php echo e(t_title($item)); ?></td>
         <td><?php echo e($item['cat_name']); ?></td>
         <td><?php echo !empty($genre_map[$item['id']]) ? e(implode(', ', $genre_map[$item['id']])) : '-'; ?></td>
         <td><?php echo e($item['release_year']); ?></td>
-        <td>Yagona video</td>
+        <td><?php echo t('single_video'); ?></td>
         <td><?php echo e($item['views']); ?></td>
         <td class="action-links">
-            <a href="edit_content.php?id=<?php echo $item['id']; ?>">Tahrirlash</a>
-            <a href="../watch.php?id=<?php echo $item['id']; ?>" target="_blank">Ko'rish</a>
-            <form method="post" action="delete_content.php" style="display:inline;" onsubmit="return confirm('O\'chirishni tasdiqlaysizmi?');">
+            <a href="edit_content.php?id=<?php echo $item['id']; ?>"><?php echo t('edit'); ?></a>
+            <a href="../watch.php?id=<?php echo $item['id']; ?>" target="_blank"><?php echo t('watch'); ?></a>
+            <form method="post" action="delete_content.php" style="display:inline;" onsubmit="return confirm('<?php echo t('confirm_delete'); ?>');">
                 <?php echo csrf_input(); ?>
                 <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
-                <button type="submit" class="danger" style="background:none;border:none;padding:0;font:inherit;text-decoration:underline;cursor:pointer;">O'chirish</button>
+                <button type="submit" class="danger" style="background:none;border:none;padding:0;font:inherit;text-decoration:underline;cursor:pointer;"><?php echo t('delete'); ?></button>
             </form>
         </td>
     </tr>
     <?php endforeach; ?>
     <?php if (empty($items)): ?>
-    <tr><td colspan="8">Hozircha kontent yo'q.</td></tr>
+    <tr><td colspan="8"><?php echo t('no_content_yet'); ?></td></tr>
     <?php endif; ?>
 </table>
 </div>

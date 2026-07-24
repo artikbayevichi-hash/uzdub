@@ -5,13 +5,7 @@ require_once __DIR__ . '/includes/functions.php';
 $page_title = t('privacy_page_title');
 include __DIR__ . '/includes/header.php';
 ?>
-<style>
-.legal-wrap { max-width:800px; margin:0 auto; padding:40px 20px 80px; }
-.legal-wrap h1 { font-size:28px; color:var(--blue-glow); margin-bottom:20px; }
-.legal-wrap p, .legal-wrap li { color:var(--text-light); font-size:15px; line-height:1.8; margin-bottom:12px; }
-.legal-wrap h2 { font-size:20px; color:var(--text-light); margin:24px 0 12px; }
-.legal-wrap ul { padding-left:20px; }
-</style>
+<link rel="stylesheet" href="/uzdub/css/legal.css">
 <div class="legal-wrap">
     <h1>🔒 <?php echo t('privacy_heading'); ?></h1>
     <p><?php echo t('privacy_intro'); ?></p>

@@ -219,7 +219,3 @@ function uzum_verify_callback($data) {
 function generate_transaction_id() {
     return 'UZ' . date('ymd') . strtoupper(substr(bin2hex(random_bytes(8)), 0, 12));
 }
-
-function tg_send_photo_old($photo_path, $caption = '') {
-    return tg_send_photo($photo_path, $caption);
-}

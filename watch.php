@@ -4,20 +4,23 @@ require_once __DIR__ . '/includes/functions.php';
 
 $id = (int)($_GET['id'] ?? 0);
 
-// AJAX - watchlistga qo'shish/olib tashlash
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_watchlist'])) {
+// AJAX - Sevimlilar (favorites) ga qo'shish/olib tashlash
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_fav'])) {
     header('Content-Type: application/json');
     if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>t('login_required')]); exit; }
     if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>t('security_token_wrong')]); exit; }
     $user = current_user();
     $cid = (int)$_POST['content_id'];
-    $chk = $pdo->prepare("SELECT id FROM watchlist WHERE user_id=? AND content_id=?");
+
+    $chk = $pdo->prepare("SELECT id FROM user_content_status WHERE user_id=? AND content_id=? AND status='favorite'");
     $chk->execute([$user['id'], $cid]);
     if ($row = $chk->fetch()) {
-        $pdo->prepare("DELETE FROM watchlist WHERE id=?")->execute([$row['id']]);
+        $pdo->prepare("DELETE FROM user_content_status WHERE id=?")->execute([$row['id']]);
+        $pdo->prepare("DELETE FROM watchlist WHERE user_id=? AND content_id=?")->execute([$user['id'], $cid]);
         echo json_encode(['ok'=>true,'added'=>false]);
     } else {
-        $pdo->prepare("INSERT INTO watchlist (user_id, content_id) VALUES (?,?)")->execute([$user['id'], $cid]);
+        $pdo->prepare("INSERT INTO user_content_status (user_id, content_id, status) VALUES (?,?, 'favorite')")->execute([$user['id'], $cid]);
+        $pdo->prepare("INSERT IGNORE INTO watchlist (user_id, content_id) VALUES (?,?)")->execute([$user['id'], $cid]);
         echo json_encode(['ok'=>true,'added'=>true]);
     }
     exit;
@@ -39,7 +42,7 @@ $genre_rows = $genre_rows->fetchAll();
 
 $in_watchlist = false;
 if (is_user()) {
-    $chk = $pdo->prepare("SELECT id FROM watchlist WHERE user_id=? AND content_id=?");
+    $chk = $pdo->prepare("SELECT id FROM user_content_status WHERE user_id=? AND content_id=? AND status='favorite'");
     $chk->execute([$_SESSION['user_id'], $id]);
     $in_watchlist = (bool)$chk->fetch();
 }
@@ -69,6 +72,12 @@ include __DIR__ . '/includes/header.php';
 .watch-btn { display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:8px; border:1px solid rgba(33,150,243,0.3); background:var(--card-bg); color:var(--text-light); cursor:pointer; font-size:14px; font-weight:600; text-decoration:none; transition:0.2s; }
 .watch-btn:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.1); }
 .watch-btn.active { background:var(--blue-primary); border-color:var(--blue-primary); }
+.fav-btn { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:var(--card-bg); color:var(--text-muted); cursor:pointer; transition:all 0.3s ease; padding:0; }
+.fav-btn svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; transition:all 0.3s ease; }
+.fav-btn:hover { border-color:rgba(239,83,80,0.4); color:#e57373; transform:scale(1.1); }
+.fav-btn:hover svg { stroke:#e57373; }
+.fav-btn.active { border-color:rgba(239,83,80,0.5); background:rgba(239,83,80,0.1); color:#ef5350; }
+.fav-btn.active svg { fill:#ef5350; stroke:#ef5350; }
 .premium-tag { background:linear-gradient(135deg,#f9a825,#ff6f00); color:#fff; font-size:11px; padding:3px 10px; border-radius:20px; font-weight:700; margin-left:8px; }
 .premium-lock { position:relative; border-radius:12px; overflow:hidden; min-height:320px; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px 20px; background:#0d1424; }
 .premium-lock .lock-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(18px) brightness(0.35); transform:scale(1.1); }
@@ -103,11 +112,9 @@ include __DIR__ . '/includes/header.php';
     </div>
 
     <div class="watch-action-bar">
-        <button class="watch-btn <?php echo $in_watchlist ? 'active' : ''; ?>" id="watchlistBtn" onclick="toggleWatchlist(<?php echo $id; ?>)">
-            <span id="wlIcon"><?php echo $in_watchlist ? '✅' : '➕'; ?></span>
-            <span id="wlText"><?php echo $in_watchlist ? t('watchlist_added') : t('watchlist_add'); ?></span>
+        <button class="fav-btn <?php echo $in_watchlist ? 'active' : ''; ?>" id="watchlistBtn" onclick="toggleFav(<?php echo $id; ?>)" title="<?php echo $in_watchlist ? t('removed_from_watchlist') : t('added_to_watchlist'); ?>">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
-        <a href="mylist.php" class="watch-btn">📋 <?php echo t('my_list'); ?></a>
     </div>
 
     <div class="detail-header">
@@ -164,34 +171,31 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-function toggleWatchlist(contentId) {
+function toggleFav(contentId) {
     <?php if (!is_user()): ?>
     window.location.href = 'auth/login.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
     return;
     <?php endif; ?>
     var fd = new FormData();
-    fd.append('toggle_watchlist', '1');
+    fd.append('toggle_fav', '1');
     fd.append('content_id', contentId);
     fd.append('csrf_token', '<?php echo e(csrf_token()); ?>');
     fetch('watch.php?id=<?php echo $id; ?>', {method:'POST', body:fd})
-        .then(r => r.json())
-        .then(r => {
-            if (!r.ok) { if (window.showToast) showToast(r.msg || '<?php echo t('error_occurred'); ?>', 'error'); return; }
+        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) { if (window.showToast) showToast(r.msg || 'Xatolik', 'error'); return; }
             var btn = document.getElementById('watchlistBtn');
-            var icon = document.getElementById('wlIcon');
-            var text = document.getElementById('wlText');
             if (r.added) {
                 btn.classList.add('active');
-                icon.textContent = '✅';
-                text.textContent = "<?php echo t('watchlist_added'); ?>";
-                if (window.showToast) showToast("<?php echo t('added_to_watchlist'); ?>", 'success');
+                btn.title = '<?php echo e(t('removed_from_watchlist')); ?>';
+                if (window.showToast) showToast('<?php echo e(t('added_to_watchlist')); ?>', 'success');
             } else {
                 btn.classList.remove('active');
-                icon.textContent = '➕';
-                text.textContent = '<?php echo t('watch_later'); ?>';
-                if (window.showToast) showToast("<?php echo t('removed_from_watchlist'); ?>", 'info');
+                btn.title = '<?php echo e(t('added_to_watchlist')); ?>';
+                if (window.showToast) showToast('<?php echo e(t('removed_from_watchlist')); ?>', 'info');
             }
-        });
+        })
+        .catch(function() { if (window.showToast) showToast('Xatolik', 'error'); });
 }
 </script>
 

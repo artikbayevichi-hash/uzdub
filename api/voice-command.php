@@ -74,8 +74,6 @@ if (contains($norm, ['bosh sahifa', 'asosiy sahifa', 'bosh sahifaga'])) {
     $response = ['action' => 'navigate', 'url' => $BASE . 'category.php?slug=kino', 'speak' => "Kino bo'limini ochyapman."];
 } elseif (contains($norm, ['multfilm bo\'lim', 'multfilm bolim', 'multfilmlarga']) || contains($norm, ['multfilm'])) {
     $response = ['action' => 'navigate', 'url' => $BASE . 'category.php?slug=multfilm', 'speak' => "Multfilm bo'limini ochyapman."];
-} elseif (contains($norm, ['ro\'yxatim', 'royxatim', 'saqlanganlar', 'mening ro\'yxatim'])) {
-    $response = ['action' => 'navigate', 'url' => $BASE . 'mylist.php', 'speak' => "Ro'yxatingizni ochyapman."];
 } elseif (contains($norm, ['xabarlarim', 'xabarlar bo\'limi', 'inbox'])) {
     $response = ['action' => 'navigate', 'url' => $BASE . 'inbox.php', 'speak' => "Xabarlaringizni ochyapman."];
 } elseif (contains($norm, ['premium', 'obuna'])) {

@@ -609,7 +609,7 @@ body {
 .genre-pill:hover { transform: translateZ(var(--z-meta)); }
 
 /* ===== Asosiy konteynerlar ===== */
-main, .main-content, .card-box, .auth-wrap, .detail-page, .inbox-page, .global-chat-page, .profile-page, .premium-page, .category-page, .search-page, .mylist-page, .watch-page {
+main, .main-content, .card-box, .auth-wrap, .detail-page, .inbox-page, .global-chat-page, .profile-page, .premium-page, .category-page, .search-page, .watch-page {
     position: relative;
     z-index: 2;
     background: rgba(10, 14, 23, 0.45);
@@ -1757,4 +1757,34 @@ main, .main-content, .card-box, .auth-wrap, .detail-page, .inbox-page, .global-c
         transition-duration: 0.01ms !important;
     }
     .card:hover { transform: scale(1.02) !important; }
+}
+
+/* ===== Skeleton Loading ===== */
+.skeleton {
+    background: linear-gradient(90deg, #121a2b 25%, #1d283d 50%, #121a2b 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    width: 200px;
+    height: 300px;
+    margin: 10px;
+    display: inline-block;
+}
+
+.skeleton-text {
+    height: 20px;
+    margin-top: 10px;
+    width: 80%;
+}
+
+.skeleton-text.short {
+    width: 40%;
 }

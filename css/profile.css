@@ -344,6 +344,29 @@
     gap: 16px;
 }
 
+.fav-section {
+    margin-bottom: 28px;
+}
+.fav-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.fav-section-count {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+.fav-cat-label {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 8px 0 4px;
+}
+
 .collection-card {
     text-decoration: none;
     border-radius: 10px;

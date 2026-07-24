@@ -60,8 +60,12 @@ $stat_watch_seconds = (int)$stat_watch_time->fetchColumn();
 $stat_watch_hours = floor($stat_watch_seconds / 3600);
 $stat_watch_mins = floor(($stat_watch_seconds % 3600) / 60);
 
-$stat_favorites = $pdo->prepare("SELECT COUNT(*) FROM user_content_status WHERE user_id = ? AND status = 'favorite'");
-$stat_favorites->execute([$uid]);
+$stat_favorites = $pdo->prepare("SELECT COUNT(DISTINCT content_id) as cnt FROM (
+    SELECT content_id FROM user_content_status WHERE user_id = ? AND status = 'favorite'
+    UNION
+    SELECT content_id FROM watchlist WHERE user_id = ?
+) AS all_favs");
+$stat_favorites->execute([$uid, $uid]);
 $stat_favorites_count = (int)$stat_favorites->fetchColumn();
 
 $stat_streak = 0;
@@ -118,14 +122,25 @@ if ($tab === 'history') {
     $stmt->execute([$uid]);
     $collection_items = $stmt->fetchAll();
 } elseif ($tab === 'favorites') {
-    $sql = "SELECT ucs.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name
+    $fav_where = 'WHERE 1=1';
+    if ($cat !== 'all') {
+        $fav_where = "WHERE favs.category = " . $pdo->quote($cat);
+    }
+    $sql = "SELECT content_id, title, poster, release_year, category, category_name FROM (
+            SELECT ucs.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name, ucs.created_at as sort_date
             FROM user_content_status ucs
             JOIN content c ON c.id = ucs.content_id
             JOIN categories cat ON cat.id = c.category_id
-            WHERE ucs.user_id = ? AND ucs.status = 'favorite' $cat_filter
-            ORDER BY ucs.created_at DESC LIMIT 50";
+            WHERE ucs.user_id = ? AND ucs.status = 'favorite'
+            UNION
+            SELECT w.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name, w.created_at as sort_date
+            FROM watchlist w
+            JOIN content c ON c.id = w.content_id
+            JOIN categories cat ON cat.id = c.category_id
+            WHERE w.user_id = ?
+            ) AS favs $fav_where ORDER BY sort_date DESC LIMIT 50";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$uid]);
+    $stmt->execute([$uid, $uid]);
     $collection_items = $stmt->fetchAll();
 } elseif ($tab === 'notifications') {
     if ($is_own) {
@@ -294,6 +309,15 @@ include __DIR__ . '/includes/header.php';
     </div>
     <?php endif; ?>
 
+    <?php if ($tab === 'favorites' && $cat !== 'all'): ?>
+    <div class="fav-cat-label">
+        <?php
+        $cat_labels = ['kino' => '🎬 ' . t('cat_movies'), 'anime' => '🎭 ' . t('cat_anime'), 'multfilm' => '🎪 ' . t('cat_cartoons')];
+        echo $cat_labels[$cat] ?? '';
+        ?>
+    </div>
+    <?php endif; ?>
+
     <div class="profile-collection">
         <?php if ($tab === 'notifications'): ?>
             <?php if (!$is_own): ?>
@@ -325,6 +349,55 @@ include __DIR__ . '/includes/header.php';
             <?php endforeach; ?>
             <?php endif; ?>
         <?php else: ?>
+            <?php if ($tab === 'favorites'): ?>
+                <?php
+                $grouped = ['kino' => [], 'anime' => [], 'multfilm' => []];
+                foreach ($collection_items as $item) {
+                    $slug = $item['category'] ?? '';
+                    if (isset($grouped[$slug])) $grouped[$slug][] = $item;
+                }
+                $empty = true;
+                foreach ($grouped as $items) { if (!empty($items)) { $empty = false; break; } }
+                ?>
+                <?php if ($empty): ?>
+                <div class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <p><?php echo t('section_empty'); ?></p>
+                </div>
+                <?php else: ?>
+                <?php
+                $section_icons = ['kino' => '🎬', 'anime' => '🎭', 'multfilm' => '🎪'];
+                $section_labels = ['kino' => t('cat_movies'), 'anime' => t('cat_anime'), 'multfilm' => t('cat_cartoons')];
+                foreach ($grouped as $slug => $items):
+                    if (empty($items)) continue;
+                ?>
+                <div class="fav-section">
+                    <h3 class="fav-section-title"><?php echo $section_icons[$slug]; ?> <?php echo $section_labels[$slug]; ?> <span class="fav-section-count">(<?php echo count($items); ?>)</span></h3>
+                    <div class="collection-grid">
+                        <?php foreach ($items as $item): ?>
+                        <a href="watch.php?id=<?php echo $item['content_id']; ?>" class="collection-card">
+                            <div class="collection-poster">
+                                <?php if ($item['poster']): ?>
+                                <img src="/uzdub/uploads/posters/<?php echo e($item['poster']); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
+                                <?php else: ?>
+                                <div class="no-poster"><?php echo $section_icons[$slug]; ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="collection-info">
+                                <div class="collection-title"><?php echo e(t_title($item)); ?></div>
+                                <div class="collection-meta">
+                                    <?php if ($item['release_year']): ?>
+                                    <span><?php echo e($item['release_year']); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            <?php else: ?>
             <?php if (empty($collection_items)): ?>
             <div class="empty-state">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><rect width="18" height="18" x="3" y="3" rx="2"/><line x1="12" x2="12" y1="8" y2="16"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
@@ -356,6 +429,7 @@ include __DIR__ . '/includes/header.php';
                 </a>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>
     </div>

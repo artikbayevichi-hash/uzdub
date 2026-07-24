@@ -181,11 +181,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
 </div>
 
-<style>
-.genre-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-.genre-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--card-bg); border: 1px solid rgba(33,150,243,0.3); border-radius: 20px; cursor: pointer; transition: 0.2s; font-size: 13px; color: var(--text-light); }
-.genre-pill:hover { border-color: var(--blue-primary); }
-.genre-pill input[type="checkbox"] { accent-color: var(--blue-primary); }
-</style>
-
 <?php include __DIR__ . '/includes/admin_footer.php'; ?>
