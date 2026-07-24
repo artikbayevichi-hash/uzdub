@@ -10,7 +10,7 @@
 
 set_time_limit(120);
 $sourceDir = __DIR__;
-$excludeNames = ['.git', 'node_modules', 'vendor', '.gitignore', '_create_zip.php', 'download-zip.php'];
+$excludeNames = ['.git', 'node_modules', 'vendor', '.gitignore', '_create_zip.php', 'download-zip.php', '.env', '.env.example', '.htaccess', 'config', 'logs'];
 
 $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
 $allowed_ips = ['127.0.0.1', '::1'];

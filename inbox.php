@@ -3,7 +3,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_user();
 
-$page_title = 'Xabarlarim';
+$page_title = t('inbox_title');
 $user = current_user();
 
 // Foydalanuvchi bilan yozishgan barcha odamlar (oxirgi xabar bilan)
@@ -62,11 +62,11 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="inbox-page">
-    <h1>💌 Xabarlarim</h1>
+    <h1>💌 <?php echo t('inbox_title'); ?></h1>
 
     <form class="find-box" method="get">
-        <input type="text" name="find" placeholder="Foydalanuvchi ID yoki nomi bo'yicha qidirish..." value="<?php echo e($search_q); ?>">
-        <button type="submit">Qidirish</button>
+        <input type="text" name="find" placeholder="<?php echo t('search_user_placeholder'); ?>" value="<?php echo e($search_q); ?>">
+        <button type="submit"><?php echo t('search_btn'); ?></button>
     </form>
 
     <?php if ($search_result !== null): ?>
@@ -75,11 +75,11 @@ include __DIR__ . '/includes/header.php';
             <img src="<?php echo avatar_url($su['avatar']); ?>" alt="">
             <div class="conv-info">
                 <div class="name"><?php echo e($su['username']); ?> <?php if ($su['is_premium']): ?>⭐<?php endif; ?></div>
-                <div class="last-msg">🆔 <?php echo e($su['user_id']); ?> — Yozishmani boshlash</div>
+                <div class="last-msg">🆔 <?php echo e($su['user_id']); ?> — <?php echo t('start_chat'); ?></div>
             </div>
         </a>
         <?php endforeach; ?>
-        <?php if (empty($search_result)): ?><p class="empty-inbox">Foydalanuvchi topilmadi.</p><?php endif; ?>
+        <?php if (empty($search_result)): ?><p class="empty-inbox"><?php echo t('user_not_found'); ?></p><?php endif; ?>
         <hr style="border-color:rgba(33,150,243,0.15); margin:20px 0;">
     <?php endif; ?>
 
@@ -88,7 +88,7 @@ include __DIR__ . '/includes/header.php';
         <img src="<?php echo avatar_url($c['avatar']); ?>" alt="">
         <div class="conv-info">
             <div class="name"><?php echo e($c['username']); ?> <?php if ($c['is_premium']): ?>⭐<?php endif; ?></div>
-            <div class="last-msg"><?php echo $c['last_message'] ? e($c['last_message']) : '📷 Rasm/GIF'; ?></div>
+            <div class="last-msg"><?php echo $c['last_message'] ? e($c['last_message']) : '📷 ' . t('image_gif_fallback'); ?></div>
         </div>
         <div class="conv-meta">
             <div class="time"><?php echo $c['last_time'] ? time_ago($c['last_time']) : ''; ?></div>
@@ -98,7 +98,7 @@ include __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
 
     <?php if (empty($conversations) && $search_result === null): ?>
-    <div class="empty-inbox">Hozircha suhbatlaringiz yo'q. Yuqoridan foydalanuvchi qidirib, yozishmani boshlang.</div>
+    <div class="empty-inbox"><?php echo t('no_conversations'); ?></div>
     <?php endif; ?>
 </div>
 

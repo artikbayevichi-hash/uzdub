@@ -29,9 +29,9 @@ include __DIR__ . '/includes/header.php';
 <div class="grid-wrap">
     <?php foreach ($items as $item): ?>
     <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
         <div class="card-info">
-            <h3><?php echo e($item['title']); ?></h3>
+            <h3><?php echo e(t_title($item)); ?></h3>
             <div class="meta">
                 <span><?php echo e($item['release_year']); ?></span>
                 <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
@@ -40,7 +40,7 @@ include __DIR__ . '/includes/header.php';
     </a>
     <?php endforeach; ?>
     <?php if (empty($items)): ?>
-        <p>Bu bo'limda hozircha kontent yo'q.</p>
+        <p><?php echo t('no_content_in_section'); ?></p>
     <?php endif; ?>
 </div>
 

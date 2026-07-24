@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'Bosh sahifa';
+$page_title = t('home');
 
 // Hero uchun eng so'nggi 5 ta kontent (aylanuvchi banner)
 $hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC LIMIT 5")->fetchAll();
@@ -38,7 +38,7 @@ include __DIR__ . '/includes/splash.php';
                 <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>
                 
             </div>
-            <h1><?php echo e($hero['title']); ?></h1>
+            <h1><?php echo e(t_title($hero)); ?></h1>
             <div class="hero-meta">
                 <span>&#9733; <?php echo e($hero['rating']); ?></span>
                 <span>&middot;</span>
@@ -46,10 +46,10 @@ include __DIR__ . '/includes/splash.php';
                 <span>&middot;</span>
                 <span><?php echo e($hero['content_code'] ?? ''); ?></span>
             </div>
-            <p><?php echo e(mb_strimwidth($hero['description'] ?? '', 0, 200, '...')); ?></p>
+            <p><?php echo e(mb_strimwidth(t_desc($hero) ?? '', 0, 200, '...')); ?></p>
             <div>
-                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-primary">&#9654; Tomosha qilish</a>
-                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#8505; Batafsil</a>
+                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-primary">&#9654; <?php echo t('watch'); ?></a>
+                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#8505; <?php echo t('details'); ?></a>
             </div>
         </div>
     </div>
@@ -69,17 +69,17 @@ include __DIR__ . '/includes/splash.php';
 
 <?php if (!empty($continue_items)): ?>
 <section class="content-section">
-    <h2>&#9199; Davom eting</h2>
+    <h2>&#9199; <?php echo t('continue'); ?></h2>
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($continue_items as $item):
                 $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
             ?>
             <a href="watch.php?id=<?php echo $item['id']; ?>" class="card card-continue">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
                 <div class="continue-progress" style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 10px;overflow:hidden;"><span style="display:block;height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:2px;transition:width 0.5s ease;"></span></div>
                 <div class="card-info">
-                    <h3><?php echo e($item['title']); ?></h3>
+                    <h3><?php echo e(t_title($item)); ?></h3>
                     <div class="meta">
                         <span><?php echo e($item['release_year']); ?></span>
                         <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
@@ -113,14 +113,14 @@ if (is_user() && isset($_SESSION['user_id'])):
     if (!empty($recommendations)):
 ?>
 <section class="content-section">
-    <h2>🤖 Sizga tavsiya etamiz</h2>
+    <h2>🤖 <?php echo t('recommended'); ?></h2>
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($recommendations as $item): ?>
             <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
                 <div class="card-info">
-                    <h3><?php echo e($item['title']); ?></h3>
+                    <h3><?php echo e(t_title($item)); ?></h3>
                     <div class="meta">
                         <span><?php echo e($item['cat_name']); ?></span>
                         <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
@@ -146,9 +146,9 @@ if (is_user() && isset($_SESSION['user_id'])):
         <div class="row-scroll">
             <?php foreach ($items as $item): ?>
             <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
                 <div class="card-info">
-                    <h3><?php echo e($item['title']); ?></h3>
+                    <h3><?php echo e(t_title($item)); ?></h3>
                     <div class="meta">
                         <span><?php echo e($item['release_year']); ?></span>
                         <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
@@ -162,7 +162,7 @@ if (is_user() && isset($_SESSION['user_id'])):
 <?php endforeach; ?>
 
 <?php if (empty($categories)): ?>
-<div class="content-section"><p>Hozircha kontent qo'shilmagan. Admin paneldan qo'shing.</p></div>
+<div class="content-section"><p><?php echo t('no_content'); ?></p></div>
 <?php endif; ?>
 
 <script>

@@ -2,13 +2,13 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'Global Chat';
+$page_title = t('global_chat_title');
 
 // AJAX - yangi xabar (matn yoki rasm/gif)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     header('Content-Type: application/json');
-    if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>'Kirish kerak']); exit; }
-    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>'Xavfsizlik tokeni noto\'g\'ri']); exit; }
+    if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>t('login_required')]); exit; }
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>t('security_token_wrong')]); exit; }
     $user = current_user();
     check_premium_expiry($pdo, $user['id']);
     refresh_user_session($pdo, $user['id']);
@@ -21,22 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     // Faqat premium foydalanuvchi rasm/gif yubora oladi
     if (!empty($_FILES['attachment']['name'])) {
         if (!$user['is_premium']) {
-            echo json_encode(['ok'=>false,'msg'=>'Rasm/GIF yuborish faqat Premium foydalanuvchilar uchun! ⭐']);
+            echo json_encode(['ok'=>false,'msg'=>t('image_gif_premium_global')]);
             exit;
         }
         $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg','jpeg','png','webp','gif'];
         if (!in_array($ext, $allowed)) {
-            echo json_encode(['ok'=>false,'msg'=>'Faqat rasm yoki GIF fayl yuborish mumkin.']);
+            echo json_encode(['ok'=>false,'msg'=>t('only_image_gif')]);
             exit;
         }
         $attachment = upload_file('attachment', __DIR__ . '/uploads/chat/', $allowed);
-        if (!$attachment) { echo json_encode(['ok'=>false,'msg'=>'Fayl yuklashda xatolik.']); exit; }
+        if (!$attachment) { echo json_encode(['ok'=>false,'msg'=>t('file_upload_error')]); exit; }
         $attachment_type = ($ext === 'gif') ? 'gif' : 'image';
     }
 
-    if ($txt === '' && !$attachment) { echo json_encode(['ok'=>false,'msg'=>'Xabar bo\'sh bo\'lishi mumkin emas']); exit; }
-    if (mb_strlen($txt) > 500) { echo json_encode(['ok'=>false,'msg'=>'Xabar juda uzun']); exit; }
+    if ($txt === '' && !$attachment) { echo json_encode(['ok'=>false,'msg'=>t('message_empty')]); exit; }
+    if (mb_strlen($txt) > 500) { echo json_encode(['ok'=>false,'msg'=>t('message_too_long')]); exit; }
 
     $pdo->prepare("INSERT INTO global_messages (user_id, message, attachment, attachment_type) VALUES (?,?,?,?)")
         ->execute([$user['id'], $txt ?: null, $attachment, $attachment_type]);
@@ -110,26 +110,26 @@ include __DIR__ . '/includes/header.php';
 
 <div class="chat-page">
     <div class="chat-page-header">
-        <h1>💬 Global Chat</h1>
+        <h1>💬 <?php echo t('global_chat_title'); ?></h1>
         <?php if (is_user()):
             $unread_count = $pdo->prepare("SELECT COUNT(*) c FROM private_messages WHERE receiver_id=? AND is_read=0");
             $unread_count->execute([$_SESSION['user_id']]);
             $unread_count = $unread_count->fetch()['c'];
         ?>
         <a href="inbox.php" class="inbox-link-btn">
-            💌 Shaxsiy xabarlar
+            💌 <?php echo t('private_messages'); ?>
             <?php if ($unread_count > 0): ?><span class="inbox-unread-dot"></span><?php endif; ?>
         </a>
         <?php endif; ?>
     </div>
     <div class="chat-box" style="position:relative;">
         <div class="messages-area" id="msgArea">
-            <div style="text-align:center;color:var(--text-muted);font-size:13px;">⏳ Xabarlar yuklanmoqda...</div>
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;">⏳ <?php echo t('loading_messages'); ?></div>
         </div>
         <?php if (is_user()): ?>
         <div class="attach-preview-bar" id="attachPreviewBar" style="display:none;">
             <img id="attachPreviewImg" src="">
-            <button onclick="clearAttachment()">✕ Bekor qilish</button>
+            <button onclick="clearAttachment()">✕ <?php echo t('cancel'); ?></button>
         </div>
         <div class="emoji-picker" id="emojiPicker">
             <?php foreach (['😀','😂','😍','😎','🥰','😢','😡','👍','👎','❤️','🔥','🎉','🍿','🎬','⭐','🤔','😴','🙌','👀','💯'] as $emo): ?>
@@ -138,13 +138,13 @@ include __DIR__ . '/includes/header.php';
         </div>
         <div class="chat-input-bar">
             <button type="button" class="chat-attach-btn" onclick="toggleEmoji()" title="Emoji">😊</button>
-            <button type="button" class="chat-attach-btn <?php echo $is_premium_user ? '' : 'locked'; ?>" onclick="attachClick()" title="<?php echo $is_premium_user ? 'Rasm/GIF yuborish' : 'Faqat Premium uchun'; ?>">📎</button>
+            <button type="button" class="chat-attach-btn <?php echo $is_premium_user ? '' : 'locked'; ?>" onclick="attachClick()" title="<?php echo $is_premium_user ? t('image_gif_upload') : t('only_premium'); ?>">📎</button>
             <input type="file" id="attachInput" accept="image/*,.gif" style="display:none;" onchange="onAttachSelect(this)">
-            <input type="text" id="msgInput" placeholder="Xabar yozing..." maxlength="500">
-            <button class="chat-send-btn" onclick="sendMsg()">Yuborish</button>
+            <input type="text" id="msgInput" placeholder="<?php echo t('write_message'); ?>" maxlength="500">
+            <button class="chat-send-btn" onclick="sendMsg()"><?php echo t('send_btn'); ?></button>
         </div>
         <?php else: ?>
-        <div class="need-login">Xabar yuborish uchun <a href="auth/login.php">kiring</a> yoki <a href="auth/register.php">ro'yxatdan o'ting</a>.</div>
+        <div class="need-login"><?php echo t('send_to_login'); ?> <a href="auth/login.php"><?php echo t('login'); ?></a> <?php echo t('or'); ?> <a href="auth/register.php"><?php echo t('register_text'); ?></a>.</div>
         <?php endif; ?>
     </div>
 </div>
@@ -168,7 +168,7 @@ function renderMsg(msg) {
     var prem = msg.is_premium == 1 ? '<span class="msg-prem">⭐</span>' : '';
     var body = '';
     if (msg.message) body += '<div class="msg-text">' + escHtml(msg.message) + '</div>';
-    if (msg.attachment) body += '<img class="msg-image" src="/uzdub/uploads/chat/' + msg.attachment + '" onclick="window.open(this.src)">';
+    if (msg.attachment) body += '<img class="msg-image" src="/uzdub/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
     return '<div class="msg-item' + (isOwn ? ' own' : '') + '" data-id="' + msg.id + '">' +
         '<img class="msg-avatar" src="' + avatar + '" onerror="this.src=\'' + defaultAvatar + '\'">' +
         '<div class="msg-body">' +
@@ -193,7 +193,7 @@ function fetchMessages() {
                 });
                 if (atBottom) area.scrollTop = area.scrollHeight;
             } else if (lastId === 0) {
-                document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">Hozircha xabar yo\'q. Birinchi bo\'ling! 🎉</div>';
+                document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;"><?php echo t('no_messages_yet'); ?> 🎉</div>';
             }
         });
 }
@@ -207,7 +207,7 @@ function insertEmoji(emo) {
     input.focus();
 }
 function attachClick() {
-    if (!isPremium) { alert('Rasm/GIF yuborish faqat Premium foydalanuvchilar uchun! Premium sahifasidan sotib oling ⭐'); return; }
+    if (!isPremium) { alert('<?php echo t('image_gif_premium_alert'); ?>'); return; }
     document.getElementById('attachInput').click();
 }
 function onAttachSelect(input) {
@@ -244,7 +244,7 @@ function sendMsg() {
                 clearAttachment();
                 fetchMessages();
             } else {
-                alert(r.msg || 'Xatolik yuz berdi');
+                alert(r.msg || '<?php echo t('error_occurred'); ?>');
             }
         });
 }

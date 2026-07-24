@@ -18,7 +18,6 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    die('Ma\'lumotlar bazasiga ulanishda xatolik: ' . $e->getMessage() .
-        '<br>Iltimos, phpMyAdmin orqali "uzdub" nomli baza yaratilganini va ' .
-        'database.sql fayli import qilinganini tekshiring.');
+    error_log('DB ulanish xatosi: ' . $e->getMessage());
+    die('Ma\'lumotlar bazasiga ulanishda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko\'ring.');
 }

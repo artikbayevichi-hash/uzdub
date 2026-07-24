@@ -30,7 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Xavfsizlik tokeni noto\'g\'ri.';
     } else {
         $title = trim($_POST['title'] ?? '');
+    $title_ru = trim($_POST['title_ru'] ?? '');
+    $title_en = trim($_POST['title_en'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $description_ru = trim($_POST['description_ru'] ?? '');
+    $description_en = trim($_POST['description_en'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
     $release_year = (int)($_POST['release_year'] ?? 0);
     $rating = (float)($_POST['rating'] ?? 0);
@@ -40,14 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'] ?? 'completed';
     $post_genres = $_POST['genres'] ?? [];
 
+    $allowed_statuses = ['completed', 'ongoing', 'upcoming'];
+    if (!in_array($status, $allowed_statuses, true)) $status = 'completed';
+
     $poster = $item['poster'];
     $new_poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
     if ($new_poster) $poster = $new_poster;
 
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
 
-    $stmt = $pdo->prepare("UPDATE content SET title=?, description=?, category_id=?, release_year=?, rating=?, poster=?, studio=?, director=?, duration=?, status=?, is_premium=? WHERE id=?");
-    $stmt->execute([$title, $description, $category_id, $release_year ?: null, $rating, $poster, $studio ?: null, $director ?: null, $duration ?: null, $status, $is_premium, $id]);
+    $stmt = $pdo->prepare("UPDATE content SET title=?, title_ru=?, title_en=?, description=?, description_ru=?, description_en=?, category_id=?, release_year=?, rating=?, poster=?, studio=?, director=?, duration=?, status=?, is_premium=? WHERE id=?");
+    $stmt->execute([$title, $title_ru ?: null, $title_en ?: null, $description, $description_ru ?: null, $description_en ?: null, $category_id, $release_year ?: null, $rating, $poster, $studio ?: null, $director ?: null, $duration ?: null, $status, $is_premium, $id]);
 
     // Janrlarni yangilash
     $pdo->prepare("DELETE FROM content_genres WHERE content_id = ?")->execute([$id]);
@@ -61,9 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Video ma'lumotlarini yangilash
     if (isset($_POST['video_type'])) {
         $video_type = $_POST['video_type'];
+        $allowed_video_types = ['youtube', 'cloud', 'file'];
+        if (!in_array($video_type, $allowed_video_types, true)) $video_type = 'youtube';
         $video_url = $item['video_url'];
         if ($video_type === 'file') {
-            $new_video = upload_file('video_file', __DIR__ . '/../uploads/videos/', ['mp4','webm','mkv','ogg']);
+            $new_video = upload_file('video_file', __DIR__ . '/../uploads/videos/', ['mp4','webm','mkv','ogg'], ['video/mp4','video/webm','video/x-matroska','video/ogg']);
             if ($new_video) $video_url = $new_video;
         } else {
             $video_url = trim($_POST['video_url'] ?? $video_url);
@@ -94,8 +103,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Nomi *</label>
     <input type="text" name="title" value="<?php echo e($item['title']); ?>" required>
 
+    <label>Nomi (Ruscha)</label>
+    <input type="text" name="title_ru" value="<?php echo e($item['title_ru'] ?? ''); ?>" placeholder="Русское название">
+
+    <label>Nomi (Inglizcha)</label>
+    <input type="text" name="title_en" value="<?php echo e($item['title_en'] ?? ''); ?>" placeholder="English title">
+
     <label>Tavsif</label>
     <textarea name="description"><?php echo e($item['description']); ?></textarea>
+
+    <label>Tavsif (Ruscha)</label>
+    <textarea name="description_ru" placeholder="Описание на русском"><?php echo e($item['description_ru'] ?? ''); ?></textarea>
+
+    <label>Tavsif (Inglizcha)</label>
+    <textarea name="description_en" placeholder="Description in English"><?php echo e($item['description_en'] ?? ''); ?></textarea>
 
     <label>Kategoriya *</label>
     <select name="category_id" required>

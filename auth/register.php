@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_id = $pdo->lastInsertId();
             $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$new_id]);
             refresh_user_session($pdo, $new_id);
+            session_regenerate_id(true);
             $token = generate_switch_token($pdo, $new_id);
             $_SESSION['switch_token'] = $token;
             $_SESSION['switch_user_id'] = $uid;

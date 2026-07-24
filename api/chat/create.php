@@ -30,7 +30,7 @@ if (!$chk->fetchColumn()) {
     echo json_encode(['error' => 'AI chat faqat Premium foydalanuvchilar uchun.']);
     exit;
 }
-$title = trim($_POST['title'] ?? 'Yangi chat');
+$title = mb_substr(trim($_POST['title'] ?? 'Yangi chat'), 0, 100);
 $firstMessage = trim($_POST['first_message'] ?? '');
 
 try {

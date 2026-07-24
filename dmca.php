@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'DMCA';
+$page_title = t('dmca_page_title');
 include __DIR__ . '/includes/header.php';
 ?>
 <style>
@@ -13,21 +13,21 @@ include __DIR__ . '/includes/header.php';
 .legal-wrap ul { padding-left:20px; }
 </style>
 <div class="legal-wrap">
-    <h1>📋 DMCA — Raqamli mingillik mualliflik huquqi qonuni</h1>
-    <p>UZDUB PLATFORM raqamli mingillik mualliflik huquqi qonuniga muvofiq ishlaydi. Agar sizning mualliflik huquqingiz buzilgan deb hisoblasangiz, biz bilan bog'laning.</p>
+    <h1>📋 <?php echo t('dmca_heading'); ?></h1>
+    <p><?php echo t('dmca_intro'); ?></p>
 
-    <h2>Shikoyat jarayoni</h2>
-    <p>DMCA shikoyatini yuborish uchun quyidagi ma'lumotlarni taqdim eting:</p>
+    <h2><?php echo t('complaint_process'); ?></h2>
+    <p><?php echo t('complaint_intro'); ?></p>
     <ul>
-        <li>Mualliflik huquqi egasi yoki ularning vakili tomonidan imzolangan shikoyat</li>
-        <li>Buzilgan deb da'vo qilingan materialning aniqlanishi</li>
-        <li>Sizning aloqa ma'lumotlaringiz</li>
-        <li>Yaxshi niyat bilan e'lon qilingan bayonot</li>
+        <li><?php echo t('complaint_1'); ?></li>
+        <li><?php echo t('complaint_2'); ?></li>
+        <li><?php echo t('complaint_3'); ?></li>
+        <li><?php echo t('complaint_4'); ?></li>
     </ul>
 
-    <h2>Bog'lanish</h2>
-    <p>Shikoyatlaringizni quyidagi manzilga yuboring:</p>
+    <h2><?php echo t('dmca_contact'); ?></h2>
+    <p><?php echo t('dmca_contact_text'); ?></p>
     <p>📧 Email: <a href="mailto:dmca@uzdub.uz" style="color:var(--blue-glow);">dmca@uzdub.uz</a></p>
-    <p>Biz 24 soat ichida javob berishga harakat qilamiz.</p>
+    <p><?php echo t('dmca_response'); ?></p>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

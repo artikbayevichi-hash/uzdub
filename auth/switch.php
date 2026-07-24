@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
+header('Referrer-Policy: no-referrer');
+
 $uid  = $_GET['uid']  ?? '';
 $token = $_GET['token'] ?? '';
 
@@ -41,6 +43,7 @@ if ($needs_verify) {
 check_premium_expiry($pdo, $user['id']);
 $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
 refresh_user_session($pdo, $user['id']);
+session_regenerate_id(true);
 
 header('Location: /uzdub/index.php');
 exit;

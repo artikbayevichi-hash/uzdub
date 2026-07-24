@@ -31,7 +31,7 @@ if (!$chk->fetchColumn()) {
     exit;
 }
 $sessionId = (int)($_POST['session_id'] ?? 0);
-$title = trim($_POST['title'] ?? '');
+$title = mb_substr(trim($_POST['title'] ?? ''), 0, 100);
 
 if (!$sessionId || !$title) {
     echo json_encode(['error' => 'Ma\'lumotlar to\'liq emas']);

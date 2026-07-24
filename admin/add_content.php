@@ -12,7 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Xavfsizlik tokeni noto\'g\'ri.';
     } else {
         $title = trim($_POST['title'] ?? '');
+    $title_ru = trim($_POST['title_ru'] ?? '');
+    $title_en = trim($_POST['title_en'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $description_ru = trim($_POST['description_ru'] ?? '');
+    $description_en = trim($_POST['description_en'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
     $release_year = (int)($_POST['release_year'] ?? 0);
     $rating = (float)($_POST['rating'] ?? 0);
@@ -22,6 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duration = trim($_POST['duration'] ?? '');
     $status = $_POST['status'] ?? 'completed';
     $selected_genres = $_POST['genres'] ?? [];
+
+    $allowed_statuses = ['completed', 'ongoing', 'upcoming'];
+    if (!in_array($status, $allowed_statuses, true)) $status = 'completed';
 
     if ($title === '' || $category_id === 0) {
         $error = 'Nomi va kategoriyani to\'ldiring.';
@@ -35,8 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$error) {
             $video_type = $_POST['video_type'] ?? null;
+            $allowed_video_types = ['youtube', 'cloud', 'file'];
+            if (!in_array($video_type, $allowed_video_types, true)) $video_type = 'youtube';
             if ($video_type === 'file') {
-                $video_url = upload_file('video_file', __DIR__ . '/../uploads/videos/', ['mp4','webm','mkv','ogg']);
+                $video_url = upload_file('video_file', __DIR__ . '/../uploads/videos/', ['mp4','webm','mkv','ogg'], ['video/mp4','video/webm','video/x-matroska','video/ogg']);
                 if (!$video_url) { $error = 'Video fayl yuklashda xatolik (mp4, webm, mkv, ogg bo\'lishi kerak).'; }
             } else {
                 $video_url = trim($_POST['video_url'] ?? '');
@@ -50,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cat_slug = $cat_stmt->fetch()['slug'] ?? 'kino';
             $content_code = generate_content_code($pdo, $cat_slug);
 
-            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, description, poster, category_id, release_year, rating, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->execute([$content_code, $title, $description, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_premium, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $status]);
+            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, title_ru, title_en, description, description_ru, description_en, poster, category_id, release_year, rating, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([$content_code, $title, $title_ru ?: null, $title_en ?: null, $description, $description_ru ?: null, $description_en ?: null, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_premium, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $status]);
             $content_id = (int)$pdo->lastInsertId();
 
             // Janrlarni saqlash
@@ -80,8 +89,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Nomi *</label>
     <input type="text" name="title" required>
 
+    <label>Nomi (Ruscha)</label>
+    <input type="text" name="title_ru" placeholder="Русское название">
+
+    <label>Nomi (Inglizcha)</label>
+    <input type="text" name="title_en" placeholder="English title">
+
     <label>Tavsif</label>
     <textarea name="description"></textarea>
+
+    <label>Tavsif (Ruscha)</label>
+    <textarea name="description_ru" placeholder="Описание на русском"></textarea>
+
+    <label>Tavsif (Inglizcha)</label>
+    <textarea name="description_en" placeholder="Description in English"></textarea>
 
     <label>Kategoriya *</label>
     <select name="category_id" required>

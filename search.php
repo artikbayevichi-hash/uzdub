@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/functions.php';
 
 $q = trim($_GET['q'] ?? '');
 $cat_filter = $_GET['cat'] ?? '';
-$page_title = 'Qidiruv: ' . $q;
+$page_title = t('search_results_for') . $q;
 $items = [];
 $found_user = null;
 $found_content = null;
@@ -12,8 +12,8 @@ $found_content = null;
 // AJAX - avtotugallash (autocomplete) so'rovlari
 if (isset($_GET['ajax_autocomplete']) && $q !== '') {
     header('Content-Type: application/json');
-    $stmt = $pdo->prepare("SELECT id, title, poster, release_year, rating, content_code FROM content WHERE title LIKE ? ORDER BY views DESC, rating DESC LIMIT 6");
-    $stmt->execute(['%' . $q . '%']);
+    $stmt = $pdo->prepare("SELECT id, title, title_ru, title_en, poster, release_year, rating, content_code FROM content WHERE title LIKE ? OR title_ru LIKE ? OR title_en LIKE ? ORDER BY views DESC, rating DESC LIMIT 6");
+    $stmt->execute(['%' . $q . '%', '%' . $q . '%', '%' . $q . '%']);
     $results = $stmt->fetchAll();
     echo json_encode($results, JSON_UNESCAPED_UNICODE);
     exit;
@@ -56,20 +56,20 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="content-section" style="margin-top: 90px;">
-    <h2>🔍 "<?php echo e($q ?: 'Barcha kontent'); ?>" bo'yicha natijalar</h2>
+    <h2>🔍 "<?php echo e($q ?: t('all_content')); ?>" <?php echo t('results_for'); ?></h2>
     
     <!-- Kategoriya filtrlari -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 8px;">
-        <a href="search.php?q=<?php echo e(urlencode($q)); ?>" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter ? 'rgba(33,150,243,0.15)' : 'var(--blue-primary)'; ?>;border-radius:20px;">🏠 Barchasi</a>
-        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=kino" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='kino' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🎬 Kino</a>
-        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=anime" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='anime' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🎌 Anime</a>
-        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=multfilm" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='multfilm' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🧸 Multfilm</a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter ? 'rgba(33,150,243,0.15)' : 'var(--blue-primary)'; ?>;border-radius:20px;">🏠 <?php echo t('all'); ?></a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=kino" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='kino' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🎬 <?php echo t('movies'); ?></a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=anime" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='anime' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🎌 <?php echo t('anime'); ?></a>
+        <a href="search.php?q=<?php echo e(urlencode($q)); ?>&cat=multfilm" class="btn" style="font-size:12px;padding:6px 14px;background:<?php echo $cat_filter==='multfilm' ? 'var(--blue-primary)' : 'rgba(33,150,243,0.15)'; ?>;border-radius:20px;">🧸 <?php echo t('cartoons'); ?></a>
     </div>
 </div>
 
 <div style="padding:0 40px;font-size:12px;color:var(--text-muted);">
-    <?php echo count($items) . ' ta kontent topildi'; ?>
-    <?php if ($found_user): ?> · 1 ta foydalanuvchi topildi<?php endif; ?>
+    <?php echo count($items) . ' ' . t('contents_found'); ?>
+    <?php if ($found_user): ?> · <?php echo t('users_found'); ?><?php endif; ?>
 </div>
 
 <?php if ($found_user): ?>
@@ -80,7 +80,7 @@ include __DIR__ . '/includes/header.php';
             <h3><?php echo e($found_user['username']); ?> <?php if ($found_user['is_premium']): ?>⭐<?php endif; ?></h3>
             <div class="uid">🆔 <?php echo e($found_user['user_id']); ?></div>
         </div>
-        <a href="profile.php?uid=<?php echo e($found_user['user_id']); ?>" class="view-profile">Profilni ko'rish</a>
+        <a href="profile.php?uid=<?php echo e($found_user['user_id']); ?>" class="view-profile"><?php echo t('view_profile'); ?></a>
     </div>
 </div>
 <?php endif; ?>
@@ -90,9 +90,9 @@ include __DIR__ . '/includes/header.php';
 <div class="grid-wrap">
     <?php foreach ($items as $item): ?>
     <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
         <div class="card-info">
-            <h3><?php echo e($item['title']); ?></h3>
+            <h3><?php echo e(t_title($item)); ?></h3>
             <div class="meta">
                 <span><?php echo e($item['content_code'] ?? ''); ?></span>
                 <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
@@ -101,7 +101,7 @@ include __DIR__ . '/includes/header.php';
     </a>
     <?php endforeach; ?>
     <?php if ($q !== '' && empty($items) && !$found_user): ?>
-        <p>Hech narsa topilmadi.</p>
+        <p><?php echo t('nothing_found'); ?></p>
     <?php endif; ?>
 </div>
 

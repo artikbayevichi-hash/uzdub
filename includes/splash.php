@@ -1,8 +1,8 @@
 <?php
 $splash_plans = [
-    ['label' => '1 Oy', 'price' => '10 000', 'days' => 30, 'features' => ['HD sifat', 'Cheklovsiz tomosha', 'Premium kontent']],
-    ['label' => '3 Oy', 'price' => '25 000', 'days' => 90, 'features' => ['HD sifat', 'Cheklovsiz tomosha', 'Premium kontent', '⭐ Mashhur'], 'popular' => true],
-    ['label' => '1 Yil', 'price' => '80 000', 'days' => 365, 'features' => ['HD sifat', 'Cheklovsiz tomosha', 'Premium kontent', 'Engfoydali']],
+    ['label_key' => 'splash_plan_1m', 'price' => '10 000', 'days' => 30, 'features' => ['splash_hdfit', 'splash_unlimited', 'splash_premium_cont']],
+    ['label_key' => 'splash_plan_3m', 'price' => '25 000', 'days' => 90, 'features' => ['splash_hdfit', 'splash_unlimited', 'splash_premium_cont', 'splash_popular'], 'popular' => true],
+    ['label_key' => 'splash_plan_1y', 'price' => '80 000', 'days' => 365, 'features' => ['splash_hdfit', 'splash_unlimited', 'splash_premium_cont', 'splash_best']],
 ];
 $splash_user = is_user() ? current_user() : null;
 $splash_user_json = $splash_user ? json_encode([
@@ -25,11 +25,11 @@ $splash_user_json = $splash_user ? json_encode([
                 <span class="splash-logo">🎬 UZDUB PLATFORM</span>
             </div>
             <h1 class="splash-title">
-                <span class="splash-line line-1">Kino, Anime</span>
-                <span class="splash-line line-2">Multfilmlar</span>
-                <span class="splash-line line-3">O'zbek tilida</span>
+                <span class="splash-line line-1"><?php echo t('splash_line1'); ?></span>
+                <span class="splash-line line-2"><?php echo t('splash_line2'); ?></span>
+                <span class="splash-line line-3"><?php echo t('splash_line3'); ?></span>
             </h1>
-            <p class="splash-subtitle">Barcha sevimli kontentlaringiz bir joyda. Sifatli dublyaj bilan.</p>
+            <p class="splash-subtitle"><?php echo t('splash_subtitle'); ?></p>
 
             <?php if ($splash_user): ?>
             <div class="splash-user-card">
@@ -48,7 +48,7 @@ $splash_user_json = $splash_user ? json_encode([
                 <div class="splash-accounts-list" style="display:none;"></div>
                 <a href="/uzdub/auth/login.php" class="splash-add-account-btn">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                    Akkaunt qo'shish
+                    <?php echo t('splash_add_account'); ?>
                 </a>
             </div>
 
@@ -66,7 +66,7 @@ $splash_user_json = $splash_user ? json_encode([
             <?php endif; ?>
 
             <button id="splashSkip" class="splash-skip" onclick="dismissSplash()">
-                Saytga kirish
+                <?php echo t('splash_enter'); ?>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
         </div>
@@ -74,35 +74,35 @@ $splash_user_json = $splash_user ? json_encode([
         <div class="splash-features">
             <div class="splash-feature-card">
                 <div class="splash-feature-icon">🎬</div>
-                <h3>Kino</h3>
-                <p>Eng so'nggi kino va filmlar o'zbek tilida</p>
+                <h3><?php echo t('splash_feature_kino'); ?></h3>
+                <p><?php echo t('splash_feature_kino_desc'); ?></p>
             </div>
             <div class="splash-feature-card">
                 <div class="splash-feature-icon">🎌</div>
-                <h3>Anime</h3>
-                <p>Sevimli animelaringiz sifatli dublyaj bilan</p>
+                <h3><?php echo t('splash_feature_anime'); ?></h3>
+                <p><?php echo t('splash_feature_anime_desc'); ?></p>
             </div>
             <div class="splash-feature-card">
                 <div class="splash-feature-icon">🤖</div>
-                <h3>AI Yordamchi</h3>
-                <p>AI bilan kino tavsiyalar oling</p>
+                <h3><?php echo t('splash_feature_ai'); ?></h3>
+                <p><?php echo t('splash_feature_ai_desc'); ?></p>
             </div>
         </div>
 
         <div class="splash-premium-section">
-            <h2 class="splash-section-title">⭐ Premium obuna</h2>
-            <p class="splash-section-desc">Premium bilan barcha kontentlarga cheklovsiz kirish</p>
+            <h2 class="splash-section-title"><?php echo t('splash_premium_title'); ?></h2>
+            <p class="splash-section-desc"><?php echo t('splash_premium_desc'); ?></p>
             <div class="splash-plans-grid">
                 <?php foreach ($splash_plans as $plan): ?>
                 <div class="splash-plan-card <?php echo !empty($plan['popular']) ? 'popular' : ''; ?>">
                     <?php if (!empty($plan['popular'])): ?>
-                    <div class="splash-popular-badge">Mashhur</div>
+                    <div class="splash-popular-badge"><?php echo t('splash_popular'); ?></div>
                     <?php endif; ?>
-                    <div class="splash-plan-name"><?php echo $plan['label']; ?></div>
-                    <div class="splash-plan-price"><?php echo $plan['price']; ?> <span>so'm</span></div>
+                    <div class="splash-plan-name"><?php echo t($plan['label_key']); ?></div>
+                    <div class="splash-plan-price"><?php echo $plan['price']; ?> <span><?php echo t('splash_sum'); ?></span></div>
                     <ul class="splash-plan-features">
                         <?php foreach ($plan['features'] as $f): ?>
-                        <li>✓ <?php echo $f; ?></li>
+                        <li>✓ <?php echo t($f); ?></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
@@ -111,30 +111,30 @@ $splash_user_json = $splash_user ? json_encode([
         </div>
 
         <div class="splash-about">
-            <h2 class="splash-section-title">UZDUB PLATFORM haqida</h2>
-            <p>UZDUB PLATFORM — bu kino, anime va multfilmlarni o'zbek tilida tomosha qilish uchun platforma. Biz sifatli dublyaj va qulay interfeys bilan sizga xizmat ko'rsatamiz.</p>
+            <h2 class="splash-section-title"><?php echo t('splash_about_title'); ?></h2>
+            <p><?php echo t('splash_about_desc'); ?></p>
             <div class="splash-stats">
                 <div class="splash-stat">
                     <span class="splash-stat-num" id="statContent">500+</span>
-                    <span class="splash-stat-label">Kontent</span>
+                    <span class="splash-stat-label"><?php echo t('splash_stat_content'); ?></span>
                 </div>
                 <div class="splash-stat">
                     <span class="splash-stat-num" id="statUsers">10K+</span>
-                    <span class="splash-stat-label">Foydalanuvchi</span>
+                    <span class="splash-stat-label"><?php echo t('splash_stat_users'); ?></span>
                 </div>
                 <div class="splash-stat">
                     <span class="splash-stat-num" id="statRating">4.8</span>
-                    <span class="splash-stat-label">Reyting</span>
+                    <span class="splash-stat-label"><?php echo t('splash_stat_rating'); ?></span>
                 </div>
             </div>
         </div>
 
         <div class="splash-footer">
             <button class="splash-enter-btn" onclick="dismissSplash()">
-                Saytga kirish
+                <?php echo t('splash_enter'); ?>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
-            <p class="splash-footer-text">&copy; <?php echo date('Y'); ?> UZDUB PLATFORM.UZ — Barcha huquqlar himoyalangan</p>
+            <p class="splash-footer-text">&copy; <?php echo date('Y'); ?> UZDUB PLATFORM.UZ — <?php echo t('splash_footer_copy'); ?></p>
         </div>
     </div>
 </div>

@@ -23,8 +23,18 @@ if ($text === '') {
     exit;
 }
 
+if (!is_user()) {
+    echo json_encode(['action' => 'speak', 'speak' => "Ovozli yordamchi uchun tizimga kirishingiz kerak."]);
+    exit;
+}
+
 if (!validate_csrf($input['csrf_token'] ?? '')) {
     echo json_encode(['action' => 'speak', 'speak' => "Xavfsizlik tokeni noto'g'ri. Sahifani yangilang."]);
+    exit;
+}
+
+if (!rate_limit_check($pdo, 'voice_command', 10, 60)) {
+    echo json_encode(['action' => 'speak', 'speak' => "Juda ko'p so'rov. Biroz kuting."]);
     exit;
 }
 

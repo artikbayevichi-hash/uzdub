@@ -9,7 +9,7 @@ check_premium_expiry($pdo, $user['id']);
 refresh_user_session($pdo, $user['id']);
 $user = current_user();
 
-$page_title = 'Premium obuna';
+$page_title = t('premium_page_title');
 $selected_plan = $_GET['plan'] ?? '';
 $plans = PREMIUM_PLANS;
 
@@ -18,15 +18,15 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
     if (!validate_csrf($_POST['csrf_token'] ?? '')) {
-        $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+        $error = t('token_error');
     } else {
     $plan = $_POST['plan'] ?? '';
     if (!isset($plans[$plan])) {
-        $error = 'Noto\'g\'ri tarif.';
+        $error = t('invalid_plan');
     } else {
         $screenshot = upload_file('screenshot', __DIR__ . '/uploads/screenshots/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
         if (!$screenshot) {
-            $error = 'To\'lov skreenshot rasm (jpg/png) yuklang.';
+            $error = t('upload_screenshot');
         } else {
             $plan_info = $plans[$plan];
             $expires   = date('Y-m-d H:i:s', strtotime('+' . $plan_info['days'] . ' days'));
@@ -34,16 +34,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
             $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, screenshot, status, expires_at) VALUES (?,?,?,?,?,?)")
                 ->execute([$user['id'], $plan, $plan_info['price'], $screenshot, 'pending', $expires]);
 
-            $caption = "💰 <b>Yangi premium so'rov!</b>\n"
-                . "👤 Foydalanuvchi: <b>" . $user['username'] . "</b> (ID: " . $user['user_id'] . ")\n"
-                . "📦 Tarif: <b>" . $plan_info['label'] . "</b>\n"
-                . "💵 Summa: <b>" . number_format($plan_info['price'], 0, '.', ' ') . " so'm</b>\n"
-                . "⏳ Holat: <b>Tasdiqlash kutilmoqda</b>\n"
-                . "👉 Admin panel orqali tasdiqlang.";
+            $caption = "💰 <b>" . t('new_premium_request') . "</b>\n"
+                . "👤 " . t('user_label') . " <b>" . $user['username'] . "</b> (ID: " . $user['user_id'] . ")\n"
+                . "📦 " . t('plan_label') . " <b>" . $plan_info['label'] . "</b>\n"
+                . "💵 " . t('amount_label') . " <b>" . number_format($plan_info['price'], 0, '.', ' ') . " " . t('currency') . "</b>\n"
+                . "⏳ " . t('status_label') . " <b>" . t('pending_approval') . "</b>\n"
+                . "👉 " . t('admin_approve');
 
             $photo_path = __DIR__ . '/uploads/screenshots/' . $screenshot;
             tg_send_photo($photo_path, $caption);
-            $msg = "To'lov so'rovingiz qabul qilindi! Admin tekshirib, tez orada Premiumni faollashtiradi.";
+            $msg = t('request_received');
         }
     }
     }
@@ -88,15 +88,15 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="premium-page">
-    <h1>⭐ Premium Obuna</h1>
-    <p class="subtitle">Premium bilan barcha kino va animelarga cheklovsiz kirish</p>
+    <h1>⭐ <?php echo t('premium_subscription'); ?></h1>
+    <p class="subtitle"><?php echo t('premium_desc'); ?></p>
 
     <?php if ($msg): ?><div class="alert alert-success">⭐ <?php echo e($msg); ?></div><?php endif; ?>
     <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
 
     <?php if ($user['is_premium'] && $user['premium_expires_at']): ?>
     <div class="current-premium">
-        ✅ Sizda faol premium bor — tugaydi: <b><?php echo date('d.m.Y', strtotime($user['premium_expires_at'])); ?></b>. Muddatni uzaytirish uchun yangi obuna sotib olishingiz mumkin.
+        ✅ <?php echo t('active_premium'); ?> <b><?php echo date('d.m.Y', strtotime($user['premium_expires_at'])); ?></b>. <?php echo t('extend_hint'); ?>
     </div>
     <?php endif; ?>
 
@@ -107,7 +107,7 @@ include __DIR__ . '/includes/header.php';
     if ($pending):
     ?>
     <div class="current-premium" style="border-color:#2196f3; color:#90caf9;">
-        ⏳ So'rovingiz ko'rib chiqilmoqda (<?php echo date('d.m.Y H:i', strtotime($pending['created_at'])); ?> yuborilgan). Admin tasdiqlashini kuting.
+        ⏳ <?php echo t('pending_review'); ?> (<?php echo date('d.m.Y H:i', strtotime($pending['created_at'])); ?> <?php echo t('submitted'); ?>). <?php echo t('wait_admin'); ?>
     </div>
     <?php endif; ?>
 
@@ -115,20 +115,20 @@ include __DIR__ . '/includes/header.php';
         <?php foreach ($plans as $key => $plan): ?>
         <div class="plan-card <?php echo $key === '3month' ? 'popular' : ''; ?> <?php echo $selected_plan === $key ? 'selected' : ''; ?>"
              onclick="selectPlan('<?php echo $key; ?>', '<?php echo e($plan['label']); ?>', <?php echo $plan['price']; ?>)">
-            <?php if ($key === '3month'): ?><div class="popular-badge">🔥 Mashhur</div><?php endif; ?>
+            <?php if ($key === '3month'): ?><div class="popular-badge">🔥 <?php echo t('popular'); ?></div><?php endif; ?>
             <div class="plan-name"><?php echo e($plan['label']); ?></div>
-            <div class="plan-price"><?php echo number_format($plan['price'], 0, '.', ' '); ?> <span>so'm</span></div>
-            <div class="plan-desc"><?php echo $plan['days']; ?> kun to'liq kirish</div>
+            <div class="plan-price"><?php echo number_format($plan['price'], 0, '.', ' '); ?> <span><?php echo t('currency'); ?></span></div>
+            <div class="plan-desc"><?php echo $plan['days']; ?> <?php echo t('days_access'); ?></div>
         </div>
         <?php endforeach; ?>
     </div>
 
     <div class="payment-box" id="payment-box">
-        <h2>💳 To'lov usulini tanlang</h2>
+        <h2>💳 <?php echo t('choose_payment'); ?></h2>
 
         <div class="payment-tabs" style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
             <button type="button" class="pay-tab active" onclick="switchPaymentTab('card', this)" style="padding:10px 20px;border-radius:10px;border:2px solid rgba(33,150,243,0.3);background:var(--card-bg);color:var(--text-light);font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
-                💳 Karta o'tkazma
+                💳 <?php echo t('card_transfer'); ?>
             </button>
             <?php if (defined('CLICK_MERCHANT_ID') && CLICK_MERCHANT_ID): ?>
             <button type="button" class="pay-tab" onclick="switchPaymentTab('click', this)" style="padding:10px 20px;border-radius:10px;border:2px solid rgba(33,150,243,0.3);background:var(--card-bg);color:var(--text-light);font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
@@ -144,9 +144,9 @@ include __DIR__ . '/includes/header.php';
 
         <!-- Karta o'tkazma -->
         <div class="pay-section" id="pay-card" style="display:block;">
-            <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px;">Quyidagi karta raqamiga <b id="pay-amount" style="color:#f9a825"></b> so'm o'tkazing:</p>
+            <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px;"><?php echo t('transfer_to_card'); ?> <b id="pay-amount" style="color:#f9a825"></b> <?php echo t('transfer_sum'); ?></p>
             <div class="card-display">
-                <div style="font-size:13px;opacity:0.7;margin-bottom:12px;">💳 O'tkazma kartasi</div>
+                <div style="font-size:13px;opacity:0.7;margin-bottom:12px;">💳 <?php echo t('transfer_card'); ?></div>
                 <div class="card-num"><?php echo e(CARD_NUMBER); ?></div>
                 <div class="card-meta">
                     <span><?php echo e(CARD_OWNER); ?></span>
@@ -154,22 +154,22 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
             <ol class="steps">
-                <li><b>Yuqoridagi karta raqamiga</b> aniq summani o'tkazing.</li>
-                <li>O'tkazmadan so'ng <b>bankomat/mobil bank screenshotini</b> oling.</li>
-                <li>Quyidagi maydonga screenshotni yuklang.</li>
-                <li>Admin tekshirib tasdiqlagach, <b>Premium avtomatik yoqiladi</b>.</li>
+                <li><b><?php echo t('transfer_exact_sum'); ?></b> <?php echo t('transfer_exact'); ?></li>
+                <li><?php echo t('after_transfer'); ?> <b><?php echo t('upload_receipt'); ?></b> <?php echo t('upload_receipt2'); ?></li>
+                <li><?php echo t('upload_to_field'); ?></li>
+                <li><?php echo t('admin_will_activate'); ?> <b><?php echo t('auto_activate'); ?></b>.</li>
             </ol>
             <form method="post" enctype="multipart/form-data">
                 <?php echo csrf_input(); ?>
                 <input type="hidden" name="plan" id="plan-input-card" value="">
                 <input type="hidden" name="submit_payment" value="1">
                 <div class="upload-area" onclick="document.getElementById('ssFile').click()">
-                    <div>📸 Screenshot yuklash uchun bosing</div>
-                    <div style="font-size:12px;margin-top:6px;">(JPG yoki PNG, max 5MB)</div>
+                    <div>📸 <?php echo t('click_upload_screenshot'); ?></div>
+                    <div style="font-size:12px;margin-top:6px;"><?php echo t('screenshot_format'); ?></div>
                     <input type="file" id="ssFile" name="screenshot" accept="image/*" onchange="previewShot(this)">
                     <img id="ssPreview" class="upload-preview" alt="Preview">
                 </div>
-                <button type="submit" class="submit-btn">✅ To'lov qildim — Tasdiqlash uchun yuborish</button>
+                <button type="submit" class="submit-btn">✅ <?php echo t('confirm_payment'); ?></button>
             </form>
         </div>
 
@@ -177,15 +177,15 @@ include __DIR__ . '/includes/header.php';
         <div class="pay-section" id="pay-click" style="display:none;">
             <div style="text-align:center;padding:30px 20px;">
                 <div style="font-size:48px;margin-bottom:16px;">🟢</div>
-                <h3 style="margin-bottom:12px;color:var(--text-light);font-size:20px;">Click orqali to'lash</h3>
+                <h3 style="margin-bottom:12px;color:var(--text-light);font-size:20px;"><?php echo t('pay_with_click'); ?></h3>
                 <p style="color:var(--text-muted);margin-bottom:24px;font-size:14px;">
-                    Click mobil ilovasi orqali tez va xavfsiz to'lov.
-                    To'lov amalga oshishi bilan Premium avtomatik faollashadi!
+                    <?php echo t('click_desc'); ?>
+                    <?php echo t('click_auto_activate'); ?>
                 </p>
                 <a href="#" id="clickPayBtn" class="btn" style="background:#00aa13;color:#fff;padding:14px 32px;font-size:16px;border-radius:10px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;">
-                    🟢 Click bilan to'lash
+                    🟢 <?php echo t('click_pay_btn'); ?>
                 </a>
-                <p style="color:var(--text-muted);font-size:12px;margin-top:12px;">To'lov xavfsiz. Ma'lumotlaringiz himoyalangan.</p>
+                <p style="color:var(--text-muted);font-size:12px;margin-top:12px;"><?php echo t('click_security'); ?></p>
             </div>
         </div>
 
@@ -193,15 +193,15 @@ include __DIR__ . '/includes/header.php';
         <div class="pay-section" id="pay-uzum" style="display:none;">
             <div style="text-align:center;padding:30px 20px;">
                 <div style="font-size:48px;margin-bottom:16px;">⚡</div>
-                <h3 style="margin-bottom:12px;color:var(--text-light);font-size:20px;">Uzum orqali to'lash</h3>
+                <h3 style="margin-bottom:12px;color:var(--text-light);font-size:20px;"><?php echo t('pay_with_uzum'); ?></h3>
                 <p style="color:var(--text-muted);margin-bottom:24px;font-size:14px;">
-                    Uzum mobil ilovasi orqali bir zumda to'lov.
-                    To'lov tasdiqlanishi bilan Premium avtomatik yoqiladi!
+                    <?php echo t('uzum_desc'); ?>
+                    <?php echo t('uzum_auto_activate'); ?>
                 </p>
                 <a href="#" id="uzumPayBtn" class="btn" style="background:#7c3aed;color:#fff;padding:14px 32px;font-size:16px;border-radius:10px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;">
-                    ⚡ Uzum bilan to'lash
+                    ⚡ <?php echo t('uzum_pay_btn'); ?>
                 </a>
-                <p style="color:var(--text-muted);font-size:12px;margin-top:12px;">To'lov xavfsiz. Ma'lumotlaringiz himoyalangan.</p>
+                <p style="color:var(--text-muted);font-size:12px;margin-top:12px;"><?php echo t('uzum_security'); ?></p>
             </div>
         </div>
     </div>
@@ -261,7 +261,7 @@ function previewShot(input) {
 
 <?php if ($selected_plan && isset($plans[$selected_plan])): ?>
 document.addEventListener('DOMContentLoaded', function() {
-    selectPlan('<?php echo $selected_plan; ?>', '<?php echo e($plans[$selected_plan]['label']); ?>', <?php echo $plans[$selected_plan]['price']; ?>);
+    selectPlan(<?php echo json_encode($selected_plan); ?>, <?php echo json_encode(e($plans[$selected_plan]['label'])); ?>, <?php echo (int)$plans[$selected_plan]['price']; ?>);
 });
 <?php endif; ?>
 </script>

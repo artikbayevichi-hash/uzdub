@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'Tasodifiy';
+$page_title = t('random_page_title');
 
 $slug = $_GET['slug'] ?? '';
 if ($slug) {
@@ -18,7 +18,7 @@ if ($slug) {
             }
         } catch (Exception $e) {}
     }
-    $no_content_msg = "Bu kategoriyada hali kontent yo'q";
+    $no_content_msg = t('no_content_in_category');
 }
 
 require_once __DIR__ . '/includes/header.php';
@@ -92,8 +92,8 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <div class="random-page">
-    <div class="random-title">🎲 Tasodifiy</div>
-    <div class="random-subtitle">Qaysi turdan tasodifiy ko'rmoqchisiz?</div>
+    <div class="random-title">🎲 <?php echo t('random_heading'); ?></div>
+    <div class="random-subtitle"><?php echo t('random_subtitle'); ?></div>
     <?php if (!empty($no_content_msg)): ?>
     <div style="background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;color:#ef5350;font-size:13px;">
         ⚠️ <?php echo $no_content_msg; ?>
@@ -102,9 +102,9 @@ require_once __DIR__ . '/includes/header.php';
     <div class="random-grid">
         <?php
         $cats = [
-            ['slug' => 'kino',    'icon' => '🎬', 'label' => 'Kino',    'color' => '#2196f3'],
-            ['slug' => 'anime',   'icon' => '🎌', 'label' => 'Anime',   'color' => '#e040fb'],
-            ['slug' => 'multfilm','icon' => '🧸', 'label' => 'Multfilm','color' => '#4caf50'],
+            ['slug' => 'kino',    'icon' => '🎬', 'label' => t('random_kino_label'),    'color' => '#2196f3'],
+            ['slug' => 'anime',   'icon' => '🎌', 'label' => t('random_anime_label'),   'color' => '#e040fb'],
+            ['slug' => 'multfilm','icon' => '🧸', 'label' => t('random_multfilm_label'),'color' => '#4caf50'],
         ];
         foreach ($cats as $cat) {
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM content c JOIN categories cat ON c.category_id = cat.id WHERE cat.slug = ?");
@@ -113,7 +113,7 @@ require_once __DIR__ . '/includes/header.php';
             echo '<a href="/uzdub/random.php?slug=' . $cat['slug'] . '" class="random-card" style="--card-accent:' . $cat['color'] . ';">';
             echo '<div class="random-card-icon">' . $cat['icon'] . '</div>';
             echo '<div class="random-card-label">' . $cat['label'] . '</div>';
-            echo '<div class="random-card-count">' . $count . ' ta kontent</div>';
+            echo '<div class="random-card-count">' . $count . ' ' . t('content_count') . '</div>';
             echo '</a>';
         }
         ?>

@@ -5,7 +5,7 @@
                 <div class="footer-logo-wrap">
                     <span class="footer-logo">🎬 UZDUB PLATFORM</span>
                 </div>
-                <p class="footer-desc">Kino, Anime va Multfilmlar o'zbek tilida — bir joyda.</p>
+                <p class="footer-desc"><?php echo t('footer_desc'); ?></p>
                 <div class="footer-social">
                     <a href="https://t.me/uzdub" target="_blank" title="Telegram" class="social-tg">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.499 1.201-.82 1.23-.697.065-1.226-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.12.099.153.232.168.334.016.102.035.33.02.51z"/></svg>
@@ -19,28 +19,28 @@
                 </div>
             </div>
             <div class="footer-links">
-                <h4>Foydali havolalar</h4>
-                <a href="/uzdub/index.php">Bosh sahifa</a>
-                <a href="/uzdub/category.php?slug=kino">Kino</a>
-                <a href="/uzdub/category.php?slug=anime">Anime</a>
-                <a href="/uzdub/category.php?slug=multfilm">Multfilm</a>
-                <a href="/uzdub/statistics.php">Statistika</a>
+                <h4><?php echo t('useful_links'); ?></h4>
+                <a href="/uzdub/index.php"><?php echo t('home'); ?></a>
+                <a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a>
+                <a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a>
+                <a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a>
+                <a href="/uzdub/statistics.php"><?php echo t('statistics'); ?></a>
             </div>
             <div class="footer-links">
-                <h4>Huquqiy</h4>
+                <h4><?php echo t('legal'); ?></h4>
                 <a href="/uzdub/dmca.php">DMCA</a>
-                <a href="/uzdub/terms.php">Foydalanish shartlari</a>
-                <a href="/uzdub/privacy.php">Maxfiylik siyosati</a>
-                <a href="/uzdub/contacts.php">Aloqa</a>
+                <a href="/uzdub/terms.php"><?php echo t('terms'); ?></a>
+                <a href="/uzdub/privacy.php"><?php echo t('privacy'); ?></a>
+                <a href="/uzdub/contacts.php"><?php echo t('contacts'); ?></a>
             </div>
         </div>
         <div class="footer-divider"></div>
         <div class="footer-disclaimer">
             <span class="disclaimer-icon">ℹ️</span>
-            <p>Ushbu saytdagi audio dublyajlar boshqa dublyaj jamoalari va manbalaridan yig'ib, tanishtirish maqsadida joylashtirilgan. Barcha huquqlar tegishli mualliflar va dublyaj jamoalariga tegishli.</p>
+            <p><?php echo t('disclaimer'); ?></p>
         </div>
         <div class="footer-bottom">
-            &copy; <?php echo date('Y'); ?> UZDUB PLATFORM.UZ — barcha huquqlar himoyalangan.
+            &copy; <?php echo date('Y'); ?> UZDUB PLATFORM.UZ — <?php echo t('all_rights'); ?>
         </div>
     </div>
 </footer>

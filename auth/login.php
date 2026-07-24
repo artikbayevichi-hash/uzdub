@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
         check_premium_expiry($pdo, $user['id']);
         refresh_user_session($pdo, $user['id']);
+        session_regenerate_id(true);
         $token = generate_switch_token($pdo, $user['id']);
         $_SESSION['switch_token'] = $token;
         $_SESSION['switch_user_id'] = $user['user_id'];

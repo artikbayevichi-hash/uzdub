@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'Aloqa';
+$page_title = t('contacts_page_title');
 include __DIR__ . '/includes/header.php';
 ?>
 <style>
@@ -19,8 +19,8 @@ include __DIR__ . '/includes/header.php';
 .contact-card a { color:var(--blue-glow); text-decoration:none; }
 </style>
 <div class="legal-wrap">
-    <h1>📩 Aloqa</h1>
-    <p>Biz bilan bog'lanish uchun quyidagi usullardan foydalaning:</p>
+    <h1>📩 <?php echo t('contacts_heading'); ?></h1>
+    <p><?php echo t('contacts_desc'); ?></p>
 
     <div class="contact-grid">
         <div class="contact-card">
@@ -45,7 +45,7 @@ include __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <h2>Xabar yuboring</h2>
-    <p>Savollaringiz, takliflaringiz yoki muammolaringiz bo'lsa, bizga email yozing. 24 soat ichida javob berishga harakat qilamiz.</p>
+    <h2><?php echo t('write_message_heading'); ?></h2>
+    <p><?php echo t('write_message_desc'); ?></p>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

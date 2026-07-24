@@ -28,6 +28,19 @@ if (!$sessionId) {
 
 $userId = $_SESSION['user_id'] ?? null;
 
+// Premium tekshirish
+if ($userId) {
+    $chk = $pdo->prepare("SELECT is_premium FROM users WHERE id = ?");
+    $chk->execute([$userId]);
+    if (!$chk->fetchColumn()) {
+        echo json_encode(['error' => 'AI chat faqat Premium foydalanuvchilar uchun.']);
+        exit;
+    }
+} else {
+    echo json_encode(['error' => 'AI chatdan foydalanish uchun tizimga kirishingiz kerak.']);
+    exit;
+}
+
 // Sessiya haqiqatan shu foydalanuvchiga tegishli ekanini tekshirish (IDOR himoyasi)
 if ($userId && $sessionId) {
     $own = $pdo->prepare("SELECT id FROM ai_chat_sessions WHERE id = ? AND user_id = ?");

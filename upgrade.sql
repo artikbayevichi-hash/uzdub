@@ -107,4 +107,17 @@ WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'users' AND COLUMN_NAME = 'last_lo
 SET @sql = IF(@col_exists = 0, 'ALTER TABLE users ADD COLUMN last_login_at DATETIME DEFAULT NULL AFTER google_id', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+CREATE TABLE IF NOT EXISTS user_content_status (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_id INT NOT NULL,
+    status ENUM('watching','planned','completed','paused','dropped','favorite') NOT NULL DEFAULT 'watching',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_user_content_status (user_id, content_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
+    INDEX idx_user_status (user_id, status)
+) ENGINE=InnoDB;
+
 SELECT 'Yangilash muvaffaqiyatli yakunlandi!' AS natija;

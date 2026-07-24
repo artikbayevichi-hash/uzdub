@@ -1,0 +1,15 @@
+# Asosiy himoya — maxfiy fayllarni veb orqali kirishdan to'sish
+<FilesMatch "\.(env|env\.example|sql|bat|ps1|zip)$">
+    Require all denied
+</FilesMatch>
+
+# Index faylni ko'rsatishni to'xtatish
+Options -Indexes
+
+# Xavfsizlik headerlari
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

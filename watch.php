@@ -7,8 +7,8 @@ $id = (int)($_GET['id'] ?? 0);
 // AJAX - watchlistga qo'shish/olib tashlash
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_watchlist'])) {
     header('Content-Type: application/json');
-    if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>'Kirish kerak']); exit; }
-    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>'Xavfsizlik tokeni noto\'g\'ri']); exit; }
+    if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>t('login_required')]); exit; }
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>t('security_token_wrong')]); exit; }
     $user = current_user();
     $cid = (int)$_POST['content_id'];
     $chk = $pdo->prepare("SELECT id FROM watchlist WHERE user_id=? AND content_id=?");
@@ -29,7 +29,7 @@ $item = $stmt->fetch();
 
 if (!$item) { header('Location: index.php'); exit; }
 
-$page_title = $item['title'];
+$page_title = t_title($item);
 $pdo->prepare("UPDATE content SET views = views + 1 WHERE id = ?")->execute([$id]);
 
 // Janrlarni olish
@@ -88,12 +88,12 @@ include __DIR__ . '/includes/header.php';
             <div class="lock-bg" style="background-image:url('<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : ''; ?>');"></div>
             <div class="lock-content">
                 <div class="lock-icon">🔒</div>
-                <h3>Bu — Premium kontent</h3>
-                <p>"<?php echo e($item['title']); ?>" ni tomosha qilish uchun Premium obuna kerak.</p>
+                <h3><?php echo t('premium_content'); ?></h3>
+                <p>"<?php echo e(t_title($item)); ?>" <?php echo t('premium_needed'); ?></p>
                 <?php if (is_user()): ?>
-                <a href="premium.php" class="btn-unlock">⭐ Premium olish</a>
+                <a href="premium.php" class="btn-unlock">⭐ <?php echo t('get_premium'); ?></a>
                 <?php else: ?>
-                <a href="auth/login.php?redirect=<?php echo urlencode('/uzdub/watch.php?id=' . $id); ?>" class="btn-unlock">Kirish va Premium olish</a>
+                <a href="auth/login.php?redirect=<?php echo urlencode('/uzdub/watch.php?id=' . $id); ?>" class="btn-unlock"><?php echo t('login_and_premium'); ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -105,20 +105,20 @@ include __DIR__ . '/includes/header.php';
     <div class="watch-action-bar">
         <button class="watch-btn <?php echo $in_watchlist ? 'active' : ''; ?>" id="watchlistBtn" onclick="toggleWatchlist(<?php echo $id; ?>)">
             <span id="wlIcon"><?php echo $in_watchlist ? '✅' : '➕'; ?></span>
-            <span id="wlText"><?php echo $in_watchlist ? 'Ro\'yxatda' : 'Keyinroq ko\'rish'; ?></span>
+            <span id="wlText"><?php echo $in_watchlist ? t('watchlist_added') : t('watchlist_add'); ?></span>
         </button>
-        <a href="mylist.php" class="watch-btn">📋 Mening ro'yxatim</a>
+        <a href="mylist.php" class="watch-btn">📋 <?php echo t('my_list'); ?></a>
     </div>
 
     <div class="detail-header">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($item['title']); ?>" alt="<?php echo e($item['title']); ?>">
+        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
         <div>
-            <h1><?php echo e($item['title']); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">⭐ PREMIUM TAVSIYA</span><?php endif; ?></h1>
+            <h1><?php echo e(t_title($item)); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">⭐ <?php echo t('premium_tag'); ?></span><?php endif; ?></h1>
             <div class="meta">
                 <?php echo e($item['cat_name']); ?> &middot;
                 <?php echo e($item['release_year']); ?> &middot;
                 &#9733; <?php echo e($item['rating']); ?> &middot;
-                &#128065; <?php echo e($item['views']); ?> marta ko'rilgan
+                &#128065; <?php echo e($item['views']); ?> <?php echo t('views_count'); ?>
             </div>
 
             <?php if (!empty($genre_rows)): ?>
@@ -131,27 +131,27 @@ include __DIR__ . '/includes/header.php';
 
             <?php if ($item['studio'] || $item['director'] || $item['duration']): ?>
             <div class="meta" style="margin-top:8px;">
-                <?php if ($item['studio']): ?>&#127968; Studio: <?php echo e($item['studio']); ?><br><?php endif; ?>
-                <?php if ($item['director']): ?>&#128100; Rejissyor: <?php echo e($item['director']); ?><br><?php endif; ?>
-                <?php if ($item['duration']): ?>&#9202; Davomiylik: <?php echo e($item['duration']); ?><br><?php endif; ?>
-                <?php if ($item['status']): ?>&#127922; Holati: <?php echo e(ucfirst($item['status'])); ?><?php endif; ?>
+                <?php if ($item['studio']): ?>&#127968; <?php echo t('studio'); ?> <?php echo e($item['studio']); ?><br><?php endif; ?>
+                <?php if ($item['director']): ?>&#128100; <?php echo t('director'); ?> <?php echo e($item['director']); ?><br><?php endif; ?>
+                <?php if ($item['duration']): ?>&#9202; <?php echo t('duration'); ?> <?php echo e($item['duration']); ?><br><?php endif; ?>
+                <?php if ($item['status']): ?>&#127922; <?php echo t('status'); ?> <?php echo e(ucfirst($item['status'])); ?><?php endif; ?>
             </div>
             <?php endif; ?>
 
-            <p class="desc"><?php echo nl2br(e($item['description'])); ?></p>
+            <p class="desc"><?php echo nl2br(e(t_desc($item))); ?></p>
         </div>
     </div>
 
     <?php if (!empty($similar)): ?>
     <section class="content-section" style="padding-left:0; padding-right:0;">
-        <h2>O'xshash kontentlar</h2>
+        <h2><?php echo t('similar_content'); ?></h2>
         <div class="row-wrap">
             <div class="row-scroll">
                 <?php foreach ($similar as $s): ?>
                 <a href="watch.php?id=<?php echo $s['id']; ?>" class="card">
-                    <img src="<?php echo $s['poster'] ? 'uploads/posters/' . e($s['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($s['title']); ?>" alt="<?php echo e($s['title']); ?>">
+                    <img src="<?php echo $s['poster'] ? 'uploads/posters/' . e($s['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($s)); ?>" alt="<?php echo e(t_title($s)); ?>">
                     <div class="card-info">
-                        <h3><?php echo e($s['title']); ?></h3>
+                        <h3><?php echo e(t_title($s)); ?></h3>
                         <div class="meta"><span><?php echo e($s['release_year']); ?></span><span class="badge">&#9733; <?php echo e($s['rating']); ?></span></div>
                     </div>
                 </a>
@@ -176,20 +176,20 @@ function toggleWatchlist(contentId) {
     fetch('watch.php?id=<?php echo $id; ?>', {method:'POST', body:fd})
         .then(r => r.json())
         .then(r => {
-            if (!r.ok) { if (window.showToast) showToast(r.msg || 'Xatolik yuz berdi', 'error'); return; }
+            if (!r.ok) { if (window.showToast) showToast(r.msg || '<?php echo t('error_occurred'); ?>', 'error'); return; }
             var btn = document.getElementById('watchlistBtn');
             var icon = document.getElementById('wlIcon');
             var text = document.getElementById('wlText');
             if (r.added) {
                 btn.classList.add('active');
                 icon.textContent = '✅';
-                text.textContent = "Ro'yxatda";
-                if (window.showToast) showToast("Ro'yxatga qo'shildi", 'success');
+                text.textContent = "<?php echo t('watchlist_added'); ?>";
+                if (window.showToast) showToast("<?php echo t('added_to_watchlist'); ?>", 'success');
             } else {
                 btn.classList.remove('active');
                 icon.textContent = '➕';
-                text.textContent = 'Keyinroq ko\'rish';
-                if (window.showToast) showToast("Ro'yxatdan olib tashlandi", 'info');
+                text.textContent = '<?php echo t('watch_later'); ?>';
+                if (window.showToast) showToast("<?php echo t('removed_from_watchlist'); ?>", 'info');
             }
         });
 }
@@ -211,7 +211,7 @@ function toggleWatchlist(contentId) {
                 video.currentTime = resumeAt;
                 if (window.showToast) {
                     var mins = Math.floor(resumeAt / 60);
-                    showToast("Siz to'xtagan joydan davom etyapti (" + mins + " daq.)", 'info');
+                    showToast("<?php echo t('resuming_from'); ?> (" + mins + " <?php echo t('minutes_abbrev'); ?>)", 'info');
                 }
             }
             video.removeEventListener('loadedmetadata', onMeta);

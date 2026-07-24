@@ -24,18 +24,24 @@ if (!$user) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+    $attempt_id = 'switch_verify:' . client_ip() . ':' . $user['id'];
+    if (login_is_locked($pdo, $attempt_id)) {
+        $error = 'Juda ko\'p noto\'g\'ri urinish. ' . LOGIN_LOCKOUT_MINUTES . ' daqiqadan so\'ng qayta urinib ko\'ring.';
+    } elseif (!validate_csrf($_POST['csrf_token'] ?? '')) {
         $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
     } else {
         $password = $_POST['password'] ?? '';
         if (password_verify($password, $user['password'])) {
+            login_clear_attempts($pdo, $attempt_id);
             unset($_SESSION['verify_switch_uid'], $_SESSION['verify_switch_token'], $_SESSION['verify_switch_username']);
             $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
             check_premium_expiry($pdo, $user['id']);
             refresh_user_session($pdo, $user['id']);
+            session_regenerate_id(true);
             header('Location: /uzdub/index.php');
             exit;
         }
+        login_register_failed($pdo, $attempt_id);
         $error = 'Parol noto\'g\'ri.';
     }
 }

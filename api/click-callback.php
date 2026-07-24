@@ -19,7 +19,17 @@ header('Content-Type: application/json; charset=utf-8');
 // Click yuborgan ma'lumotlarni olish
 $data = $_POST;
 
-// So'rovni logga yozish (sezgili ma'lumotlarni qirqish)
+// Click har doim quyidagi maydonlarni yuboradi:
+// click_trans_id, merchant_trans_id, service_id, amount, action, sign_time, sign_string, merchant_prepare_id
+$click_trans_id   = (int)($data['click_trans_id'] ?? 0);
+$merchant_trans_id = $data['merchant_trans_id'] ?? '';
+$service_id       = (int)($data['service_id'] ?? 0);
+$amount           = (float)($data['amount'] ?? 0);
+$action           = (int)($data['action'] ?? 0);
+$sign_time        = $data['sign_time'] ?? '';
+$sign_string      = $data['sign_string'] ?? '';
+
+// So'rovni logga yozish (sezgirsiz)
 $log_file = __DIR__ . '/../logs/click_payments.log';
 $log_dir = dirname($log_file);
 if (!is_dir($log_dir)) mkdir($log_dir, 0755, true);
@@ -30,16 +40,6 @@ $safe_log = json_encode([
     'action' => $action,
 ], JSON_UNESCAPED_UNICODE);
 file_put_contents($log_file, $safe_log . "\n", FILE_APPEND);
-
-// Click har doim quyidagi maydonlarni yuboradi:
-// click_trans_id, merchant_trans_id, service_id, amount, action, sign_time, sign_string, merchant_prepare_id
-$click_trans_id   = (int)($data['click_trans_id'] ?? 0);
-$merchant_trans_id = $data['merchant_trans_id'] ?? '';  // Bizning transaction_id
-$service_id       = (int)($data['service_id'] ?? 0);
-$amount           = (float)($data['amount'] ?? 0);
-$action           = (int)($data['action'] ?? 0);
-$sign_time        = $data['sign_time'] ?? '';
-$sign_string      = $data['sign_string'] ?? '';
 
 // 1) Action tekshirish
 // Click: action=0 — prepare (buyurtma yaratish), action=1 — complete (to'lov tasdiqlash)

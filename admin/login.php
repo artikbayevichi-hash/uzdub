@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             login_clear_attempts($pdo, $attempt_id);
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_username'] = $admin['username'];
+            session_regenerate_id(true);
             header('Location: dashboard.php');
             exit;
         } else {

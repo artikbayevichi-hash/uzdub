@@ -54,6 +54,7 @@ $user_db_id = find_or_create_google_user($pdo, $google_id, $email, $name);
 $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user_db_id]);
 check_premium_expiry($pdo, $user_db_id);
 refresh_user_session($pdo, $user_db_id);
+session_regenerate_id(true);
 
 $token = generate_switch_token($pdo, $user_db_id);
 $_SESSION['switch_token'] = $token;

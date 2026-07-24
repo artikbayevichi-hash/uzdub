@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : 'UZDUB PLATFORM - Kino, Anime, Multfilm'; ?></title>
+<title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?></title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <link rel="stylesheet" href="/uzdub/css/skeleton.css">
 <link rel="stylesheet" href="/uzdub/css/splash.css">
@@ -28,12 +28,18 @@
         <li><a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a></li>
         <li><a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a></li>
         <li><a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a></li>
-        <li><a href="/uzdub/random.php">🎲 Tasodifiy</a></li>
-        <li><a href="/uzdub/statistics.php">📊 Statistika</a></li>
+        <li class="random-dropdown">
+            <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
+            <div class="random-menu">
+                <a href="/uzdub/random.php?slug=kino">🎬 <?php echo t('random_kino'); ?></a>
+                <a href="/uzdub/random.php?slug=anime">🎭 <?php echo t('random_anime'); ?></a>
+                <a href="/uzdub/random.php?slug=multfilm">🎪 <?php echo t('random_multfilm'); ?></a>
+                <a href="/uzdub/random.php">🎲 <?php echo t('random_all'); ?></a>
+            </div>
+        </li>
         <li><a href="/uzdub/global_chat.php"><?php echo t('chat'); ?></a></li>
         <?php if (is_user()): ?>
         <li><a href="/uzdub/inbox.php"><?php echo t('messages'); ?></a></li>
-        <li><a href="/uzdub/mylist.php"><?php echo t('my_list'); ?></a></li>
         <li><a href="/uzdub/premium.php" style="color:#f9a825;">⭐ <?php echo t('premium'); ?></a></li>
         <?php endif; ?>
     </ul>
@@ -43,9 +49,10 @@
                 <?php echo strtoupper(current_lang()); ?> ▾
             </button>
             <div class="lang-menu" id="langMenu">
-                <a href="?lang=uz<?php echo isset($_GET['q']) ? '&q='.urlencode($_GET['q']) : ''; ?>" class="<?php echo current_lang()=='uz'?'active':''; ?>">🇺🇿 O'zbek</a>
-                <a href="?lang=ru<?php echo isset($_GET['q']) ? '&q='.urlencode($_GET['q']) : ''; ?>" class="<?php echo current_lang()=='ru'?'active':''; ?>">🇷🇺 Русский</a>
-                <a href="?lang=en<?php echo isset($_GET['q']) ? '&q='.urlencode($_GET['q']) : ''; ?>" class="<?php echo current_lang()=='en'?'active':''; ?>">🇬🇧 English</a>
+                <?php $lang_params = $_GET; unset($lang_params['lang']); $lang_qs = $lang_params ? '&' . http_build_query($lang_params) : ''; ?>
+                <a href="?lang=uz<?php echo $lang_qs; ?>" class="<?php echo current_lang()=='uz'?'active':''; ?>">🇺🇿 O'zbek</a>
+                <a href="?lang=ru<?php echo $lang_qs; ?>" class="<?php echo current_lang()=='ru'?'active':''; ?>">🇷🇺 Русский</a>
+                <a href="?lang=en<?php echo $lang_qs; ?>" class="<?php echo current_lang()=='en'?'active':''; ?>">🇬🇧 English</a>
             </div>
         </div>
         <form action="/uzdub/search.php" method="get" class="search-box" id="searchForm" autocomplete="off" style="position:relative;">
@@ -138,16 +145,18 @@
                 .then(function(data) {
                     suggestions.innerHTML = '';
                     if (!data || data.length === 0) {
-                        suggestions.innerHTML = '<div class="search-suggestion-nores">Natija topilmadi</div>';
+                        suggestions.innerHTML = '<div class="search-suggestion-nores"><?php echo t('search_no_results'); ?></div>';
                     } else {
                         data.forEach(function(item) {
                             var a = document.createElement('a');
                             a.className = 'search-suggestion-item';
                             a.href = '/uzdub/watch.php?id=' + item.id;
-                            var poster = item.poster ? '/uzdub/uploads/posters/' + item.poster : 'https://via.placeholder.com/28x40/121a2b/2196f3?text=' + encodeURIComponent(item.title.slice(0,1));
+                            var lang = '<?php echo current_lang(); ?>';
+                            var displayTitle = (lang === 'ru' && item.title_ru) ? item.title_ru : (lang === 'en' && item.title_en) ? item.title_en : item.title;
+                            var poster = item.poster ? '/uzdub/uploads/posters/' + item.poster : 'https://via.placeholder.com/28x40/121a2b/2196f3?text=' + encodeURIComponent(displayTitle.slice(0,1));
                             a.innerHTML = '<img src="' + poster + '" alt="" loading="lazy">' +
                                 '<div class="sug-info">' +
-                                    '<div class="sug-title">' + escHtml(item.title) + '</div>' +
+                                    '<div class="sug-title">' + escHtml(displayTitle) + '</div>' +
                                     '<div class="sug-meta">' + (item.release_year || '') + ' <span class="sug-badge">' + (item.content_code || '') + '</span></div>' +
                                 '</div>';
                             suggestions.appendChild(a);
@@ -203,7 +212,7 @@
             <?php if ($u['is_premium']): ?><span class="header-premium-badge">⭐</span><?php endif; ?>
         </a>
         <div class="acc-switcher-wrap">
-            <button class="acc-switcher-btn" id="accSwitcherBtn" title="Akkauntlar">⋮</button>
+            <button class="acc-switcher-btn" id="accSwitcherBtn" title="<?php echo t('accounts'); ?>">⋮</button>
             <div class="acc-switcher-dropdown" id="accSwitcherDropdown">
                 <div class="acc-dropdown-current">
                     <img src="<?php echo avatar_url($u['avatar']); ?>" class="acc-dd-avatar" alt="">
@@ -217,7 +226,7 @@
                 <div class="acc-dropdown-list" id="accDropdownList"></div>
                 <a href="/uzdub/auth/login.php?new=1" class="acc-dropdown-add">
                     <span class="acc-add-icon">+</span>
-                    Akkaunt qo'shish
+                    <?php echo t('add_account'); ?>
                 </a>
             </div>
         </div>
@@ -228,7 +237,7 @@
 </header>
 
 <?php $__cur_page = basename($_SERVER['PHP_SELF']); ?>
-<nav class="bottom-nav" aria-label="Asosiy navigatsiya">
+<nav class="bottom-nav" aria-label="<?php echo t('main_nav'); ?>">
     <a href="/uzdub/index.php" class="<?php echo $__cur_page=='index.php' ? 'active' : ''; ?>">
         <span class="bn-icon">🏠</span><span class="bn-label"><?php echo t('home'); ?></span>
     </a>
@@ -275,6 +284,12 @@ document.getElementById('navToggle').addEventListener('click', function() {
         try { return JSON.parse(localStorage.getItem('uzdub_accounts')) || []; } catch(e) { return []; }
     }
 
+    function escHtml(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s));
+        return d.innerHTML;
+    }
+
     function renderAccounts() {
         var accounts = getAccounts();
         list.innerHTML = '';
@@ -282,10 +297,12 @@ document.getElementById('navToggle').addEventListener('click', function() {
             if (String(acc.user_id) === String(currentUserId)) return;
             var item = document.createElement('a');
             item.className = 'acc-dd-item';
-            item.href = '/uzdub/auth/switch.php?uid=' + acc.user_id + '&token=' + encodeURIComponent(acc.switch_token || '');
-            item.innerHTML = '<img src="' + (acc.avatar || '/uzdub/uploads/avatars/default.png') + '" class="acc-dd-item-avatar" alt="">' +
+            item.href = '/uzdub/auth/switch.php?uid=' + encodeURIComponent(acc.user_id) + '&token=' + encodeURIComponent(acc.switch_token || '');
+            var avatarSrc = escHtml(acc.avatar || '/uzdub/uploads/avatars/default.png');
+            var displayName = escHtml(acc.username || '');
+            item.innerHTML = '<img src="' + avatarSrc + '" class="acc-dd-item-avatar" alt="">' +
                 '<div class="acc-dd-item-info">' +
-                    '<span class="acc-dd-item-name">' + (acc.username || '') + '</span>' +
+                    '<span class="acc-dd-item-name">' + displayName + '</span>' +
                     (acc.is_premium ? '<span class="acc-dd-item-premium">⭐ Premium</span>' : '') +
                 '</div>';
             list.appendChild(item);
@@ -302,6 +319,15 @@ document.getElementById('navToggle').addEventListener('click', function() {
 
     document.addEventListener('click', function(e) {
         if (!dd.contains(e.target) && e.target !== btn) dd.classList.remove('open');
+    });
+})();
+
+// Tasodifiy dropdown
+(function() {
+    var rd = document.querySelector('.random-dropdown');
+    if (!rd) return;
+    document.addEventListener('click', function(e) {
+        if (!rd.contains(e.target)) rd.classList.remove('open');
     });
 })();
 </script>

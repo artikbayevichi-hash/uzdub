@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'httponly' => true,
         'secure' => isset($_SERVER['HTTPS']),
-        'samesite' => 'Strict'
+        'samesite' => 'Lax'
     ]);
     session_start();
 }
@@ -423,6 +423,7 @@ function refresh_user_session($pdo, $user_db_id) {
     $stmt->execute([$user_db_id]);
     $u = $stmt->fetch();
     if ($u) {
+        unset($u['password']);
         $_SESSION['user_id'] = $u['id'];
         $_SESSION['user_data'] = $u;
     }
@@ -454,7 +455,7 @@ function find_or_create_google_user($pdo, $google_id, $email, $name) {
 // ===== 8 xonali unikal ID yaratish =====
 function generate_user_id($pdo) {
     do {
-        $uid = str_pad(mt_rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+        $uid = str_pad((string)random_int(10000000, 99999999), 8, '0', STR_PAD_LEFT);
         $exists = $pdo->prepare("SELECT id FROM users WHERE user_id = ?");
         $exists->execute([$uid]);
     } while ($exists->fetch());
@@ -685,4 +686,19 @@ function time_ago($datetime) {
     if ($diff < 3600) return floor($diff/60) . ' daqiqa oldin';
     if ($diff < 86400) return floor($diff/3600) . ' soat oldin';
     return date('d.m.Y H:i', strtotime($datetime));
+}
+
+// ===== Content tarjimasi (title/description) =====
+function t_title($item) {
+    $lang = $GLOBALS['current_lang'] ?? 'uz';
+    if ($lang === 'ru' && !empty($item['title_ru'])) return $item['title_ru'];
+    if ($lang === 'en' && !empty($item['title_en'])) return $item['title_en'];
+    return $item['title'] ?? '';
+}
+
+function t_desc($item) {
+    $lang = $GLOBALS['current_lang'] ?? 'uz';
+    if ($lang === 'ru' && !empty($item['description_ru'])) return $item['description_ru'];
+    if ($lang === 'en' && !empty($item['description_en'])) return $item['description_en'];
+    return $item['description'] ?? '';
 }

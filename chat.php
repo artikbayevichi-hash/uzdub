@@ -15,26 +15,26 @@ $other = $stmt->fetch();
 
 if (!$other || $other['id'] == $user['id']) { header('Location: index.php'); exit; }
 
-$page_title = 'Chat: ' . $other['username'];
+$page_title = t('chat_title_prefix') . $other['username'];
 
 // AJAX - xabar yuborish
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     header('Content-Type: application/json');
-    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>'Xavfsizlik tokeni noto\'g\'ri']); exit; }
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>t('security_token_wrong')]); exit; }
     $txt = trim($_POST['message'] ?? '');
     $attachment = null; $attachment_type = null;
 
     if (!empty($_FILES['attachment']['name'])) {
-        if (!$user['is_premium']) { echo json_encode(['ok'=>false,'msg'=>'Rasm/GIF yuborish faqat Premium uchun! ⭐']); exit; }
+        if (!$user['is_premium']) { echo json_encode(['ok'=>false,'msg'=>t('image_gif_premium')]); exit; }
         $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg','jpeg','png','webp','gif'];
-        if (!in_array($ext, $allowed)) { echo json_encode(['ok'=>false,'msg'=>'Faqat rasm/GIF mumkin']); exit; }
+        if (!in_array($ext, $allowed)) { echo json_encode(['ok'=>false,'msg'=>t('only_images_gifs')]); exit; }
         $attachment = upload_file('attachment', __DIR__ . '/uploads/chat/', $allowed);
-        if (!$attachment) { echo json_encode(['ok'=>false,'msg'=>'Yuklashda xatolik']); exit; }
+        if (!$attachment) { echo json_encode(['ok'=>false,'msg'=>t('upload_error')]); exit; }
         $attachment_type = ($ext === 'gif') ? 'gif' : 'image';
     }
 
-    if ($txt === '' && !$attachment) { echo json_encode(['ok'=>false,'msg'=>'Bo\'sh xabar']); exit; }
+    if ($txt === '' && !$attachment) { echo json_encode(['ok'=>false,'msg'=>t('empty_message')]); exit; }
 
     $pdo->prepare("INSERT INTO private_messages (sender_id, receiver_id, message, attachment, attachment_type) VALUES (?,?,?,?,?)")
         ->execute([$user['id'], $other['id'], $txt ?: null, $attachment, $attachment_type]);
@@ -99,11 +99,11 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div class="chat-box">
         <div class="messages-area" id="msgArea">
-            <div style="text-align:center;color:var(--text-muted);font-size:13px;">⏳ Yuklanmoqda...</div>
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;">⏳ <?php echo t('loading'); ?></div>
         </div>
         <div class="attach-preview-bar" id="attachPreviewBar" style="display:none;">
             <img id="attachPreviewImg" src="">
-            <button onclick="clearAttachment()">✕ Bekor qilish</button>
+            <button onclick="clearAttachment()">✕ <?php echo t('cancel'); ?></button>
         </div>
         <div class="emoji-picker" id="emojiPicker">
             <?php foreach (['😀','😂','😍','😎','🥰','😢','😡','👍','👎','❤️','🔥','🎉','🍿','🎬','⭐','🤔','😴','🙌','👀','💯'] as $emo): ?>
@@ -114,15 +114,15 @@ include __DIR__ . '/includes/header.php';
             <button type="button" class="chat-attach-btn" onclick="toggleEmoji()">😊</button>
             <button type="button" class="chat-attach-btn <?php echo $user['is_premium'] ? '' : 'locked'; ?>" onclick="attachClick()">📎</button>
             <input type="file" id="attachInput" accept="image/*,.gif" style="display:none;" onchange="onAttachSelect(this)">
-            <input type="text" id="msgInput" placeholder="Xabar yozing..." maxlength="500">
-            <button class="chat-send-btn" onclick="sendMsg()">Yuborish</button>
+            <input type="text" id="msgInput" placeholder="<?php echo t('write_message'); ?>" maxlength="500">
+            <button class="chat-send-btn" onclick="sendMsg()"><?php echo t('send_btn'); ?></button>
         </div>
     </div>
 </div>
 
 <script>
 var lastId = 0;
-var currentUserId = <?php echo $user['id']; ?>;
+var currentUserId = <?php echo (int)$user['id']; ?>;
 var isPremium = <?php echo $user['is_premium'] ? 'true' : 'false'; ?>;
 var selectedFile = null;
 
@@ -135,7 +135,7 @@ function renderMsg(msg) {
     var isOwn = msg.sender_id == currentUserId;
     var body = '';
     if (msg.message) body += '<div class="msg-text">' + escHtml(msg.message) + '</div>';
-    if (msg.attachment) body += '<img class="msg-image" src="/uzdub/uploads/chat/' + msg.attachment + '" onclick="window.open(this.src)">';
+    if (msg.attachment) body += '<img class="msg-image" src="/uzdub/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
     body += '<span class="msg-time-small">' + escHtml(msg.created_at.substring(11,16)) + '</span>';
     return '<div class="msg-item ' + (isOwn ? 'own' : 'other') + '" data-id="' + msg.id + '">' + body + '</div>';
 }
@@ -152,14 +152,14 @@ function fetchMessages() {
                 });
                 area.scrollTop = area.scrollHeight;
             } else if (lastId === 0) {
-                document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">Xabar yo\'q. Salom bering! 👋</div>';
+                document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;"><?php echo t('no_messages_say_hi'); ?> 👋</div>';
             }
         });
 }
 function toggleEmoji() { document.getElementById('emojiPicker').classList.toggle('active'); }
 function insertEmoji(emo) { var i=document.getElementById('msgInput'); i.value += emo; i.focus(); }
 function attachClick() {
-    if (!isPremium) { alert('Rasm/GIF yuborish faqat Premium foydalanuvchilar uchun ⭐'); return; }
+    if (!isPremium) { alert('<?php echo t('image_gif_premium_js'); ?>'); return; }
     document.getElementById('attachInput').click();
 }
 function onAttachSelect(input) {
@@ -191,7 +191,7 @@ function sendMsg() {
         .then(r => r.json())
         .then(r => {
             if (r.ok) { input.value = ''; clearAttachment(); fetchMessages(); }
-            else alert(r.msg || 'Xatolik');
+            else alert(r.msg || '<?php echo t('error'); ?>');
         });
 }
 document.addEventListener('DOMContentLoaded', function() {

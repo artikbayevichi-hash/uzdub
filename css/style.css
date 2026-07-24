@@ -348,6 +348,47 @@ body {
 .lang-menu a:hover { background: rgba(33,150,243,0.12); transform: translateZ(var(--z-subtle)); }
 .lang-menu a.active { color: var(--blue-glow); background: rgba(33,150,243,0.1); }
 
+.random-dropdown { position: relative; }
+.random-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.random-btn:hover { color: var(--blue-glow); }
+.random-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 10px;
+    background: var(--card-bg);
+    border: 1px solid rgba(33,150,243,0.3);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 190px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 50;
+}
+.random-dropdown.open .random-menu { display: block; }
+.random-menu a {
+    display: block;
+    padding: 9px 12px;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.random-menu a:hover { background: rgba(33,150,243,0.12); }
+
 .search-box {
     display: flex;
     align-items: center;

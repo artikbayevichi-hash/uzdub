@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'Statistika';
+$page_title = t('stats_page_title');
 
 $stats = [
     'content'   => $pdo->query("SELECT COUNT(*) FROM content")->fetchColumn(),
@@ -54,55 +54,55 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="stats-hero">
-    <h1>📊 Statistika</h1>
-    <p>UZDUB PLATFORM haqida raqamlar</p>
+    <h1>📊 <?php echo t('stats_heading'); ?></h1>
+    <p><?php echo t('stats_desc'); ?></p>
 </div>
 
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">🎬</div>
         <span class="stat-num" id="sContent"><?php echo $stats['content']; ?></span>
-        <div class="stat-label">Kontent</div>
+        <div class="stat-label"><?php echo t('stat_content'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">👥</div>
         <span class="stat-num" id="sUsers"><?php echo $stats['users']; ?></span>
-        <div class="stat-label">Foydalanuvchi</div>
+        <div class="stat-label"><?php echo t('stat_users'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">👁️</div>
         <span class="stat-num" id="sViews"><?php echo number_format($stats['views']); ?></span>
-        <div class="stat-label">Ko'rishlar</div>
+        <div class="stat-label"><?php echo t('stat_views'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">⭐</div>
         <span class="stat-num"><?php echo $stats['premium']; ?></span>
-        <div class="stat-label">Premium a'zolar</div>
+        <div class="stat-label"><?php echo t('stat_premium'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">🎥</div>
         <span class="stat-num"><?php echo $stats['episodes']; ?></span>
-        <div class="stat-label">Epizodlar</div>
+        <div class="stat-label"><?php echo t('stat_episodes'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">💬</div>
         <span class="stat-num"><?php echo $stats['comments']; ?></span>
-        <div class="stat-label">Izohlar</div>
+        <div class="stat-label"><?php echo t('stat_comments'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">⭐</div>
         <span class="stat-num"><?php echo $stats['ratings']; ?></span>
-        <div class="stat-label">Baholar</div>
+        <div class="stat-label"><?php echo t('stat_ratings'); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon">✉️</div>
         <span class="stat-num"><?php echo $stats['messages']; ?></span>
-        <div class="stat-label">Xabarlar</div>
+        <div class="stat-label"><?php echo t('stat_messages'); ?></div>
     </div>
 </div>
 
 <div class="stats-section">
-    <h2>📂 Kategoriyalar bo'yicha</h2>
+    <h2>📂 <?php echo t('by_category'); ?></h2>
     <div class="cat-bars">
         <?php
         $max_cnt = max(array_column($stats['cat_stats'], 'cnt') ?: [1]);
@@ -122,9 +122,9 @@ include __DIR__ . '/includes/header.php';
 
 <?php if ($stats['top_rated']): ?>
 <div class="stats-section">
-    <h2>🏆 Eng yuqori baholangan</h2>
+    <h2>🏆 <?php echo t('top_rated'); ?></h2>
     <table class="stats-table">
-        <thead><tr><th>#</th><th>Nomi</th><th>Baho</th><th>Ko'rishlar</th></tr></thead>
+        <thead><tr><th>#</th><th><?php echo t('name_col'); ?></th><th><?php echo t('rating_col'); ?></th><th><?php echo t('views_col'); ?></th></tr></thead>
         <tbody>
         <?php foreach ($stats['top_rated'] as $i => $r): ?>
         <tr>
@@ -141,9 +141,9 @@ include __DIR__ . '/includes/header.php';
 
 <?php if ($stats['top_viewed']): ?>
 <div class="stats-section">
-    <h2>👀 Eng ko'p ko'rilgan</h2>
+    <h2>👀 <?php echo t('most_viewed'); ?></h2>
     <table class="stats-table">
-        <thead><tr><th>#</th><th>Nomi</th><th>Ko'rishlar</th><th>Baho</th></tr></thead>
+        <thead><tr><th>#</th><th><?php echo t('name_col'); ?></th><th><?php echo t('views_col'); ?></th><th><?php echo t('rating_col'); ?></th></tr></thead>
         <tbody>
         <?php foreach ($stats['top_viewed'] as $i => $v): ?>
         <tr>
@@ -160,9 +160,9 @@ include __DIR__ . '/includes/header.php';
 
 <?php if ($stats['newest']): ?>
 <div class="stats-section">
-    <h2>🆕 Eng yangilar</h2>
+    <h2>🆕 <?php echo t('newest'); ?></h2>
     <table class="stats-table">
-        <thead><tr><th>#</th><th>Nomi</th><th>Sana</th><th>Baho</th></tr></thead>
+        <thead><tr><th>#</th><th><?php echo t('name_col'); ?></th><th><?php echo t('date_col'); ?></th><th><?php echo t('rating_col'); ?></th></tr></thead>
         <tbody>
         <?php foreach ($stats['newest'] as $i => $n): ?>
         <tr>
