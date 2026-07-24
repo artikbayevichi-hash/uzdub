@@ -19,11 +19,17 @@ header('Content-Type: application/json; charset=utf-8');
 // Click yuborgan ma'lumotlarni olish
 $data = $_POST;
 
-// So'rovni logga yozish (debug uchun)
+// So'rovni logga yozish (sezgili ma'lumotlarni qirqish)
 $log_file = __DIR__ . '/../logs/click_payments.log';
 $log_dir = dirname($log_file);
 if (!is_dir($log_dir)) mkdir($log_dir, 0755, true);
-file_put_contents($log_file, date('[Y-m-d H:i:s] ') . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+$safe_log = json_encode([
+    'time' => date('Y-m-d H:i:s'),
+    'click_trans_id' => $click_trans_id,
+    'merchant_trans_id' => $merchant_trans_id,
+    'action' => $action,
+], JSON_UNESCAPED_UNICODE);
+file_put_contents($log_file, $safe_log . "\n", FILE_APPEND);
 
 // Click har doim quyidagi maydonlarni yuboradi:
 // click_trans_id, merchant_trans_id, service_id, amount, action, sign_time, sign_string, merchant_prepare_id

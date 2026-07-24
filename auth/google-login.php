@@ -10,6 +10,7 @@ if (!$client_id || !$client_secret) {
     exit;
 }
 
+session_set_cookie_params(['httponly' => true, 'secure' => isset($_SERVER['HTTPS']), 'samesite' => 'Strict']);
 session_start();
 $_SESSION['google_state'] = bin2hex(random_bytes(16));
 

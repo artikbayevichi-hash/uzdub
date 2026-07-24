@@ -24,16 +24,20 @@ if (!$user) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $password = $_POST['password'] ?? '';
-    if (password_verify($password, $user['password'])) {
-        unset($_SESSION['verify_switch_uid'], $_SESSION['verify_switch_token'], $_SESSION['verify_switch_username']);
-        $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
-        check_premium_expiry($pdo, $user['id']);
-        refresh_user_session($pdo, $user['id']);
-        header('Location: /uzdub/index.php');
-        exit;
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+        $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+    } else {
+        $password = $_POST['password'] ?? '';
+        if (password_verify($password, $user['password'])) {
+            unset($_SESSION['verify_switch_uid'], $_SESSION['verify_switch_token'], $_SESSION['verify_switch_username']);
+            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+            check_premium_expiry($pdo, $user['id']);
+            refresh_user_session($pdo, $user['id']);
+            header('Location: /uzdub/index.php');
+            exit;
+        }
+        $error = 'Parol noto\'g\'ri.';
     }
-    $error = 'Parol noto\'g\'ri.';
 }
 ?>
 <!DOCTYPE html>
@@ -81,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert alert-info">Bu akkauntga 7 kundan ortiq vaqt kirilmagan. Davom etish uchun parolni kiriting.</div>
         <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
         <form method="post">
+            <?php echo csrf_input(); ?>
             <label>Parol</label>
             <input type="password" name="password" placeholder="Parolni kiriting" required autofocus>
             <button type="submit" class="btn">Tekshirish</button>

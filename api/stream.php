@@ -5,6 +5,11 @@
    Birinchi provider ishlamasa (limit/xato), keyingisiga avtomatik o'tadi.
    ============================================================ */
 
+session_set_cookie_params([
+    'httponly' => true,
+    'secure' => isset($_SERVER['HTTPS']),
+    'samesite' => 'Strict'
+]);
 session_start();
 
 require_once __DIR__ . '/../config/db.php';

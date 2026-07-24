@@ -1,5 +1,12 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'httponly' => true,
+        'secure' => isset($_SERVER['HTTPS']),
+        'samesite' => 'Strict'
+    ]);
+    session_start();
+}
 require_once __DIR__ . '/lang.php';
 
 function e($str) {
@@ -480,6 +487,7 @@ function get_youtube_id($url) {
 function upload_file($file_input_name, $target_dir, $allowed_ext, $allowed_mimes = null) {
     if (!isset($_FILES[$file_input_name]) || $_FILES[$file_input_name]['error'] !== UPLOAD_ERR_OK) return null;
     $file = $_FILES[$file_input_name];
+    if ($file['size'] > MAX_UPLOAD_SIZE) return false;
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowed_ext)) return false;
 
@@ -504,6 +512,7 @@ function client_ip() {
 // ===== Brute-force himoyasi (login urinishlari) =====
 define('LOGIN_MAX_ATTEMPTS', 5);
 define('LOGIN_LOCKOUT_MINUTES', 15);
+define('MAX_UPLOAD_SIZE', 10 * 1024 * 1024);
 
 // $identifier masalan: 'user:1.2.3.4:ali123' yoki 'admin:1.2.3.4:admin'
 function login_is_locked($pdo, $identifier) {

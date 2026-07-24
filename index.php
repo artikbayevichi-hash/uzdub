@@ -102,11 +102,12 @@ if (is_user() && isset($_SESSION['user_id'])):
     $history_cats = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
     if (!empty($history_cats)) {
-        $unique_cats = array_unique($history_cats);
-        $ph = implode(',', $unique_cats);
-        // O'xshash kategoriyadagi kontentlarni ko'rilganlaridan tashqari
+        $unique_cats = array_values(array_unique($history_cats));
         $uid = (int)$_SESSION['user_id'];
-        $stmt = $pdo->query("SELECT DISTINCT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id IN ($ph) AND c.id NOT IN (SELECT content_id FROM watch_progress WHERE user_id = $uid) ORDER BY c.rating DESC, c.views DESC LIMIT 12");
+        $placeholders = implode(',', array_fill(0, count($unique_cats), '?'));
+        $stmt = $pdo->prepare("SELECT DISTINCT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id IN ($placeholders) AND c.id NOT IN (SELECT content_id FROM watch_progress WHERE user_id = ?) ORDER BY c.rating DESC, c.views DESC LIMIT 12");
+        $params = array_merge($unique_cats, [$uid]);
+        $stmt->execute($params);
         $recommendations = $stmt->fetchAll();
     }
     if (!empty($recommendations)):

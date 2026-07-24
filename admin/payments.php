@@ -48,7 +48,7 @@ foreach ($payments as $p) if ($p['status'] === 'pending') $pending_count++;
 <table>
     <tr><th>Sana</th><th>Foydalanuvchi</th><th>Tarif</th><th>Summa</th><th>Screenshot</th><th>Status</th><th>Amallar</th></tr>
     <?php foreach ($payments as $p): ?>
-    <tr style="<?php echo $p['status']==='pending' ? 'background:rgba(255,179,0,0.06);' : ''; ?>">
+    <tr class="<?php echo $p['status']==='pending' ? 'row-pending' : ''; ?>">
         <td><?php echo date('d.m.Y H:i', strtotime($p['created_at'])); ?></td>
         <td><?php echo e($p['username']); ?> (<?php echo e($p['uid']); ?>)</td>
         <td><?php echo e($plan_labels[$p['plan']] ?? $p['plan']); ?></td>

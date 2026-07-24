@@ -4,6 +4,7 @@
    Foydalanuvchiga uning qiziqishlari asosida kinolar tavsiya qilish
    ============================================================ */
 
+session_set_cookie_params(['httponly' => true, 'secure' => isset($_SERVER['HTTPS']), 'samesite' => 'Strict']);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 

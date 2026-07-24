@@ -12,7 +12,10 @@
    ============================================================ */
 
 // Xavfsizlik: faqat to'g'ri kalit bilan yoki CLI orqali ishlaydi
-$secret_key = 'YOUR_CRON_SECRET_KEY'; // o'zgartiring
+$secret_key = env('CRON_SECRET_KEY', '');
+if ($secret_key === '') {
+    die('Xatolik: CRON_SECRET_KEY .env faylida o\'rnatilmagan.');
+}
 $is_cli = (php_sapi_name() === 'cli');
 
 if (!$is_cli) {

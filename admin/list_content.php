@@ -5,8 +5,9 @@ include __DIR__ . '/includes/admin_header.php';
 $items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC")->fetchAll();
 $genre_map = [];
 foreach ($items as $it) {
-    $grs = $pdo->query("SELECT g.name FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = " . (int)$it['id'] . " ORDER BY g.name")->fetchAll(PDO::FETCH_COLUMN);
-    $genre_map[$it['id']] = $grs;
+    $grs_stmt = $pdo->prepare("SELECT g.name FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = ? ORDER BY g.name");
+    $grs_stmt->execute([$it['id']]);
+    $genre_map[$it['id']] = $grs_stmt->fetchAll(PDO::FETCH_COLUMN);
 }
 ?>
 

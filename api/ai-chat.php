@@ -4,6 +4,7 @@
    UZDUB AI — tarix, foydalanuvchi ma'lumotlari, o'rganish
    ============================================================ */
 
+session_set_cookie_params(['httponly' => true, 'secure' => isset($_SERVER['HTTPS']), 'samesite' => 'Strict']);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 

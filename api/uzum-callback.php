@@ -20,11 +20,17 @@ header('Content-Type: application/json; charset=utf-8');
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true) ?? $_POST;
 
-// Logga yozish
+// Logga yozish (sezgili ma'lumotlarni qirqish)
 $log_file = __DIR__ . '/../logs/uzum_payments.log';
 $log_dir = dirname($log_file);
 if (!is_dir($log_dir)) mkdir($log_dir, 0755, true);
-file_put_contents($log_file, date('[Y-m-d H:i:s] ') . $raw . "\n", FILE_APPEND);
+$safe_log = json_encode([
+    'time' => date('Y-m-d H:i:s'),
+    'method' => $method,
+    'transaction_id' => $transaction_id ?? '',
+    'status' => $status ?? '',
+], JSON_UNESCAPED_UNICODE);
+file_put_contents($log_file, $safe_log . "\n", FILE_APPEND);
 
 // Uzum (Payme) API standart maydonlari:
 // method, params: { transaction_id, amount, account: { transaction_id }, time }

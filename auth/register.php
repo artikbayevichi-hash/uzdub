@@ -25,12 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($password !== $confirm) {
         $error = 'Parollar mos emas.';
     } else {
-        // Mavjudligini tekshirish
-        $chk = $pdo->prepare("SELECT id FROM users WHERE username=? OR email=?");
-        $chk->execute([$username, $email]);
-        if ($chk->fetch()) {
-            $error = 'Bu foydalanuvchi nomi yoki email allaqachon band.';
+        if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+            $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
         } else {
+            $chk = $pdo->prepare("SELECT id FROM users WHERE username=? OR email=?");
+            $chk->execute([$username, $email]);
+            if ($chk->fetch()) {
+                $error = 'Bu foydalanuvchi nomi yoki email allaqachon band.';
+            } else {
             $uid  = generate_user_id($pdo);
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (user_id, username, email, password) VALUES (?,?,?,?)");
@@ -44,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: /uzdub/auth/save-account.php');
             exit;
         }
+    }
     }
 }
 ?>
@@ -87,8 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>🎬 UZDUB PLATFORM</h1>
         <h2 style="text-align:center;font-size:18px;margin-bottom:20px;color:var(--text-muted);">Ro'yxatdan o'tish</h2>
         <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
-        <?php if ($success): ?><div class="alert alert-success"><?php echo $success; ?></div><?php else: ?>
+        <?php if ($success): ?><div class="alert alert-success"><?php echo e($success); ?></div><?php else: ?>
         <form method="post">
+            <?php echo csrf_input(); ?>
             <label>Foydalanuvchi nomi</label>
             <input type="text" name="username" placeholder="Ali123" value="<?php echo e($_POST['username'] ?? ''); ?>" required>
             <label>Email</label>

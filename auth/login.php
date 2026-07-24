@@ -7,7 +7,20 @@ if (is_user() && !$new_account) { header('Location: /uzdub/index.php'); exit; }
 
 $error = '';
 $redirect = $_GET['redirect'] ?? '/uzdub/index.php';
-if (!preg_match('#^/uzdub/[^/\\\\].*#', $redirect) && $redirect !== '/uzdub/index.php') {
+$allowed = [
+    '/uzdub/index.php',
+    '/uzdub/watch.php',
+    '/uzdub/category.php',
+    '/uzdub/random.php',
+    '/uzdub/statistics.php',
+    '/uzdub/global_chat.php',
+    '/uzdub/mylist.php',
+    '/uzdub/profile.php',
+    '/uzdub/premium.php',
+    '/uzdub/inbox.php',
+    '/uzdub/search.php',
+];
+if (!in_array($redirect, $allowed, true) && !preg_match('#^/uzdub/(watch|category|profile|mylist|premium|inbox|search)\.php#', $redirect)) {
     $redirect = '/uzdub/index.php';
 }
 
@@ -19,12 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (login_is_locked($pdo, $attempt_id)) {
         $error = 'Juda ko\'p muvaffaqiyatsiz urinish. ' . LOGIN_LOCKOUT_MINUTES . ' daqiqadan so\'ng qayta urinib ko\'ring.';
     } else {
+        if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+            $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+        } else {
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE username=? OR email=?");
+            $stmt->execute([$login, $login]);
+            $user = $stmt->fetch();
 
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username=? OR email=?");
-    $stmt->execute([$login, $login]);
-    $user = $stmt->fetch();
-
-    if ($user && password_verify($password, $user['password'])) {
+            if ($user && password_verify($password, $user['password'])) {
         login_clear_attempts($pdo, $attempt_id);
         $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
         check_premium_expiry($pdo, $user['id']);
@@ -51,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     login_register_failed($pdo, $attempt_id);
     $error = 'Login yoki parol noto\'g\'ri.';
+    }
     }
 }
 
@@ -112,6 +128,7 @@ $google_client_id = env('GOOGLE_CLIENT_ID', '');
         </a>
         <div class="auth-divider"><span>yoki</span></div>
         <form method="post">
+            <?php echo csrf_input(); ?>
             <label>Login yoki Email</label>
             <input type="text" name="login" placeholder="ali123 yoki email@example.com" required autofocus>
             <label>Parol</label>

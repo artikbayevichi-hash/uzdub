@@ -20,6 +20,7 @@ $page_title = 'Chat: ' . $other['username'];
 // AJAX - xabar yuborish
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     header('Content-Type: application/json');
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>'Xavfsizlik tokeni noto\'g\'ri']); exit; }
     $txt = trim($_POST['message'] ?? '');
     $attachment = null; $attachment_type = null;
 
@@ -184,6 +185,7 @@ function sendMsg() {
     var fd = new FormData();
     fd.append('ajax_send', '1');
     fd.append('message', txt);
+    fd.append('csrf_token', '<?php echo e(csrf_token()); ?>');
     if (selectedFile) fd.append('attachment', selectedFile);
     fetch('/uzdub/chat.php?with=<?php echo e($other['user_id']); ?>', {method:'POST', body:fd})
         .then(r => r.json())

@@ -8,6 +8,7 @@ $page_title = 'Global Chat';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     header('Content-Type: application/json');
     if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>'Kirish kerak']); exit; }
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>'Xavfsizlik tokeni noto\'g\'ri']); exit; }
     $user = current_user();
     check_premium_expiry($pdo, $user['id']);
     refresh_user_session($pdo, $user['id']);
@@ -233,6 +234,7 @@ function sendMsg() {
     var fd = new FormData();
     fd.append('ajax_send', '1');
     fd.append('message', txt);
+    fd.append('csrf_token', '<?php echo e(csrf_token()); ?>');
     if (selectedFile) fd.append('attachment', selectedFile);
     fetch('/uzdub/global_chat.php', {method:'POST', body:fd})
         .then(r => r.json())

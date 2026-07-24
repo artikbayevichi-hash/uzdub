@@ -8,6 +8,7 @@ $id = (int)($_GET['id'] ?? 0);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_watchlist'])) {
     header('Content-Type: application/json');
     if (!is_user()) { echo json_encode(['ok'=>false,'msg'=>'Kirish kerak']); exit; }
+    if (!validate_csrf($_POST['csrf_token'] ?? '')) { echo json_encode(['ok'=>false,'msg'=>'Xavfsizlik tokeni noto\'g\'ri']); exit; }
     $user = current_user();
     $cid = (int)$_POST['content_id'];
     $chk = $pdo->prepare("SELECT id FROM watchlist WHERE user_id=? AND content_id=?");
@@ -32,7 +33,9 @@ $page_title = $item['title'];
 $pdo->prepare("UPDATE content SET views = views + 1 WHERE id = ?")->execute([$id]);
 
 // Janrlarni olish
-$genre_rows = $pdo->query("SELECT g.name, g.slug, g.color FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = $id ORDER BY g.name")->fetchAll();
+$genre_rows = $pdo->prepare("SELECT g.name, g.slug, g.color FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = ? ORDER BY g.name");
+$genre_rows->execute([$id]);
+$genre_rows = $genre_rows->fetchAll();
 
 $in_watchlist = false;
 if (is_user()) {
@@ -169,6 +172,7 @@ function toggleWatchlist(contentId) {
     var fd = new FormData();
     fd.append('toggle_watchlist', '1');
     fd.append('content_id', contentId);
+    fd.append('csrf_token', '<?php echo e(csrf_token()); ?>');
     fetch('watch.php?id=<?php echo $id; ?>', {method:'POST', body:fd})
         .then(r => r.json())
         .then(r => {

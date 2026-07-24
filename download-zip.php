@@ -12,6 +12,19 @@ set_time_limit(120);
 $sourceDir = __DIR__;
 $excludeNames = ['.git', 'node_modules', 'vendor', '.gitignore', '_create_zip.php', 'download-zip.php'];
 
+$client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+$allowed_ips = ['127.0.0.1', '::1'];
+if (!in_array($client_ip, $allowed_ips)) {
+    http_response_code(403);
+    die('Ruxsat berilmagan');
+}
+
+$zip_secret = env('ZIP_SECRET_KEY', '');
+if ($zip_secret !== '' && ($_GET['key'] ?? '') !== $zip_secret) {
+    http_response_code(403);
+    die('Ruxsat berilmagan');
+}
+
 // ---------------------------------------------------------------
 // HTML interfeys
 // ---------------------------------------------------------------

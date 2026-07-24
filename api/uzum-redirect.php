@@ -4,6 +4,7 @@
    Foydalanuvchini Uzum to'lov sahifasiga yo'naltirish
    ============================================================ */
 
+session_set_cookie_params(['httponly' => true, 'secure' => isset($_SERVER['HTTPS']), 'samesite' => 'Strict']);
 session_start();
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/payment.php';

@@ -16,11 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (login_is_locked($pdo, $attempt_id)) {
         $error = 'Juda ko\'p muvaffaqiyatsiz urinish. ' . LOGIN_LOCKOUT_MINUTES . ' daqiqadan so\'ng qayta urinib ko\'ring.';
     } else {
-        $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
-        $stmt->execute([$username]);
-        $admin = $stmt->fetch();
+        if (!validate_csrf($_POST['csrf_token'] ?? '')) {
+            $error = 'Xavfsizlik tokeni noto\'g\'ri. Sahifani yangilab qayta urinib ko\'ring.';
+        } else {
+            $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
+            $stmt->execute([$username]);
+            $admin = $stmt->fetch();
 
-        if ($admin && password_verify($password, $admin['password'])) {
+            if ($admin && password_verify($password, $admin['password'])) {
             login_clear_attempts($pdo, $attempt_id);
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_username'] = $admin['username'];
@@ -30,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             login_register_failed($pdo, $attempt_id);
             $error = 'Login yoki parol noto\'g\'ri.';
         }
+    }
     }
 }
 ?>
@@ -74,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2>Boshqaruv paneliga kirish</h2>
         <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
         <form method="post">
+            <?php echo csrf_input(); ?>
             <label>Login</label>
             <input type="text" name="username" required autofocus>
             <label>Parol</label>
