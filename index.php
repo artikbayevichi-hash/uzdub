@@ -4,8 +4,8 @@ require_once __DIR__ . '/includes/functions.php';
 
 $page_title = t('home');
 
-// Hero uchun eng so'nggi 5 ta kontent (aylanuvchi banner)
-$hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC LIMIT 5")->fetchAll();
+// Hero uchun eng ko'p ko'rilgan 10 ta kontent (aylanuvchi banner)
+$hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.views DESC, c.release_year DESC LIMIT 10")->fetchAll();
 
 // Faqat Kino, Anime, Multfilm (Serial olib tashlandi)
 $categories = $pdo->query("SELECT * FROM categories WHERE slug != 'serial' ORDER BY id")->fetchAll();
@@ -188,7 +188,7 @@ if (is_user() && isset($_SESSION['user_id'])):
     }
     function nextSlide() { showSlide((current + 1) % slides.length); }
     function prevSlide() { showSlide((current - 1 + slides.length) % slides.length); }
-    function resetTimer() { clearInterval(timer); timer = setInterval(nextSlide, 5000); }
+    function resetTimer() { clearInterval(timer); timer = setInterval(nextSlide, 6000); }
 
     if (prevBtn) prevBtn.addEventListener('click', function() { prevSlide(); resetTimer(); });
     if (nextBtn) nextBtn.addEventListener('click', function() { nextSlide(); resetTimer(); });

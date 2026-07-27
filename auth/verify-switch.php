@@ -56,9 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="/uzdub/css/auth.css">
 </head>
 <body>
-<canvas id="stars-canvas"></canvas>
-<div class="auth-orb o1"></div>
-<div class="auth-orb o2"></div>
 <div class="auth-wrap">
     <div class="auth-box">
         <div class="verify-icon">🔒</div>
@@ -75,6 +72,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alt-link"><a href="/uzdub/index.php">← Bosh sahifaga qaytish</a></div>
     </div>
 </div>
-<script src="/uzdub/js/stars.js"></script>
 </body>
 </html>

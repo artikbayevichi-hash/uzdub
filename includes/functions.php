@@ -243,6 +243,7 @@ function ai_build_user_context(PDO $pdo, ?int $userId, string $lang = 'uz'): str
 // matched=false bo'lsa, 'rows' faqat suhbat uchun umumiy kontekst (eng ko'p ko'rilganlar),
 // chatda tavsiya kartochkasi sifatida ko'rsatilmaydi — chunki so'rovga chindan mos kelmagan.
 // $userId berilsa, foydalanuvchi yaqinda ko'rgan kategoriyalardagi kontentlar yuqoriroq ko'rinadi.
+// ===== AI chat: foydalanuvchi xabaridan kategoriya niyatini aniqlash =====
 function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId = null): array {
     $cols = "c.id, c.title, c.description, c.poster, c.release_year, c.rating, c.is_premium, cat.name AS cat_name, "
           . "c.studio, c.director, c.duration, c.status";
@@ -573,7 +574,7 @@ function get_content_subtitles(PDO $pdo, int $content_id, ?int $episode_id = nul
 
 function get_user_rating(PDO $pdo, int $user_id, int $content_id): ?int {
     try {
-        $stmt = $pdo->prepare("SELECT rating FROM content_ratings WHERE user_id = ? AND content_id = ?");
+        $stmt = $pdo->prepare("SELECT rating FROM ratings WHERE user_id = ? AND content_id = ?");
         $stmt->execute([$user_id, $content_id]);
         $r = $stmt->fetchColumn();
         return $r !== false ? (int)$r : null;
@@ -584,7 +585,7 @@ function get_user_rating(PDO $pdo, int $user_id, int $content_id): ?int {
 
 function get_avg_user_rating(PDO $pdo, int $content_id): ?float {
     try {
-        $stmt = $pdo->prepare("SELECT ROUND(AVG(rating), 1) FROM content_ratings WHERE content_id = ?");
+        $stmt = $pdo->prepare("SELECT ROUND(AVG(rating), 1) FROM ratings WHERE content_id = ?");
         $stmt->execute([$content_id]);
         $v = $stmt->fetchColumn();
         return $v !== null ? (float)$v : null;
@@ -595,7 +596,7 @@ function get_avg_user_rating(PDO $pdo, int $content_id): ?float {
 
 function is_content_watched(PDO $pdo, int $user_id, int $content_id): bool {
     try {
-        $stmt = $pdo->prepare("SELECT id FROM watched_content WHERE user_id = ? AND content_id = ?");
+        $stmt = $pdo->prepare("SELECT id FROM watch_history WHERE user_id = ? AND content_id = ?");
         $stmt->execute([$user_id, $content_id]);
         return (bool)$stmt->fetch();
     } catch (PDOException $e) {
@@ -605,10 +606,10 @@ function is_content_watched(PDO $pdo, int $user_id, int $content_id): bool {
 
 function mark_content_watched(PDO $pdo, int $user_id, int $content_id, ?int $episode_id = null): void {
     try {
-        $pdo->prepare("INSERT INTO watched_content (user_id, content_id, episode_id) VALUES (?,?,?)
-            ON DUPLICATE KEY UPDATE completed_at = CURRENT_TIMESTAMP, episode_id = VALUES(episode_id)")
-            ->execute([$user_id, $content_id, $episode_id]);
-        $pdo->prepare("UPDATE watch_progress SET is_completed = 1 WHERE user_id = ? AND content_id = ?")
+        $pdo->prepare("INSERT INTO watch_history (user_id, content_id) VALUES (?,?)
+            ON DUPLICATE KEY UPDATE watched_at = CURRENT_TIMESTAMP")
+            ->execute([$user_id, $content_id]);
+        $pdo->prepare("UPDATE watch_progress SET position_seconds = duration_seconds WHERE user_id = ? AND content_id = ?")
             ->execute([$user_id, $content_id]);
     } catch (PDOException $e) {}
 }
@@ -701,4 +702,134 @@ function t_desc($item) {
     if ($lang === 'ru' && !empty($item['description_ru'])) return $item['description_ru'];
     if ($lang === 'en' && !empty($item['description_en'])) return $item['description_en'];
     return $item['description'] ?? '';
+}
+
+// ===== Session tracking (user_sessions) =====
+function record_user_session($pdo, $user_id) {
+    $token = session_id();
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    $ip = client_ip();
+
+    $pdo->prepare("DELETE FROM user_sessions WHERE session_token = ?")->execute([$token]);
+
+    $stmt = $pdo->prepare("INSERT INTO user_sessions (user_id, session_token, user_agent, ip_address, last_activity) VALUES (?, ?, ?, ?, NOW())");
+    $stmt->execute([$user_id, $token, $ua, $ip]);
+    $_SESSION['session_db_id'] = $pdo->lastInsertId();
+}
+
+function touch_user_session($pdo) {
+    if (!is_user()) return;
+    $sid = $_SESSION['session_db_id'] ?? 0;
+    if ($sid > 0) {
+        try {
+            $pdo->prepare("UPDATE user_sessions SET last_activity = NOW() WHERE id = ? AND user_id = ?")->execute([$sid, $_SESSION['user_id']]);
+        } catch (PDOException $e) {}
+    }
+}
+
+function parse_user_agent($ua) {
+    $browser = 'Unknown';
+    $os = 'Unknown';
+
+    if (preg_match('/Windows/i', $ua)) $os = 'Windows';
+    elseif (preg_match('/Macintosh|Mac OS X/i', $ua)) $os = 'macOS';
+    elseif (preg_match('/Linux/i', $ua)) $os = 'Linux';
+    elseif (preg_match('/Android/i', $ua)) $os = 'Android';
+    elseif (preg_match('/iPhone|iPad/i', $ua)) $os = 'iOS';
+
+    if (preg_match('/Chrome\/(\d+)/i', $ua, $m)) $browser = 'Chrome ' . $m[1];
+    elseif (preg_match('/Firefox\/(\d+)/i', $ua, $m)) $browser = 'Firefox ' . $m[1];
+    elseif (preg_match('/Safari\/(\d+)/i', $ua, $m)) $browser = 'Safari ' . $m[1];
+    elseif (preg_match('/Edge\/(\d+)/i', $ua, $m)) $browser = 'Edge ' . $m[1];
+    elseif (preg_match('/Opera|OPR\/(\d+)/i', $ua, $m)) $browser = 'Opera';
+
+    $device = preg_match('/Mobile|Android|iPhone|iPad/i', $ua) ? 'mobile' : 'desktop';
+
+    return compact('browser', 'os', 'device');
+}
+
+function send_email($to, $subject, $textBody, $htmlBody = null) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+
+    $host = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+    $port = (int)(getenv('SMTP_PORT') ?: 587);
+    $username = getenv('SMTP_USERNAME') ?: '';
+    $password = getenv('SMTP_PASSWORD') ?: '';
+    $encryption = getenv('SMTP_ENCRYPTION') ?: 'tls';
+    $fromEmail = getenv('SMTP_FROM_EMAIL') ?: $username;
+    $fromName = getenv('SMTP_FROM_NAME') ?: 'UZDUB';
+
+    if (!$username || !$password) return false;
+
+    try {
+        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = $host;
+        $mail->Port = $port;
+        $mail->SMTPAuth = true;
+        $mail->Username = $username;
+        $mail->Password = $password;
+        $mail->SMTPSecure = $encryption;
+        $mail->CharSet = 'UTF-8';
+        $mail->Encoding = 'base64';
+
+        $mail->setFrom($fromEmail, $fromName);
+        $mail->addAddress($to);
+
+        $mail->Subject = $subject;
+        $mail->Body = $htmlBody ?: $textBody;
+        if ($htmlBody) {
+            $mail->isHTML(true);
+            $mail->AltBody = $textBody;
+        }
+
+        $mail->send();
+        return true;
+    } catch (PHPMailer\PHPMailer\Exception $e) {
+        error_log('PHPMailer error: ' . $e->getMessage());
+        return false;
+    }
+}
+
+function notify_send($pdo, $user_id, $type, $title, $message = '', $target_url = null, $sender_id = null) {
+    try {
+        $pdo->prepare("INSERT INTO notifications (user_id, sender_id, type, title, message, target_url) VALUES (?,?,?,?,?,?)")
+            ->execute([$user_id, $sender_id, $type, $title, $message, $target_url]);
+    } catch (PDOException $e) {
+        error_log('notify_send error: ' . $e->getMessage());
+    }
+}
+
+function notify_send_bulk($pdo, $user_ids, $type, $title, $message = '', $target_url = null, $sender_id = null) {
+    if (empty($user_ids)) return;
+    $placeholders = implode(',', array_fill(0, count($user_ids), '(?,?,?,?,?,?)'));
+    $params = [];
+    foreach ($user_ids as $uid) {
+        $params[] = $uid;
+        $params[] = $sender_id;
+        $params[] = $type;
+        $params[] = $title;
+        $params[] = $message;
+        $params[] = $target_url;
+    }
+    try {
+        $pdo->prepare("INSERT INTO notifications (user_id, sender_id, type, title, message, target_url) VALUES $placeholders")
+            ->execute($params);
+    } catch (PDOException $e) {
+        error_log('notify_send_bulk error: ' . $e->getMessage());
+    }
+}
+
+function mask_email($email) {
+    if (!$email || strpos($email, '@') === false) return $email;
+    $parts = explode('@', $email, 2);
+    $name = $parts[0];
+    $domain = $parts[1];
+    $len = mb_strlen($name);
+    if ($len <= 2) {
+        $masked = mb_substr($name, 0, 1) . str_repeat('*', max(1, $len - 1));
+    } else {
+        $masked = mb_substr($name, 0, 1) . str_repeat('*', max(1, $len - 2)) . mb_substr($name, -1);
+    }
+    return $masked . '@' . $domain;
 }

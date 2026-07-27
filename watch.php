@@ -149,6 +149,44 @@ include __DIR__ . '/includes/header.php';
         </div>
     </div>
 
+    <link rel="stylesheet" href="/uzdub/css/comments.css">
+    <section class="cmt-section" id="commentSection">
+        <div class="cmt-header">
+            <h3><?php echo t('comments'); ?></h3>
+            <span class="cmt-count" id="cmtCount">0</span>
+        </div>
+
+        <?php if (is_user()): ?>
+        <?php $cu = current_user(); ?>
+        <div class="cmt-input-box">
+            <img src="<?php echo avatar_url($cu['avatar']); ?>" class="cmt-avatar" alt="">
+            <div class="cmt-input-wrap">
+                <textarea class="cmt-textarea" id="cmtInput" placeholder="<?php echo t('write_comment'); ?>" rows="2"></textarea>
+                <div class="cmt-toolbar">
+                    <button type="button" class="cmt-tool-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+                    <button type="button" class="cmt-tool-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+                    <button type="button" class="cmt-tool-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+                    <button type="button" class="cmt-tool-btn" data-cmd="strike" title="Strikethrough"><s>S</s></button>
+                    <span class="cmt-tool-sep"></span>
+                    <button type="button" class="cmt-tool-btn" data-cmd="code" title="Code">&lt;/&gt;</button>
+                    <button type="button" class="cmt-send-btn" id="cmtSendBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <?php echo t('send'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="cmt-login-prompt">
+            <?php echo t('login_to_comment'); ?> <a href="auth/login.php?redirect=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>"><?php echo t('login_btn'); ?></a>
+        </div>
+        <?php endif; ?>
+
+        <div class="cmt-list" id="cmtList">
+            <div class="cmt-loading"><div class="cmt-spinner"></div></div>
+        </div>
+    </section>
+
     <?php if (!empty($similar)): ?>
     <section class="content-section" style="padding-left:0; padding-right:0;">
         <h2><?php echo t('similar_content'); ?></h2>
@@ -171,6 +209,10 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <script>
+var WT = <?php echo json_encode([
+    'removed_from_watchlist' => t('removed_from_watchlist'),
+    'added_to_watchlist' => t('added_to_watchlist'),
+], JSON_UNESCAPED_UNICODE); ?>;
 function toggleFav(contentId) {
     <?php if (!is_user()): ?>
     window.location.href = 'auth/login.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
@@ -187,20 +229,292 @@ function toggleFav(contentId) {
             var btn = document.getElementById('watchlistBtn');
             if (r.added) {
                 btn.classList.add('active');
-                btn.title = '<?php echo e(t('removed_from_watchlist')); ?>';
-                if (window.showToast) showToast('<?php echo e(t('added_to_watchlist')); ?>', 'success');
+                btn.title = WT.removed_from_watchlist;
+                if (window.showToast) showToast(WT.added_to_watchlist, 'success');
             } else {
                 btn.classList.remove('active');
-                btn.title = '<?php echo e(t('added_to_watchlist')); ?>';
-                if (window.showToast) showToast('<?php echo e(t('removed_from_watchlist')); ?>', 'info');
+                btn.title = WT.added_to_watchlist;
+                if (window.showToast) showToast(WT.removed_from_watchlist, 'info');
             }
         })
         .catch(function() { if (window.showToast) showToast('Xatolik', 'error'); });
 }
 </script>
 
+<script>
+(function() {
+    var CONTENT_ID = <?php echo $id; ?>;
+    var CSRF = '<?php echo e(csrf_token()); ?>';
+    var IS_USER = <?php echo is_user() ? 'true' : 'false'; ?>;
+    var translations = <?php echo json_encode([
+        'write_comment' => t('write_comment'),
+        'comment_posted' => t('comment_posted'),
+        'reply_posted' => t('reply_posted'),
+        'comment_deleted' => t('comment_deleted'),
+        'delete_confirm' => t('delete_confirm'),
+        'no_comments' => t('no_comments'),
+        'reply' => t('reply'),
+        'like' => t('like'),
+        'dislike' => t('dislike'),
+    ], JSON_UNESCAPED_UNICODE); ?>;
+
+    var list = document.getElementById('cmtList');
+    var countEl = document.getElementById('cmtCount');
+    var input = document.getElementById('cmtInput');
+    var sendBtn = document.getElementById('cmtSendBtn');
+    var replyingTo = null;
+
+    function esc(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function fmtText(s) {
+        return esc(s)
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/__(.+?)__/g, '<u>$1</u>')
+            .replace(/~~(.+?)~~/g, '<s>$1</s>')
+            .replace(/`(.+?)`/g, '<code>$1</code>');
+    }
+
+    function toolbarCmd(cmd, ta) {
+        var start = ta.selectionStart, end = ta.selectionEnd, val = ta.value, sel = val.substring(start, end);
+        var wraps = {
+            bold: ['**', '**'], italic: ['*', '*'], underline: ['__', '__'],
+            strike: ['~~', '~~'], code: ['`', '`']
+        };
+        var w = wraps[cmd];
+        if (!w) return;
+        if (sel) {
+            ta.value = val.substring(0, start) + w[0] + sel + w[1] + val.substring(end);
+            ta.selectionStart = start + w[0].length;
+            ta.selectionEnd = start + w[0].length + sel.length;
+        } else {
+            ta.value = val.substring(0, start) + w[0] + w[1] + val.substring(end);
+            ta.selectionStart = ta.selectionEnd = start + w[0].length;
+        }
+        ta.focus();
+    }
+
+    document.querySelectorAll('.cmt-tool-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var ta = input;
+            if (btn.closest('.cmt-reply-input')) {
+                ta = btn.closest('.cmt-reply-input').querySelector('.cmt-textarea');
+            }
+            toolbarCmd(btn.dataset.cmd, ta);
+        });
+    });
+
+    function buildComment(c, isReply) {
+        var html = '<div class="cmt-card" data-id="' + c.id + '">';
+        html += '<img src="' + esc(c.avatar_url) + '" class="cmt-avatar" alt="">';
+        html += '<div class="cmt-body">';
+        html += '<div class="cmt-meta">';
+        html += '<span class="cmt-author' + (c.is_premium ? ' premium' : '') + '">' + esc(c.username) + '</span>';
+        html += '<span class="cmt-time">' + esc(c.time_ago) + '</span>';
+        html += '</div>';
+        html += '<div class="cmt-text">' + fmtText(c.comment) + '</div>';
+        html += '<div class="cmt-actions">';
+
+        var lClass = c.user_like === 'like' ? ' liked' : '';
+        html += '<button class="cmt-action-btn like-btn' + lClass + '" data-id="' + c.id + '" data-type="like">';
+        html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>';
+        html += '<span class="cmt-action-count">' + (c.like_count || '') + '</span></button>';
+
+        var dClass = c.user_like === 'dislike' ? ' disliked' : '';
+        html += '<button class="cmt-action-btn dislike-btn' + dClass + '" data-id="' + c.id + '" data-type="dislike">';
+        html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>';
+        html += '<span class="cmt-action-count">' + (c.dislike_count || '') + '</span></button>';
+
+        if (IS_USER && !isReply) {
+            html += '<button class="cmt-action-btn reply-btn" data-id="' + c.id + '" data-user="' + esc(c.username) + '">';
+            html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
+            html += translations.reply + '</button>';
+        }
+
+        html += '</div>';
+
+        if (!isReply && c.replies && c.replies.length) {
+            html += '<div class="cmt-replies">';
+            c.replies.forEach(function(r) { html += buildComment(r, true); });
+            html += '</div>';
+        }
+
+        if (IS_USER && !isReply) {
+            html += '<div class="cmt-reply-input" id="replyBox-' + c.id + '" style="display:none">';
+            html += '<img src="<?php echo is_user() ? e(avatar_url(current_user()['avatar'])) : ''; ?>" class="cmt-avatar" alt="">';
+            html += '<div class="cmt-input-wrap">';
+            html += '<textarea class="cmt-textarea" placeholder="' + esc(translations.write_comment) + '" rows="1"></textarea>';
+            html += '<div class="cmt-toolbar">';
+            html += '<button type="button" class="cmt-tool-btn" data-cmd="bold"><b>B</b></button>';
+            html += '<button type="button" class="cmt-tool-btn" data-cmd="italic"><i>I</i></button>';
+            html += '<button type="button" class="cmt-tool-btn" data-cmd="underline"><u>U</u></button>';
+            html += '<button type="button" class="cmt-tool-btn" data-cmd="strike"><s>S</s></button>';
+            html += '<span class="cmt-tool-sep"></span>';
+            html += '<button type="button" class="cmt-tool-btn" data-cmd="code">&lt;/&gt;</button>';
+            html += '<button type="button" class="cmt-send-btn reply-send" data-parent="' + c.id + '">';
+            html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+            html += translations.send + '</button></div></div></div>';
+        }
+
+        html += '</div></div>';
+        return html;
+    }
+
+    function renderComments(data) {
+        if (!data.comments || !data.comments.length) {
+            list.innerHTML = '<div class="cmt-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><br>' + translations.no_comments + '</div>';
+            countEl.textContent = '0';
+            return;
+        }
+        var html = '';
+        data.comments.forEach(function(c) { html += buildComment(c, false); });
+        list.innerHTML = html;
+        countEl.textContent = data.total || data.comments.length;
+        attachEvents();
+    }
+
+    function loadComments() {
+        list.innerHTML = '<div class="cmt-loading"><div class="cmt-spinner"></div></div>';
+        fetch('/uzdub/api/comments.php?content_id=' + CONTENT_ID)
+            .then(function(r) { return r.json(); })
+            .then(renderComments)
+            .catch(function() { list.innerHTML = '<div class="cmt-empty">' + esc(translations.no_comments) + '</div>'; });
+    }
+
+    function postComment(text, parentId) {
+        var body = {
+            content_id: CONTENT_ID,
+            comment: text,
+            csrf_token: CSRF
+        };
+        if (parentId) body.parent_id = parentId;
+        return fetch('/uzdub/api/comment-post.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        }).then(function(r) { return r.json(); });
+    }
+
+    function toggleLike(commentId, type) {
+        return fetch('/uzdub/api/like-toggle.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({comment_id: commentId, type: type, csrf_token: CSRF})
+        }).then(function(r) { return r.json(); });
+    }
+
+    function updateLikeUI(commentId, action, likes, dislikes, userLike) {
+        var card = list.querySelector('.cmt-card[data-id="' + commentId + '"]');
+        if (!card) return;
+        var likeBtn = card.querySelector('.like-btn');
+        var dislikeBtn = card.querySelector('.dislike-btn');
+        if (likeBtn) {
+            likeBtn.classList.toggle('liked', userLike === 'like');
+            var lc = likeBtn.querySelector('.cmt-action-count');
+            if (lc) lc.textContent = likes || '';
+        }
+        if (dislikeBtn) {
+            dislikeBtn.classList.toggle('disliked', userLike === 'dislike');
+            var dc = dislikeBtn.querySelector('.cmt-action-count');
+            if (dc) dc.textContent = dislikes || '';
+        }
+    }
+
+    function attachEvents() {
+        list.querySelectorAll('.reply-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                var id = btn.dataset.id;
+                var box = document.getElementById('replyBox-' + id);
+                if (!box) return;
+                var showing = box.style.display !== 'none';
+                list.querySelectorAll('.cmt-reply-input').forEach(function(b) { b.style.display = 'none'; });
+                if (!showing) box.style.display = 'flex';
+            };
+        });
+
+        list.querySelectorAll('.reply-send').forEach(function(btn) {
+            btn.onclick = function() {
+                var ta = btn.closest('.cmt-reply-input').querySelector('.cmt-textarea');
+                var text = ta.value.trim();
+                if (!text) return;
+                btn.disabled = true;
+                postComment(text, parseInt(btn.dataset.parent)).then(function(r) {
+                    btn.disabled = false;
+                    if (r.ok) {
+                        ta.value = '';
+                        btn.closest('.cmt-reply-input').style.display = 'none';
+                        if (window.showToast) showToast(translations.reply_posted, 'success');
+                        loadComments();
+                    }
+                });
+            };
+        });
+
+        list.querySelectorAll('.like-btn, .dislike-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                if (!IS_USER) { window.location.href = '/uzdub/auth/login.php?redirect=' + encodeURIComponent(window.location.pathname); return; }
+                var id = parseInt(btn.dataset.id);
+                var type = btn.dataset.type;
+                toggleLike(id, type).then(function(r) {
+                    if (r.ok) updateLikeUI(id, r.action, r.likes, r.dislikes, r.user_like);
+                });
+            };
+        });
+    }
+
+    function pollCommentReactions() {
+        var cards = list.querySelectorAll('.cmt-card[data-id]');
+        if (cards.length === 0) return;
+        var ids = [];
+        cards.forEach(function(c) { ids.push(c.dataset.id); });
+        fetch('/uzdub/api/comment-reactions.php?ids=' + ids.join(','))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.updates) return;
+                data.updates.forEach(function(u) { updateLikeUI(u.comment_id, null, u.likes, u.dislikes, u.user_like); });
+            })
+            .catch(function() {});
+    }
+
+    if (sendBtn) {
+        sendBtn.onclick = function() {
+            var text = input.value.trim();
+            if (!text) return;
+            sendBtn.disabled = true;
+            postComment(text, null).then(function(r) {
+                sendBtn.disabled = false;
+                if (r.ok) {
+                    input.value = '';
+                    if (window.showToast) showToast(translations.comment_posted, 'success');
+                    loadComments();
+                }
+            });
+        };
+    }
+
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                if (sendBtn) sendBtn.click();
+            }
+        });
+    }
+
+    loadComments();
+    setInterval(pollCommentReactions, 5000);
+})();
+</script>
 <?php if (is_user() && !$is_locked && $item['video_type'] === 'file'): ?>
 <script>
+var WT2 = <?php echo json_encode([
+    'resuming_from' => t('resuming_from'),
+    'minutes_abbrev' => t('minutes_abbrev'),
+], JSON_UNESCAPED_UNICODE); ?>;
 (function () {
     var video = document.querySelector('.watch-player-section video');
     if (!video) return;
@@ -215,7 +529,7 @@ function toggleFav(contentId) {
                 video.currentTime = resumeAt;
                 if (window.showToast) {
                     var mins = Math.floor(resumeAt / 60);
-                    showToast("<?php echo t('resuming_from'); ?> (" + mins + " <?php echo t('minutes_abbrev'); ?>)", 'info');
+                    showToast(WT2.resuming_from + " (" + mins + " " + WT2.minutes_abbrev + ")", 'info');
                 }
             }
             video.removeEventListener('loadedmetadata', onMeta);
@@ -248,5 +562,26 @@ function toggleFav(contentId) {
 })();
 </script>
 <?php endif; ?>
+
+<script>
+(function() {
+    var hash = window.location.hash;
+    if (!hash || !hash.startsWith('#comment-')) return;
+    var commentId = hash.replace('#comment-', '');
+    function tryScroll() {
+        var el = document.querySelector('.cmt-card[data-id="' + commentId + '"]');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.background = 'rgba(33,150,243,0.12)';
+            el.style.borderRadius = '10px';
+            el.style.transition = 'background 0.3s';
+            setTimeout(function() { el.style.background = ''; }, 2500);
+        } else {
+            setTimeout(tryScroll, 500);
+        }
+    }
+    setTimeout(tryScroll, 800);
+})();
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

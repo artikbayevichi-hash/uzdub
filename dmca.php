@@ -7,6 +7,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 <link rel="stylesheet" href="/uzdub/css/legal.css">
 <div class="legal-wrap">
+<div class="legal-content-card">
     <h1>📋 <?php echo t('dmca_heading'); ?></h1>
     <p><?php echo t('dmca_intro'); ?></p>
 
@@ -23,5 +24,6 @@ include __DIR__ . '/includes/header.php';
     <p><?php echo t('dmca_contact_text'); ?></p>
     <p>📧 Email: <a href="mailto:dmca@uzdub.uz" style="color:var(--blue-glow);">dmca@uzdub.uz</a></p>
     <p><?php echo t('dmca_response'); ?></p>
+</div>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

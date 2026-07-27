@@ -47,8 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <link rel="stylesheet" href="/uzdub/css/auth.css">
 <style>
-.auth-orb.o1 { background:#ff6f00; }
-.auth-orb.o2 { background:#f9a825; }
 .auth-box { border-color:rgba(249,168,37,0.3); width:380px; }
 .auth-box:hover { box-shadow:0 28px 70px rgba(0,0,0,0.5), 0 0 30px rgba(249,168,37,0.15); }
 .auth-box h1 { color:#f9a825; text-shadow:0 0 20px rgba(249,168,37,0.45); }
@@ -60,9 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </style>
 </head>
 <body>
-<canvas id="stars-canvas"></canvas>
-<div class="auth-orb o1"></div>
-<div class="auth-orb o2"></div>
 <div class="auth-wrap">
     <div class="auth-box">
         <h1>🛡️ UZDUB PLATFORM Admin</h1>
@@ -79,6 +74,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alt-link"><a href="/uzdub/auth/login.php">← Foydalanuvchi sifatida kirish</a></div>
     </div>
 </div>
-<script src="/uzdub/js/stars.js"></script>
 </body>
 </html>

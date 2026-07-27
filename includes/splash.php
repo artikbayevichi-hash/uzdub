@@ -71,6 +71,13 @@ $splash_user_json = $splash_user ? json_encode([
             </button>
         </div>
 
+        <div class="splash-scroll-hint" onclick="document.querySelector('.splash-features').scrollIntoView({behavior:'smooth'})">
+            <span><?php echo t('splash_scroll_down'); ?></span>
+            <div class="splash-scroll-arrow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+        </div>
+
         <div class="splash-features">
             <div class="splash-feature-card">
                 <div class="splash-feature-icon">🎬</div>

@@ -37,12 +37,20 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     avatar VARCHAR(255) DEFAULT NULL,
+    bio TEXT DEFAULT NULL,
     is_premium TINYINT(1) DEFAULT 0,
     premium_expires_at DATETIME DEFAULT NULL,
     switch_token VARCHAR(64) DEFAULT NULL,
     google_id VARCHAR(100) DEFAULT NULL,
     last_login_at DATETIME DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_login DATETIME DEFAULT NULL,
+    last_activity DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    online_time INT DEFAULT 0,
+    is_email_verified TINYINT(1) DEFAULT 1,
+    email_verification_code VARCHAR(6) DEFAULT NULL,
+    two_factor_enabled TINYINT(1) DEFAULT 0,
+    two_factor_secret VARCHAR(255) DEFAULT NULL
 );
 
 -- =====================================================
@@ -280,13 +288,33 @@ CREATE TABLE IF NOT EXISTS premium_payments (
 CREATE TABLE IF NOT EXISTS global_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    category ENUM('kino','anime','multfilm') NOT NULL DEFAULT 'kino',
     message TEXT,
     attachment VARCHAR(255) DEFAULT NULL,
     attachment_type ENUM('image','gif') DEFAULT NULL,
+    reply_to INT DEFAULT NULL,
+    forwarded_from INT DEFAULT NULL,
+    is_pinned TINYINT(1) DEFAULT 0,
+    is_edited TINYINT(1) DEFAULT 0,
+    is_deleted TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user (user_id),
-    INDEX idx_created (created_at)
+    INDEX idx_category (category),
+    INDEX idx_created (created_at),
+    INDEX idx_pinned (is_pinned, category)
+);
+
+CREATE TABLE IF NOT EXISTS chat_reactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message_id INT NOT NULL,
+    user_id INT NOT NULL,
+    reaction VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_msg_user (message_id, user_id),
+    INDEX idx_message_id (message_id),
+    FOREIGN KEY (message_id) REFERENCES global_messages(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS private_messages (
@@ -358,3 +386,13 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     hit_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_rate (identifier, endpoint, hit_at)
 );
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    session_token VARCHAR(255) NOT NULL,
+    user_agent TEXT NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    last_activity DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

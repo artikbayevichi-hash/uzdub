@@ -1,4 +1,4 @@
-# Asosiy himoya — maxfiy fayllarni veb orqali kirishdan to'sish
+    # Asosiy himoya — maxfiy fayllarni veb orqali kirishdan to'sish
 <FilesMatch "\.(env|env\.example|sql|bat|ps1|zip)$">
     Require all denied
 </FilesMatch>
@@ -12,4 +12,12 @@ Options -Indexes
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Rewrite rules
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # /genre/{slug} -> /genres.php?genre={slug}
+    RewriteRule ^genre/([a-z0-9\-]+)$ genres.php?genre=$1 [L,QSA]
 </IfModule>

@@ -20,6 +20,7 @@ $current = basename($_SERVER['PHP_SELF']);
         <a href="list_content.php" class="<?php echo $current=='list_content.php'?'active':''; ?>">&#127916; Barcha kontent</a>
         <a href="add_content.php" class="<?php echo $current=='add_content.php'?'active':''; ?>">&#10133; Kino/Anime/Multfilm qo'shish</a>
         <a href="users.php" class="<?php echo $current=='users.php'?'active':''; ?>">&#128101; Foydalanuvchilar</a>
+        <a href="chat.php" class="<?php echo $current=='chat.php'?'active':''; ?>">&#128172; Chat boshqarish</a>
         <a href="payments.php" class="<?php echo $current=='payments.php'?'active':''; ?>">&#128176; To'lovlar
             <?php
             $pend = $pdo->query("SELECT COUNT(*) c FROM premium_payments WHERE status='pending'")->fetch()['c'] ?? 0;

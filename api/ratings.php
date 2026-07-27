@@ -20,8 +20,8 @@ if (!$content_id || $rating < 1 || $rating > 10) {
 }
 
 try {
-    $pdo->prepare("INSERT INTO content_ratings (user_id, content_id, rating) VALUES (?,?,?)
-        ON DUPLICATE KEY UPDATE rating=VALUES(rating), updated_at=CURRENT_TIMESTAMP")
+    $pdo->prepare("INSERT INTO ratings (user_id, content_id, rating) VALUES (?,?,?)
+        ON DUPLICATE KEY UPDATE rating=VALUES(rating)")
         ->execute([$_SESSION['user_id'], $content_id, $rating]);
     $avg = get_avg_user_rating($pdo, $content_id);
     echo json_encode(['ok'=>true,'avg'=>$avg,'your'=>$rating]);

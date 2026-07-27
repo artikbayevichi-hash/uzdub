@@ -6,21 +6,29 @@
 <title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?></title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <link rel="stylesheet" href="/uzdub/css/splash.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="/uzdub/js/3d-loader.js"></script>
-<script src="/uzdub/js/3d-effects.js"></script>
-<script src="/uzdub/js/3d-cards.js"></script>
-<script src="/uzdub/js/3d-hero.js"></script>
-<script src="/uzdub/js/3d-animations.js"></script>
+<script src="/uzdub/js/online-tracker.js" defer></script>
 </head>
 <body>
-<div class="floating-orb"></div>
-<div class="floating-orb"></div>
-<div class="floating-orb"></div>
-<canvas id="stars-canvas"></canvas>
+<script>window.UZDUB_IS_LOGGED_IN = <?php echo is_user() ? 'true' : 'false'; ?>;</script>
+
+<div class="ambient-dust">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+</div>
+
+<?php
+// Register session in user_sessions if not yet tracked
+if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
+    record_user_session($pdo, $_SESSION['user_id']);
+}
+?>
 
 <header class="site-header">
-    <a href="/uzdub/index.php" class="logo">UZDUB</a>
+    <a href="/uzdub/index.php" class="logo">UZDUB<span class="logo-sub"><span class="ls-char" style="transition-delay:0.5s">P</span><span class="ls-char" style="transition-delay:0.58s">L</span><span class="ls-char" style="transition-delay:0.66s">A</span><span class="ls-char" style="transition-delay:0.74s">T</span><span class="ls-char" style="transition-delay:0.82s">F</span><span class="ls-char" style="transition-delay:0.9s">O</span><span class="ls-char" style="transition-delay:0.98s">R</span><span class="ls-char" style="transition-delay:1.06s">M</span></span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Menyu">&#9776;</button>
     <ul class="nav-links" id="navLinks">
         <li><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"><?php echo t('home'); ?></a></li>
@@ -36,13 +44,87 @@
                 <a href="/uzdub/random.php">🎲 <?php echo t('random_all'); ?></a>
             </div>
         </li>
-        <li><a href="/uzdub/global_chat.php"><?php echo t('chat'); ?></a></li>
+        <?php
+        $genre_nav_stmt = $pdo->query("
+            SELECT cat.id as cat_id, cat.name as cat_name, cat.slug as cat_slug,
+                   g.name as genre_name, g.slug as genre_slug, g.color,
+                   COUNT(cg.content_id) as cnt
+            FROM categories cat
+            JOIN content c ON c.category_id = cat.id
+            JOIN content_genres cg ON c.id = cg.content_id
+            JOIN genres g ON cg.genre_id = g.id
+            WHERE cat.slug IN ('kino','anime','multfilm')
+            GROUP BY cat.id, g.id
+            ORDER BY cat.name, g.name
+        ");
+        $genre_nav_data = [];
+        while ($gnr = $genre_nav_stmt->fetch()) {
+            $genre_nav_data[$gnr['cat_slug']][] = $gnr;
+        }
+        $cat_icons_nav = ['kino' => '🎬', 'anime' => '🎌', 'multfilm' => '🎞️'];
+        ?>
+        <li class="genre-dropdown" id="genreDropdown">
+            <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎵 <?php echo t('genres'); ?> ▾</button>
+            <div class="genre-menu">
+                <div class="genre-menu-head">
+                    <a href="/uzdub/genres.php" class="genre-menu-all">📋 <?php echo t('all_genres'); ?></a>
+                </div>
+                <?php foreach (['kino', 'anime', 'multfilm'] as $gs): ?>
+                <div class="genre-menu-cat">
+                    <span class="genre-menu-cat-icon"><?php echo $cat_icons_nav[$gs]; ?></span>
+                    <span class="genre-menu-cat-name"><?php echo t($gs === 'kino' ? 'movies' : ($gs === 'anime' ? 'anime' : 'cartoons')); ?></span>
+                    <span class="genre-menu-arrow">›</span>
+                    <div class="genre-submenu">
+                        <?php if (!empty($genre_nav_data[$gs])): ?>
+                        <?php foreach ($genre_nav_data[$gs] as $gn): ?>
+                        <a href="/uzdub/genres.php?genre=<?php echo e($gn['genre_slug']); ?>" class="genre-sub-link">
+                            <span class="gs-dot" style="background:<?php echo e($gn['color'] ?: '#2196f3'); ?>;"></span>
+                            <?php echo e($gn['genre_name']); ?>
+                            <span class="gs-count"><?php echo $gn['cnt']; ?></span>
+                        </a>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+                        <span class="genre-sub-empty"><?php echo t('no_content_genre'); ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </li>
+        <li class="random-dropdown">
+            <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">💬 <?php echo t('chat'); ?> <span id="onlineCountHeader" class="online-badge-header">🟢 0</span> ▾</button>
+            <div class="random-menu">
+                <a href="/uzdub/global_chat.php?cat=kino">🎬 <?php echo t('chat_kino'); ?></a>
+                <a href="/uzdub/global_chat.php?cat=anime">🎌 <?php echo t('chat_anime'); ?></a>
+                <a href="/uzdub/global_chat.php?cat=multfilm">🎞️ <?php echo t('chat_multfilm'); ?></a>
+            </div>
+        </li>
         <?php if (is_user()): ?>
         <li><a href="/uzdub/inbox.php"><?php echo t('messages'); ?></a></li>
         <li><a href="/uzdub/premium.php" style="color:#f9a825;">⭐ <?php echo t('premium'); ?></a></li>
         <?php endif; ?>
     </ul>
     <div class="header-right">
+        <?php if (is_user()): ?>
+        <div class="notif-bell-wrap" id="notifBellWrap">
+            <button class="notif-bell-btn" id="notifBellBtn" title="<?php echo t('notifications'); ?>">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span class="notif-badge" id="notifBadge"></span>
+            </button>
+            <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-dd-header">
+                    <span class="notif-dd-title"><?php echo t('notifications'); ?></span>
+                    <button class="notif-dd-mark-all" id="notifMarkAll"><?php echo t('mark_all_read'); ?></button>
+                </div>
+                <div class="notif-dd-list" id="notifList">
+                    <div class="notif-dd-loading"><div class="notif-dd-spinner"></div></div>
+                </div>
+                <div class="notif-dd-footer" id="notifFooter" style="display:none;">
+                    <button class="notif-dd-load-more" id="notifLoadMore"><?php echo t('load_more'); ?></button>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
         <div class="lang-switcher">
             <button type="button" class="lang-current" onclick="document.getElementById('langMenu').classList.toggle('active')">
                 <?php echo strtoupper(current_lang()); ?> ▾
@@ -324,9 +406,156 @@ document.getElementById('navToggle').addEventListener('click', function() {
 // Tasodifiy dropdown
 (function() {
     var rd = document.querySelector('.random-dropdown');
-    if (!rd) return;
+    var gd = document.getElementById('genreDropdown');
     document.addEventListener('click', function(e) {
-        if (!rd.contains(e.target)) rd.classList.remove('open');
+        if (rd && !rd.contains(e.target)) rd.classList.remove('open');
+        if (gd && !gd.contains(e.target)) gd.classList.remove('open');
     });
+})();
+
+// Notification Bell
+(function() {
+    var bellBtn = document.getElementById('notifBellBtn');
+    var dropdown = document.getElementById('notifDropdown');
+    var badge = document.getElementById('notifBadge');
+    var list = document.getElementById('notifList');
+    var markAll = document.getElementById('notifMarkAll');
+    var loadMore = document.getElementById('notifLoadMore');
+    var footer = document.getElementById('notifFooter');
+    if (!bellBtn || !dropdown) return;
+
+    var csrf = <?php echo json_encode(csrf_token()); ?>;
+    var notifPage = 1;
+    var notifTotal = 0;
+    var pollTimer = null;
+
+    function escHtml(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s || ''));
+        return d.innerHTML;
+    }
+
+    function updateBadge(count) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.add('active');
+        } else {
+            badge.classList.remove('active');
+        }
+    }
+
+    function fetchUnreadCount() {
+        fetch('/uzdub/api/notifications.php?action=unread_count')
+            .then(function(r) { return r.json(); })
+            .then(function(d) { updateBadge(d.count || 0); })
+            .catch(function() {});
+    }
+
+    function renderNotifItem(n) {
+        var a = document.createElement('a');
+        a.className = 'notif-dd-item' + (n.is_read ? '' : ' unread');
+        a.href = n.target_url || '#';
+        a.dataset.id = n.id;
+        a.dataset.read = n.is_read ? '1' : '0';
+
+        var avatarHtml;
+        if (n.sender_avatar_url) {
+            avatarHtml = '<img src="' + escHtml(n.sender_avatar_url) + '" class="notif-dd-avatar" alt="">';
+        } else {
+            var icon = n.type === 'system_update' ? '🔔' : (n.type === 'comment_reply' ? '💬' : (n.type === 'reaction' ? '❤️' : '📨'));
+            avatarHtml = '<div class="notif-dd-avatar system-avatar">' + icon + '</div>';
+        }
+
+        a.innerHTML = avatarHtml +
+            '<div class="notif-dd-body">' +
+                '<div class="notif-dd-title-text">' + escHtml(n.title) + '</div>' +
+                (n.message ? '<div class="notif-dd-message">' + escHtml(n.message) + '</div>' : '') +
+                '<div class="notif-dd-time">' + escHtml(n.time_ago) + '</div>' +
+            '</div>';
+
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (n.is_read) {
+                window.location.href = n.target_url || '#';
+                return;
+            }
+            fetch('/uzdub/api/notifications.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'mark_read', notification_id: n.id, csrf_token: csrf})
+            }).then(function() {
+                a.classList.remove('unread');
+                a.dataset.read = '1';
+                var current = parseInt(badge.textContent) || 0;
+                updateBadge(Math.max(0, current - 1));
+                window.location.href = n.target_url || '#';
+            });
+        });
+        return a;
+    }
+
+    function loadNotifications(reset) {
+        if (reset) { notifPage = 1; list.innerHTML = ''; }
+        fetch('/uzdub/api/notifications.php?action=list&page=' + notifPage)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (notifPage === 1 && (!data.notifications || data.notifications.length === 0)) {
+                    var lang = <?php echo json_encode(current_lang()); ?>;
+                    var emptyMsg = lang === 'uz' ? 'Hozircha bildirishnoma yo\'q' : (lang === 'ru' ? 'Пока нет уведомлений' : 'No notifications yet');
+                    list.innerHTML = '<div class="notif-dd-empty">' + escHtml(emptyMsg) + '</div>';
+                    footer.style.display = 'none';
+                    return;
+                }
+                data.notifications.forEach(function(n) {
+                    list.appendChild(renderNotifItem(n));
+                });
+                notifTotal = data.total || 0;
+                var shown = list.querySelectorAll('.notif-dd-item').length;
+                footer.style.display = shown < notifTotal ? 'block' : 'none';
+            })
+            .catch(function() {});
+    }
+
+    bellBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = dropdown.classList.contains('open');
+        dropdown.classList.toggle('open');
+        if (!isOpen) {
+            notifPage = 1;
+            list.innerHTML = '<div class="notif-dd-loading"><div class="notif-dd-spinner"></div></div>';
+            loadNotifications(true);
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+            dropdown.classList.remove('open');
+        }
+    });
+
+    if (markAll) {
+        markAll.addEventListener('click', function() {
+            fetch('/uzdub/api/notifications.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'mark_all_read', csrf_token: csrf})
+            }).then(function() {
+                list.querySelectorAll('.notif-dd-item.unread').forEach(function(el) {
+                    el.classList.remove('unread');
+                });
+                updateBadge(0);
+            });
+        });
+    }
+
+    if (loadMore) {
+        loadMore.addEventListener('click', function() {
+            notifPage++;
+            loadNotifications(false);
+        });
+    }
+
+    fetchUnreadCount();
+    pollTimer = setInterval(fetchUnreadCount, 30000);
 })();
 </script>

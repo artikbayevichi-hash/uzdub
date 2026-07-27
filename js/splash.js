@@ -2,24 +2,17 @@
     var splash = document.getElementById('splash-screen');
     if (!splash) return;
 
-    // === SPLASH COOLDOWN: 1 soat yoki tab yopilguncha ===
-    // sessionStorage tab yopilganda tozalanadi — tab yopilgan bo'lsa, splash ko'rsatiladi
-    // localStorage 1 soat ichida qayta ko'rsatmaslik uchun
-    var COOLDOWN_MS = 60 * 60 * 1000; // 1 soat
-    var now = Date.now();
-    var lastShow = parseInt(localStorage.getItem('uzdub_splash_last') || '0', 10);
-    var tabMarked = sessionStorage.getItem('uzdub_splash_shown');
-
-    // Agar shu tabda allaqachon ko'rsatilgan BO'LSA (tab yopilmagan) VA 1 soat o'tmagan bo'lsa — o'tkazib yuborish
-    if (tabMarked === '1' && (now - lastShow) < COOLDOWN_MS) {
+    // === SPLASH: FAQAT BIRINCHI MARTA KO'RSATILADI ===
+    // localStorage'da "uzdub_splash_seen" belgisi bor — demak allaqachon ko'rilgan
+    var alreadySeen = localStorage.getItem('uzdub_splash_seen');
+    if (alreadySeen === '1') {
         splash.style.display = 'none';
         document.body.style.overflow = '';
         return;
     }
 
-    // Splash ko'rsatilayapti — belgi qo'yamiz
-    sessionStorage.setItem('uzdub_splash_shown', '1');
-    localStorage.setItem('uzdub_splash_last', String(now));
+    // Birinchi marta — belgi qo'yamiz
+    localStorage.setItem('uzdub_splash_seen', '1');
 
     // === AKKAUNTLAR BOSHQARUVI (localStorage) ===
     var ACCOUNTS_KEY = 'uzdub_accounts';

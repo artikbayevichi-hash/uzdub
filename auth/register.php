@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$new_id]);
             refresh_user_session($pdo, $new_id);
             session_regenerate_id(true);
+            record_user_session($pdo, $new_id);
             $token = generate_switch_token($pdo, $new_id);
             $_SESSION['switch_token'] = $token;
             $_SESSION['switch_user_id'] = $uid;
@@ -61,9 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="/uzdub/css/auth.css">
 </head>
 <body>
-<canvas id="stars-canvas"></canvas>
-<div class="auth-orb o1"></div>
-<div class="auth-orb o2"></div>
 <div class="auth-wrap">
     <div class="auth-box">
         <h1>🎬 UZDUB PLATFORM</h1>
@@ -86,6 +84,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alt-link">Hisobingiz bormi? <a href="login.php">Kirish</a></div>
     </div>
 </div>
-<script src="/uzdub/js/stars.js"></script>
 </body>
 </html>

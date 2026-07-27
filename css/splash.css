@@ -3,7 +3,7 @@
     position: fixed;
     inset: 0;
     z-index: 99999;
-    background: #050a14;
+    background: #0b0f19;
     overflow-y: auto;
     overflow-x: hidden;
     transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -404,6 +404,39 @@
 .splash-skip:hover {
     color: #4fc3f7;
     background: rgba(33, 150, 243, 0.1);
+}
+
+/* Scroll down hint */
+.splash-scroll-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 0 0;
+    opacity: 0;
+    animation: fadeIn 1s ease 2s forwards;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.splash-scroll-hint:hover {
+    transform: translateY(4px);
+}
+.splash-scroll-hint span {
+    color: #9aa8bd;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.splash-scroll-arrow {
+    animation: scrollBounce 2s ease-in-out infinite;
+    color: #4fc3f7;
+}
+.splash-scroll-arrow svg {
+    filter: drop-shadow(0 0 8px rgba(79,195,247,0.5));
+}
+@keyframes scrollBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
 }
 
 /* ===== Features Section ===== */

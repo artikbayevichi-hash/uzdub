@@ -125,6 +125,18 @@ var lastId = 0;
 var currentUserId = <?php echo (int)$user['id']; ?>;
 var isPremium = <?php echo $user['is_premium'] ? 'true' : 'false'; ?>;
 var selectedFile = null;
+var T = <?php echo json_encode([
+    'loading' => t('loading'),
+    'cancel' => t('cancel'),
+    'write_message' => t('write_message'),
+    'send_btn' => t('send_btn'),
+    'no_messages_say_hi' => t('no_messages_say_hi'),
+    'load_error' => t('load_error'),
+    'retry' => t('retry'),
+    'image_gif_premium_js' => t('image_gif_premium_js'),
+    'error' => t('error'),
+    'error_occurred' => t('error_occurred'),
+], JSON_UNESCAPED_UNICODE); ?>;
 
 function escHtml(str) {
     var div = document.createElement('div');
@@ -139,27 +151,40 @@ function renderMsg(msg) {
     body += '<span class="msg-time-small">' + escHtml(msg.created_at.substring(11,16)) + '</span>';
     return '<div class="msg-item ' + (isOwn ? 'own' : 'other') + '" data-id="' + msg.id + '">' + body + '</div>';
 }
+var fetchRetries = 0;
+var maxRetries = 3;
 function fetchMessages() {
     fetch('/uzdub/chat.php?with=<?php echo e($other['user_id']); ?>&fetch_msgs=1&last_id=' + lastId)
-        .then(r => r.json())
-        .then(msgs => {
+        .then(function(r) { return r.json(); })
+        .then(function(msgs) {
+            fetchRetries = 0;
             if (msgs.length > 0) {
                 var area = document.getElementById('msgArea');
                 if (lastId === 0) area.innerHTML = '';
-                msgs.forEach(m => {
+                msgs.forEach(function(m) {
                     area.insertAdjacentHTML('beforeend', renderMsg(m));
                     lastId = Math.max(lastId, parseInt(m.id));
                 });
                 area.scrollTop = area.scrollHeight;
             } else if (lastId === 0) {
-                document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;"><?php echo t('no_messages_say_hi'); ?> 👋</div>';
+                document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">' + escHtml(T.no_messages_say_hi) + ' 👋</div>';
+            }
+        })
+        .catch(function() {
+            fetchRetries++;
+            if (lastId === 0) {
+                if (fetchRetries >= maxRetries) {
+                    document.getElementById('msgArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">⚠️ ' + escHtml(T.load_error) + ' <button onclick="fetchRetries=0;fetchMessages();" style="background:var(--blue-primary);border:none;color:#fff;padding:6px 16px;border-radius:8px;cursor:pointer;margin-left:8px;">' + escHtml(T.retry) + '</button></div>';
+                } else {
+                    setTimeout(fetchMessages, 2000);
+                }
             }
         });
 }
 function toggleEmoji() { document.getElementById('emojiPicker').classList.toggle('active'); }
 function insertEmoji(emo) { var i=document.getElementById('msgInput'); i.value += emo; i.focus(); }
 function attachClick() {
-    if (!isPremium) { alert('<?php echo t('image_gif_premium_js'); ?>'); return; }
+    if (!isPremium) { alert(T.image_gif_premium_js); return; }
     document.getElementById('attachInput').click();
 }
 function onAttachSelect(input) {
@@ -188,11 +213,12 @@ function sendMsg() {
     fd.append('csrf_token', '<?php echo e(csrf_token()); ?>');
     if (selectedFile) fd.append('attachment', selectedFile);
     fetch('/uzdub/chat.php?with=<?php echo e($other['user_id']); ?>', {method:'POST', body:fd})
-        .then(r => r.json())
-        .then(r => {
+        .then(function(r) { return r.json(); })
+        .then(function(r) {
             if (r.ok) { input.value = ''; clearAttachment(); fetchMessages(); }
-            else alert(r.msg || '<?php echo t('error'); ?>');
-        });
+            else alert(r.msg || T.error);
+        })
+        .catch(function() { alert(T.error_occurred); });
 }
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('msgInput').addEventListener('keydown', function(e) {
