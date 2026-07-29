@@ -652,6 +652,108 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.key === 'Enter') send();
   });
 
+  // ===== Voice Input (Mikrofon) =====
+  var micBtn = document.getElementById('aic-mic');
+  var SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var micRecognizer = null;
+  var micListening = false;
+
+  var NAV_COMMANDS = {
+    uz: [
+      { patterns: ['bosh sahifa', 'asosiy sahifa', 'bosh sahifaga', 'bosh sahifaga o\'t', 'bosh sahifaga ot'], url: '/uzdub/index.php', speak: 'Bosh sahifaga o\'tyapman.' },
+      { patterns: ['profilim', 'mening profilim', 'profilimni och', 'profilimga o\'t'], url: '/uzdub/profile.php', speak: 'Profilingizni ochyapman.' },
+      { patterns: ['kino', 'kino bo\'lim', 'kino bolim', 'kinolarga', 'kino bo\'limini och'], url: '/uzdub/category.php?slug=kino', speak: 'Kino bo\'limini ochyapman.' },
+      { patterns: ['anime', 'anime bo\'lim', 'anime bolim', 'animega', 'anime bo\'limini och'], url: '/uzdub/category.php?slug=anime', speak: 'Anime bo\'limini ochyapman.' },
+      { patterns: ['multfilm', 'multfilm bo\'lim', 'multfilm bolim', 'multfilmlarga', 'multfilm bo\'limini och'], url: '/uzdub/category.php?slug=multfilm', speak: 'Multfilm bo\'limini ochyapman.' },
+      { patterns: ['qidiruv', 'qidir', 'izla'], url: null, speak: null },
+    ]
+  };
+
+  function normalizeVoice(s) {
+    return (s || '').toLowerCase().replace(/[.,!?;:]/g, '').trim();
+  }
+
+  function matchNavCommand(text) {
+    var norm = normalizeVoice(text);
+    var cmds = NAV_COMMANDS.uz;
+    for (var i = 0; i < cmds.length; i++) {
+      var cmd = cmds[i];
+      for (var j = 0; j < cmd.patterns.length; j++) {
+        if (norm.indexOf(cmd.patterns[j]) !== -1) {
+          if (cmd.url) return cmd;
+          // qidiruv buyrug'i — keyingi qismni ajratish
+          var searchTerms = norm.replace(cmd.patterns[j], '').trim();
+          if (searchTerms) return { url: '/uzdub/search.php?q=' + encodeURIComponent(searchTerms), speak: '"' + searchTerms + '" bo\'ychida qidiryapman.' };
+        }
+      }
+    }
+    return null;
+  }
+
+  if (micBtn && SpeechRecognitionAPI) {
+    micBtn.addEventListener('click', function () {
+      if (micListening) {
+        if (micRecognizer) { try { micRecognizer.stop(); } catch(e){} }
+        return;
+      }
+
+      micListening = true;
+      micBtn.classList.add('aic-mic-active');
+
+      var recog = new SpeechRecognitionAPI();
+      recog.lang = 'uz-UZ';
+      recog.continuous = false;
+      recog.interimResults = true;
+      micRecognizer = recog;
+
+      var finalText = '';
+      var silenceTimer = setTimeout(function () { recog.stop(); }, 5000);
+
+      recog.onresult = function (e) {
+        var interim = '';
+        for (var i = 0; i < e.results.length; i++) {
+          if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+          else interim += e.results[i][0].transcript;
+        }
+        input.value = finalText + interim;
+        clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(function () { recog.stop(); }, 1500);
+      };
+
+      recog.onerror = function () { finalText = finalText || ''; };
+
+      recog.onend = function () {
+        clearTimeout(silenceTimer);
+        micListening = false;
+        micBtn.classList.remove('aic-mic-active');
+        micRecognizer = null;
+
+        var spoken = finalText.trim();
+        if (!spoken) return;
+
+        // Navigatsiya buyrug'ini tekshirish
+        var nav = matchNavCommand(spoken);
+        if (nav && nav.url) {
+          addMessage(spoken, 'user');
+          addMessage(nav.speak, 'bot');
+          setTimeout(function () { window.location.href = nav.url; }, 800);
+          return;
+        }
+
+        // Oddiy chat — inputga yozilgan matnni yuborish
+        input.value = spoken;
+        send();
+      };
+
+      try { recog.start(); } catch(e) {
+        micListening = false;
+        micBtn.classList.remove('aic-mic-active');
+      }
+    });
+  } else if (micBtn) {
+    micBtn.style.display = 'none';
+  }
+
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;

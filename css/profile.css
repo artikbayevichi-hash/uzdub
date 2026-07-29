@@ -259,7 +259,7 @@
     background: var(--card-bg, #0f1923);
     border: 1px solid rgba(33,150,243,0.2);
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible;
     backdrop-filter: blur(8px);
 }
 
@@ -268,6 +268,8 @@
     overflow-x: auto;
     border-bottom: 1px solid rgba(33,150,243,0.15);
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 20px;
 }
 
 .profile-tabs::-webkit-scrollbar { display: none; }
@@ -889,6 +891,113 @@
     margin: 0;
 }
 
+.twofa-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.twofa-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(33, 150, 243, 0.06);
+    border-radius: 10px;
+    border: 1px solid rgba(33, 150, 243, 0.12);
+}
+
+.twofa-step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--blue-primary, #2196f3);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.twofa-step-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.twofa-step-text strong {
+    font-size: 13px;
+    color: var(--text-light, #e0e0e0);
+    font-weight: 600;
+}
+
+.twofa-step-text span {
+    font-size: 12px;
+    color: var(--text-muted, #8899aa);
+    line-height: 1.4;
+}
+
+.twofa-secret-block {
+    margin-bottom: 20px;
+}
+
+.twofa-secret-label {
+    font-size: 11px;
+    color: var(--text-muted, #8899aa);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.twofa-secret-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.twofa-secret-row .twofa-secret-code {
+    flex: 1;
+    min-width: 0;
+}
+
+.twofa-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted, #8899aa);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.twofa-copy-btn:hover {
+    background: rgba(33, 150, 243, 0.15);
+    color: var(--blue-primary, #2196f3);
+    border-color: rgba(33, 150, 243, 0.3);
+}
+
+.twofa-copy-btn.copied {
+    color: #66bb6a;
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+.twofa-code-input {
+    text-align: center !important;
+    font-size: 20px !important;
+    letter-spacing: 6px !important;
+    max-width: 200px;
+    font-family: monospace;
+}
+
 /* ---- Sessions List ---- */
 .sessions-list {
     margin-top: 16px;
@@ -1105,12 +1214,29 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
+    .profile-page {
+        width: 100%;
+        box-sizing: border-box;
+    }
     .profile-stats-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 600px) {
+    .profile-page {
+        width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        padding: 0 8px;
+    }
+
+    .profile-header {
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
     .profile-header-inner {
         flex-direction: column;
         align-items: center;
@@ -1118,20 +1244,75 @@
         padding: 0 16px 20px;
     }
 
+    .profile-avatar-section {
+        margin-top: -40px;
+    }
+
+    .profile-avatar-wrap {
+        width: 80px;
+        height: 80px;
+    }
+
+    .profile-avatar-img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .avatar-crown {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        top: -4px;
+        right: -4px;
+    }
+
+    .online-dot {
+        width: 14px;
+        height: 14px;
+        bottom: 2px;
+        right: 2px;
+    }
+
     .profile-info-section {
         padding-top: 8px;
+        width: 100%;
     }
 
     .profile-name-row {
         justify-content: center;
     }
 
+    .profile-username {
+        font-size: 18px;
+    }
+
     .profile-meta-row {
         justify-content: center;
+        gap: 8px;
+    }
+
+    .meta-item {
+        font-size: 11px;
+        gap: 3px;
+    }
+
+    .meta-role, .meta-id {
+        font-size: 10px;
+        padding: 1px 8px;
     }
 
     .profile-actions-row {
         justify-content: center;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .pf-btn {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 12px;
     }
 
     .profile-stats-grid {

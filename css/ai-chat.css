@@ -505,6 +505,50 @@
 .aic-send:active { transform: scale(0.9); }
 .aic-send svg { width: 18px; height: 18px; fill: #fff; }
 
+/* ===== Mikrofon tugmasi ===== */
+.aic-mic {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: none;
+  background: var(--aic-surface);
+  color: var(--aic-text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.aic-mic svg { width: 18px; height: 18px; fill: currentColor; }
+.aic-mic:hover { background: rgba(33,150,243,0.12); color: var(--aic-accent); }
+
+.aic-mic.aic-mic-active {
+  background: rgba(33,150,243,0.2);
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(33,150,243,0.15);
+}
+
+.aic-mic-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  border: 2px solid rgba(33,150,243,0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.aic-mic.aic-mic-active .aic-mic-pulse {
+  opacity: 1;
+  animation: aic-mic-pulse-ring 1s ease-out infinite;
+}
+
+@keyframes aic-mic-pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
 /* ===== Tezkor takliflar (chips) ===== */
 .aic-chips {
   display: flex;
@@ -621,12 +665,12 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 480px) {
-  .aic-panel { right: 12px; bottom: 92px; width: calc(100vw - 24px); height: calc(100vh - 160px); border-radius: 14px; }
-  .aic-fab { right: 16px; bottom: 18px; width: 54px; height: 54px; }
+  .aic-panel { right: 12px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); width: calc(100vw - 24px); height: calc(100vh - 160px); border-radius: 14px; }
+  .aic-fab { right: 14px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; }
 }
 @media (max-width: 768px) {
-  .aic-fab { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
-  .aic-panel { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+  .aic-fab { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); right: 14px; }
+  .aic-panel { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ===== Premium-only tugma ===== */

@@ -1,5 +1,5 @@
 <?php
-$page_title = t('admin_all_content');
+$page_title = 'Barcha kontent';
 include __DIR__ . '/includes/admin_header.php';
 
 $items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC")->fetchAll();

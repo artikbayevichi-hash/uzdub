@@ -55,12 +55,18 @@ if ($method === 'GET') {
             exit;
         }
 
-        $secret = TOTP::generateSecret();
-        $uri = TOTP::getProvisioningUri($secret, $user['email']);
-        $qr_url = TOTP::getQRCodeUrl($uri);
+        $secret = $_SESSION['pending_2fa_secret'] ?? '';
+        if (empty($secret) || (time() - ($_SESSION['pending_2fa_time'] ?? 0)) > 600) {
+            $secret = TOTP::generateSecret();
+            $uri = TOTP::getProvisioningUri($secret, $user['email']);
+            $qr_url = TOTP::getQRCodeUrl($uri);
 
-        $_SESSION['pending_2fa_secret'] = $secret;
-        $_SESSION['pending_2fa_time'] = time();
+            $_SESSION['pending_2fa_secret'] = $secret;
+            $_SESSION['pending_2fa_time'] = time();
+        } else {
+            $uri = TOTP::getProvisioningUri($secret, $user['email']);
+            $qr_url = TOTP::getQRCodeUrl($uri);
+        }
 
         echo json_encode([
             'ok' => true,
@@ -94,7 +100,7 @@ if ($method === 'GET') {
             exit;
         }
 
-        if (!TOTP::verifyCode($secret, $code)) {
+        if (!TOTP::verifyCode($secret, $code, 2)) {
             echo json_encode(['ok' => false, 'error' => 'Noto\'g\'ri kod. Qayta urinib ko\'ring.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
@@ -124,7 +130,7 @@ if ($method === 'GET') {
             exit;
         }
 
-        if (!TOTP::verifyCode($user['two_factor_secret'], $code)) {
+        if (!TOTP::verifyCode($user['two_factor_secret'], $code, 2)) {
             echo json_encode(['ok' => false, 'error' => 'Noto\'g\'ri kod. Qayta urinib ko\'ring.'], JSON_UNESCAPED_UNICODE);
             exit;
         }

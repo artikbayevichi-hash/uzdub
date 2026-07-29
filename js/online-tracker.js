@@ -16,70 +16,28 @@
     var STORAGE累积 = 'uzdub_online_accumulated';
 
     var accumulated = 0;    // oldin yig'ilgan vaqt (sekund)
-    var sessionStart = 0;   // joriy sahifa/session boshlanish vaqti
+    var sessionStart = Math.floor(Date.now() / 1000);   // joriy sahifa/session boshlanish vaqti
     var lastHeartbeat = 0;  // oxirgi heartbeatda yuborilgan elapsed
-
-    // ===== localStorage dan o'qish / saqlash =====
-    function loadAccumulated() {
-        try {
-            var saved = parseInt(localStorage.getItem(STORAGE累积), 10);
-            return isNaN(saved) ? 0 : saved;
-        } catch (e) { return 0; }
-    }
 
     function saveAccumulated(val) {
         try { localStorage.setItem(STORAGE累积, String(val)); } catch (e) {}
-    }
-
-    function getSessionStart() {
-        try {
-            var saved = parseInt(localStorage.getItem(STORAGE_KEY), 10);
-            return isNaN(saved) ? 0 : saved;
-        } catch (e) { return 0; }
     }
 
     function saveSessionStart(val) {
         try { localStorage.setItem(STORAGE_KEY, String(val)); } catch (e) {}
     }
 
-    // ===== Vaqtni formatlash: "01m 42s" yoki "2s 15s" =====
-    function formatTime(totalSeconds) {
-        var h = Math.floor(totalSeconds / 3600);
-        var m = Math.floor((totalSeconds % 3600) / 60);
-        var s = totalSeconds % 60;
-        var parts = [];
-        if (h > 0) parts.push(h + 'h');
-        if (m > 0 || h > 0) parts.push((m < 10 && h > 0 ? '0' : '') + m + 'm');
-        parts.push((s < 10 && (m > 0 || h > 0) ? '0' : '') + s + 's');
-        return parts.join(' ');
-    }
-
-    // ===== Joriy umumiy onlayn vaqtni hisoblash =====
-    function getTotalOnlineTime() {
-        var now = Math.floor(Date.now() / 1000);
-        var elapsed = now - sessionStart;
-        if (elapsed < 0) elapsed = 0;
-        if (elapsed > 3600) elapsed = 3600; // 1 soatdan oshsa qisqartirish
-        return accumulated + elapsed;
-    }
-
-    // ===== Initialize =====
-    sessionStart = getSessionStart();
-    accumulated = loadAccumulated();
-
-    // Agar yangi session (tab yopilgan yoki 5 daqiqadan ortiq vaqt o'tgan)
-    var now = Math.floor(Date.now() / 1000);
-    if (!sessionStart || (now - sessionStart) > 300) {
-        sessionStart = now;
-        saveSessionStart(sessionStart);
-    }
-
-    // ===== Timer display ni yangilash (1 sekundda) =====
+    // ===== Session timer =====
     var timerEl = document.getElementById('sessionTimer');
+    var sessionSeconds = 0;
     function updateTimerDisplay() {
+        var h = Math.floor(sessionSeconds / 3600);
+        var m = Math.floor((sessionSeconds % 3600) / 60);
+        var s = sessionSeconds % 60;
         if (timerEl) {
-            timerEl.textContent = formatTime(getTotalOnlineTime());
+            timerEl.textContent = (h < 10 ? '0' : '') + h + 'h ' + (m < 10 ? '0' : '') + m + 'm ' + (s < 10 ? '0' : '') + s + 's';
         }
+        sessionSeconds++;
     }
     updateTimerDisplay();
     setInterval(updateTimerDisplay, 1000);
@@ -187,7 +145,7 @@
     // Global exposure
     window.UZDUBOnlineTracker = {
         getOnlineCount: function() { return currentOnlineCount; },
-        getTotalTime: function() { return getTotalOnlineTime(); },
+        getTotalTime: function() { return sessionSeconds; },
         refresh: function() { fetchOnlineCount(); sendHeartbeat(); }
     };
 })();

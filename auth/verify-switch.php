@@ -7,6 +7,7 @@ $token = $_SESSION['verify_switch_token'] ?? '';
 $username = $_SESSION['verify_switch_username'] ?? '';
 
 if (!$uid || !$token) {
+    unset($_SESSION['verify_switch_uid'], $_SESSION['verify_switch_token'], $_SESSION['verify_switch_username'], $_SESSION['verify_switch_redirect']);
     header('Location: /uzdub/index.php');
     exit;
 }
@@ -16,7 +17,7 @@ $stmt->execute([$uid, $token]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    unset($_SESSION['verify_switch_uid'], $_SESSION['verify_switch_token'], $_SESSION['verify_switch_username']);
+    unset($_SESSION['verify_switch_uid'], $_SESSION['verify_switch_token'], $_SESSION['verify_switch_username'], $_SESSION['verify_switch_redirect']);
     header('Location: /uzdub/index.php');
     exit;
 }
@@ -38,7 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             check_premium_expiry($pdo, $user['id']);
             refresh_user_session($pdo, $user['id']);
             session_regenerate_id(true);
-            header('Location: /uzdub/index.php');
+            $redirect = $_SESSION['verify_switch_redirect'] ?? '/uzdub/index.php';
+            unset($_SESSION['verify_switch_redirect']);
+            header('Location: ' . $redirect);
             exit;
         }
         login_register_failed($pdo, $attempt_id);

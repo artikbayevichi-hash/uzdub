@@ -95,3 +95,9 @@
     .va-widget { left: 14px; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
     .va-panel { max-width: 200px; }
 }
+@media (max-width: 480px) {
+    .va-widget { left: 10px; bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
+    .va-toggle { width: 46px; height: 46px; }
+    .va-mic-icon { width: 20px; height: 20px; }
+    .va-panel { max-width: 170px; font-size: 11px; padding: 8px 10px; }
+}

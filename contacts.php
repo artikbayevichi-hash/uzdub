@@ -19,17 +19,17 @@ include __DIR__ . '/includes/header.php';
         <div class="contact-card">
             <div class="cc-icon">💬</div>
             <div class="cc-label">Telegram</div>
-            <div class="cc-value"><a href="https://t.me/uzdub" target="_blank">@uzdub</a></div>
+            <div class="cc-value"><a href="https://t.me/uzdub_platform" target="_blank">@uzdub_platform</a></div>
         </div>
         <div class="contact-card">
             <div class="cc-icon">📸</div>
             <div class="cc-label">Instagram</div>
-            <div class="cc-value"><a href="https://instagram.com/uzdub.uz" target="_blank">@uzdub.uz</a></div>
+            <div class="cc-value"><a href="https://instagram.com/UZDUB_PLATFORM" target="_blank">@UZDUB_PLATFORM</a></div>
         </div>
         <div class="contact-card">
             <div class="cc-icon">🎵</div>
             <div class="cc-label">TikTok</div>
-            <div class="cc-value"><a href="https://tiktok.com/@uzdub" target="_blank">@uzdub</a></div>
+            <div class="cc-value"><a href="https://tiktok.com/@uzdub.platform" target="_blank">@uzdub.platform</a></div>
         </div>
     </div>
 

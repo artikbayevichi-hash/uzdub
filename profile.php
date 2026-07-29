@@ -8,7 +8,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
     $uid_param = $_GET['uid'];
     $tab = $_GET['ajax_tab'] ?? 'history';
     $cat = $_GET['cat'] ?? 'all';
-    $allowed_tabs = ['history','watching','planned','completed','paused','dropped','favorites','settings','security'];
+    $allowed_tabs = ['history','watching','completed','favorites','settings','security'];
     if (!in_array($tab, $allowed_tabs, true)) $tab = 'history';
     $allowed_cats = ['all','kino','anime','multfilm'];
     if (!in_array($cat, $allowed_cats, true)) $cat = 'all';
@@ -507,14 +507,44 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     </div>
                 </div>
                 <div id="twofaSetupArea" class="twofa-setup-area" style="display:none;">
+                    <div class="twofa-steps">
+                        <div class="twofa-step">
+                            <div class="twofa-step-num">1</div>
+                            <div class="twofa-step-text">
+                                <strong><?php echo e(t('twofa_step1_title')); ?></strong>
+                                <span><?php echo e(t('twofa_step1_desc')); ?></span>
+                            </div>
+                        </div>
+                        <div class="twofa-step">
+                            <div class="twofa-step-num">2</div>
+                            <div class="twofa-step-text">
+                                <strong><?php echo e(t('twofa_step2_title')); ?></strong>
+                                <span><?php echo e(t('twofa_step2_desc')); ?></span>
+                            </div>
+                        </div>
+                        <div class="twofa-step">
+                            <div class="twofa-step-num">3</div>
+                            <div class="twofa-step-text">
+                                <strong><?php echo e(t('twofa_step3_title')); ?></strong>
+                                <span><?php echo e(t('twofa_step3_desc')); ?></span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="twofa-qr-wrap">
                         <img id="twofaQR" src="" alt="QR Code" class="twofa-qr-img">
-                        <p class="twofa-secret-label"><?php echo t('twofa_scan_qr'); ?></p>
-                        <code class="twofa-secret-code" id="twofaSecret"></code>
+                    </div>
+                    <div class="twofa-secret-block">
+                        <div class="twofa-secret-label"><?php echo t('twofa_secret_key'); ?></div>
+                        <div class="twofa-secret-row">
+                            <code class="twofa-secret-code" id="twofaSecret"></code>
+                            <button type="button" class="twofa-copy-btn" id="twofaCopyBtn" title="Nusxalash">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="twofa-verify-form">
                         <label><?php echo t('twofa_enter_code'); ?></label>
-                        <input type="text" id="twofaCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input" style="text-align:center;font-size:20px;letter-spacing:6px;max-width:200px;">
+                        <input type="text" id="twofaCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input twofa-code-input" autocomplete="one-time-code">
                         <label><?php echo t('twofa_current_pass'); ?></label>
                         <input type="password" id="twofaPassInput" class="settings-input" autocomplete="current-password">
                         <button type="button" class="pf-btn pf-btn-blue" id="twofaConfirmBtn"><?php echo t('otp_verify_btn'); ?></button>
@@ -550,8 +580,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
 
         <script>
         (function() {
-            var csrf = document.querySelector('input[name="csrf_token"]');
-            var csrfVal = csrf ? csrf.value : '';
+            var csrfVal = '<?php echo csrf_token(); ?>';
             var twofaStatus = document.getElementById('twofaStatus');
 
             // ===== Load sessions =====
@@ -631,6 +660,35 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     });
                 });
             }
+
+            // ===== Copy secret key =====
+            var copyBtn = document.getElementById('twofaCopyBtn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function() {
+                    var secret = document.getElementById('twofaSecret').textContent;
+                    if (!secret) return;
+                    navigator.clipboard.writeText(secret).then(function() {
+                        copyBtn.classList.add('copied');
+                        copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+                        setTimeout(function() {
+                            copyBtn.classList.remove('copied');
+                            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+                        }, 2000);
+                        if (window.showToast) showToast('Maxfiy kalit nusxalandi', 'success');
+                    }).catch(function() {});
+                });
+            }
+
+            // ===== Numeric-only input enforcement =====
+            function enforceNumeric(el) {
+                el.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+                });
+            }
+            var twofaCodeInput = document.getElementById('twofaCodeInput');
+            var twofaDisableCodeInput = document.getElementById('twofaDisableCodeInput');
+            if (twofaCodeInput) enforceNumeric(twofaCodeInput);
+            if (twofaDisableCodeInput) enforceNumeric(twofaDisableCodeInput);
 
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function() {
@@ -732,7 +790,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 ) AS favs $fav_where ORDER BY sort_date DESC LIMIT 50";
         $stmt = $pdo->prepare($sql); $stmt->execute([$uid, $uid]); $collection_items = $stmt->fetchAll();
     } else {
-        $status_map = ['watching'=>'watching','planned'=>'planned','completed'=>'completed','paused'=>'paused','dropped'=>'dropped'];
+        $status_map = ['watching'=>'watching','completed'=>'completed'];
         $status_val = $status_map[$tab] ?? $tab;
         $sql = "SELECT ucs.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name
                 FROM user_content_status ucs JOIN content c ON c.id = ucs.content_id JOIN categories cat ON cat.id = c.category_id
@@ -970,9 +1028,6 @@ include __DIR__ . '/includes/header.php';
         <div class="profile-info-section">
             <div class="profile-name-row">
                 <h1 class="profile-username"><?php echo e($profile_user['username']); ?></h1>
-                <?php if ($profile_user['is_premium']): ?>
-                <span class="premium-badge-sm">⭐ <?php echo t('premium_badge'); ?></span>
-                <?php endif; ?>
             </div>
             <div class="profile-meta-row">
                 <span class="meta-item">
@@ -981,9 +1036,11 @@ include __DIR__ . '/includes/header.php';
                 </span>
                 <span class="meta-item">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span id="sessionTimer">00m 00s</span>
+                    <span id="sessionTimer">00h 00m 00s</span>
                 </span>
-                <span class="meta-item meta-role"><?php echo $profile_user['is_premium'] ? t('premium_badge') : t('user_role'); ?></span>
+                <?php if ($profile_user['is_premium']): ?>
+                <span class="meta-item meta-role" style="color:#f9a825;">⭐ <?php echo t('premium_badge'); ?></span>
+                <?php endif; ?>
                 <span class="meta-item meta-id"><?php echo t('id_label'); ?><?php echo e($profile_user['user_id']); ?></span>
             </div>
             <div class="profile-actions-row">
@@ -1046,21 +1103,9 @@ include __DIR__ . '/includes/header.php';
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <?php echo t('tab_watching'); ?>
         </button>
-        <button class="pf-tab" data-tab="planned">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            <?php echo t('tab_planned'); ?>
-        </button>
         <button class="pf-tab" data-tab="completed">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <?php echo t('tab_completed'); ?>
-        </button>
-        <button class="pf-tab" data-tab="paused">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>
-            <?php echo t('tab_on_hold'); ?>
-        </button>
-        <button class="pf-tab" data-tab="dropped">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
-            <?php echo t('tab_dropped'); ?>
         </button>
         <button class="pf-tab" data-tab="favorites">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -1143,11 +1188,8 @@ var PF_CURRENT_CAT = 'all';
         var h = Math.floor(sec/3600);
         var m = Math.floor((sec%3600)/60);
         var s = sec%60;
-        var parts = [];
-        if(h>0) parts.push(h+PT.hours_unit);
-        parts.push((m<10?'0':'')+m+'m');
-        parts.push((s<10?'0':'')+s+'s');
-        el.textContent = parts.join(' ');
+        if(h>0) el.textContent = h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+        else el.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
     },1000);
 })();
 

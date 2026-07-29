@@ -4,12 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?></title>
+<script>if(localStorage.getItem('uzdub_splash_seen')!=='1'){window.location.replace('/uzdub/splash.php');}</script>
 <link rel="stylesheet" href="/uzdub/css/style.css">
-<link rel="stylesheet" href="/uzdub/css/splash.css">
 <script src="/uzdub/js/online-tracker.js" defer></script>
 </head>
 <body>
 <script>window.UZDUB_IS_LOGGED_IN = <?php echo is_user() ? 'true' : 'false'; ?>;</script>
+<script>
+(function(){
+    if(window.UZDUB_IS_LOGGED_IN) return;
+    try {
+        var acc = JSON.parse(localStorage.getItem('uzdub_current_account'));
+        if(acc && acc.user_id && acc.switch_token) {
+            var redirect = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace('/uzdub/auth/switch.php?uid=' + encodeURIComponent(acc.user_id) + '&token=' + encodeURIComponent(acc.switch_token) + '&redirect=' + redirect);
+        }
+    } catch(e) {}
+})();
+</script>
 
 <div class="ambient-dust">
     <span></span><span></span><span></span><span></span>
@@ -30,11 +42,16 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
 <header class="site-header">
     <a href="/uzdub/index.php" class="logo">UZDUB<span class="logo-sub"><span class="ls-char" style="transition-delay:0.5s">P</span><span class="ls-char" style="transition-delay:0.58s">L</span><span class="ls-char" style="transition-delay:0.66s">A</span><span class="ls-char" style="transition-delay:0.74s">T</span><span class="ls-char" style="transition-delay:0.82s">F</span><span class="ls-char" style="transition-delay:0.9s">O</span><span class="ls-char" style="transition-delay:0.98s">R</span><span class="ls-char" style="transition-delay:1.06s">M</span></span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Menyu">&#9776;</button>
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
     <ul class="nav-links" id="navLinks">
-        <li><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"><?php echo t('home'); ?></a></li>
-        <li><a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a></li>
-        <li><a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a></li>
-        <li><a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a></li>
+        <li class="drawer-header">
+            <span class="drawer-title">☰ Menyu</span>
+            <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+        </li>
+        <li class="mobile-hide"><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"><?php echo t('home'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a></li>
         <li class="random-dropdown">
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
             <div class="random-menu">
@@ -103,6 +120,14 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
         <li><a href="/uzdub/inbox.php"><?php echo t('messages'); ?></a></li>
         <li><a href="/uzdub/premium.php" style="color:#f9a825;">⭐ <?php echo t('premium'); ?></a></li>
         <?php endif; ?>
+        <li class="mobile-only-items">
+            <div>
+                <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:8px 14px 4px;display:block;">🌐 <?php echo t('language'); ?></span>
+                <a href="?lang=uz">🇺🇿 O'zbek <?php echo current_lang()==='uz'?' ✓':''; ?></a>
+                <a href="?lang=ru">🇷🇺 Русский <?php echo current_lang()==='ru'?' ✓':''; ?></a>
+                <a href="?lang=en">🇬🇧 English <?php echo current_lang()==='en'?' ✓':''; ?></a>
+            </div>
+        </li>
     </ul>
     <div class="header-right">
         <?php if (is_user()): ?>
@@ -302,6 +327,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                         <?php if ($u['is_premium']): ?><span class="acc-dd-premium">⭐ Premium</span><?php endif; ?>
                         <span class="acc-dd-id">ID: <?php echo e($u['user_id']); ?></span>
                     </div>
+                    <span class="acc-dd-check">✓</span>
                 </div>
                 <div class="acc-dropdown-divider"></div>
                 <div class="acc-dropdown-list" id="accDropdownList"></div>
@@ -349,7 +375,25 @@ document.addEventListener('click', function(e) {
     if (menu && !menu.contains(e.target) && e.target !== btn) menu.classList.remove('active');
 });
 document.getElementById('navToggle').addEventListener('click', function() {
-    document.getElementById('navLinks').classList.toggle('nav-open');
+    var nl = document.getElementById('navLinks');
+    var ov = document.getElementById('drawerOverlay');
+    nl.classList.toggle('nav-open');
+    var isOpen = nl.classList.contains('nav-open');
+    if(ov) ov.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+function closeDrawer() {
+    var nl = document.getElementById('navLinks');
+    var ov = document.getElementById('drawerOverlay');
+    if(nl) nl.classList.remove('nav-open');
+    if(ov) ov.classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if(e.key === 'Escape') closeDrawer();
+});
+document.getElementById('navLinks').addEventListener('click', function(e) {
+    if(e.target.tagName === 'A') closeDrawer();
 });
 
 // Akkaunt switcher

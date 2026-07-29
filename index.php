@@ -26,7 +26,6 @@ if (is_user()) {
 }
 
 include __DIR__ . '/includes/header.php';
-include __DIR__ . '/includes/splash.php';
 ?>
 
 <?php if (!empty($hero_items)): ?>

@@ -49,6 +49,10 @@ $is_premium_user = is_user() && !empty(current_user()['is_premium']);
     </div>
     <div class="aic-inputbar">
       <input type="text" id="aic-input" class="aic-input" placeholder="Xabar yozing..." autocomplete="off">
+      <button class="aic-mic" id="aic-mic" type="button" aria-label="Ovozli kiritish" title="Mikrofon">
+        <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/><path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.08A7 7 0 0 0 19 11z"/></svg>
+        <span class="aic-mic-pulse"></span>
+      </button>
       <button class="aic-send" id="aic-send" aria-label="Yuborish">
         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>

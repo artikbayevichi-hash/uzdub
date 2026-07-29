@@ -36,6 +36,7 @@ if ($needs_verify) {
     $_SESSION['verify_switch_uid'] = $uid;
     $_SESSION['verify_switch_token'] = $token;
     $_SESSION['verify_switch_username'] = $user['username'];
+    $_SESSION['verify_switch_redirect'] = $_GET['redirect'] ?? '/uzdub/index.php';
     header('Location: /uzdub/auth/verify-switch.php');
     exit;
 }
@@ -45,5 +46,7 @@ $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$
 refresh_user_session($pdo, $user['id']);
 session_regenerate_id(true);
 
-header('Location: /uzdub/index.php');
+$redirect = $_GET['redirect'] ?? '/uzdub/index.php';
+if (!preg_match('#^/uzdub/#', $redirect)) $redirect = '/uzdub/index.php';
+header('Location: ' . $redirect);
 exit;
