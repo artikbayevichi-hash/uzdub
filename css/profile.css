@@ -74,15 +74,17 @@
     position: absolute;
     top: -6px;
     right: -6px;
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
     background: linear-gradient(135deg, #f9a825, #ff6f00);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 18px;
     border: 3px solid var(--card-bg, #0f1923);
+    transform: rotate(-20deg);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.45);
 }
 
 .online-dot {
@@ -847,6 +849,29 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.twofa-setup-area.hidden {
+    display: none;
+}
+
+.twofa-phone-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-muted, #8899aa);
+    background: rgba(33, 150, 243, 0.08);
+    border: 1px solid rgba(33, 150, 243, 0.2);
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+
+.twofa-phone-info code {
+    color: var(--blue-primary, #2196f3);
+    font-weight: 600;
+    background: transparent;
+}
+
 .twofa-qr-wrap {
     text-align: center;
     margin-bottom: 20px;
@@ -883,6 +908,10 @@
     flex-direction: column;
     gap: 10px;
     max-width: 320px;
+}
+
+.twofa-verify-form.hidden {
+    display: none;
 }
 
 .twofa-verify-form label {
@@ -996,6 +1025,225 @@
     letter-spacing: 6px !important;
     max-width: 200px;
     font-family: monospace;
+}
+
+/* ---- Telegram 2FA ---- */
+.twofa-tg-step {
+    margin-bottom: 14px;
+}
+
+.twofa-bot-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid rgba(33, 150, 243, 0.35);
+    background: rgba(33, 150, 243, 0.1);
+    color: var(--blue-primary, #2196f3);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.twofa-bot-btn:hover {
+    background: rgba(33, 150, 243, 0.2);
+    border-color: var(--blue-primary, #2196f3);
+}
+
+.twofa-link-status {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted, #8899aa);
+    font-size: 13px;
+}
+
+.twofa-link-status.status-on {
+    border-color: rgba(76, 175, 80, 0.3);
+    background: rgba(76, 175, 80, 0.08);
+    color: #81c784;
+}
+
+/* ===================== 2FA polish redesign ===================== */
+.security-section {
+    background: linear-gradient(180deg, rgba(33, 150, 243, 0.04), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 22px;
+}
+
+.security-icon {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(79, 195, 247, 0.06));
+    border: 1px solid rgba(33, 150, 243, 0.35);
+    box-shadow: 0 6px 18px rgba(33, 150, 243, 0.22), inset 0 0 18px rgba(33, 150, 243, 0.1);
+}
+
+.security-header h3 {
+    font-size: 17px;
+}
+
+.twofa-phone-info {
+    position: relative;
+    overflow: hidden;
+}
+.twofa-phone-info::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--blue-glow, #4fc3f7), var(--blue-primary, #2196f3));
+}
+.twofa-phone-info code {
+    background: rgba(33, 150, 243, 0.12);
+    padding: 2px 10px;
+    border-radius: 7px;
+    letter-spacing: 0.6px;
+}
+
+.twofa-setup-area {
+    border: 1px solid rgba(33, 150, 243, 0.16);
+    background: linear-gradient(180deg, rgba(33, 150, 243, 0.06), rgba(255, 255, 255, 0.02));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.twofa-step {
+    position: relative;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: border-color 0.2s, background 0.2s;
+}
+.twofa-step:hover {
+    border-color: rgba(33, 150, 243, 0.25);
+    background: rgba(33, 150, 243, 0.05);
+}
+
+.twofa-step-num {
+    background: linear-gradient(135deg, var(--blue-glow, #4fc3f7), var(--blue-primary, #2196f3));
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.twofa-bot-btn {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #2aabee, #1e88d0);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(42, 171, 238, 0.35);
+    padding: 11px 22px;
+}
+.twofa-bot-btn:hover {
+    background: linear-gradient(135deg, #4fc3f7, #2196f3);
+    box-shadow: 0 10px 28px rgba(42, 171, 238, 0.5);
+    border: none;
+    color: #fff;
+    transform: translateY(-2px);
+}
+.twofa-bot-btn::after {
+    content: '✈️';
+    position: absolute;
+    right: -6px;
+    top: -6px;
+    font-size: 30px;
+    opacity: 0.14;
+    transform: rotate(-14deg);
+}
+
+.twofa-secret-block {
+    background: rgba(33, 150, 243, 0.05);
+    border: 1px dashed rgba(33, 150, 243, 0.28);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.twofa-secret-code {
+    background: transparent;
+    color: var(--text-light, #e0e0e0);
+    font-size: 18px;
+    letter-spacing: 8px;
+    padding: 8px 4px;
+}
+
+.twofa-secret-code.twofa-secret-boxes {
+    display: flex;
+    gap: 6px;
+    letter-spacing: 0;
+}
+.twofa-secret-boxes span {
+    flex: 1;
+    min-width: 22px;
+    text-align: center;
+    background: #0d1424;
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    border-radius: 8px;
+    padding: 8px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--blue-glow, #4fc3f7);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.twofa-link-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+}
+.twofa-link-status .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--blue-glow, #4fc3f7);
+    box-shadow: 0 0 10px var(--blue-glow, #4fc3f7);
+    animation: apprPulse 1.8s ease-out infinite;
+}
+.twofa-link-status.status-on .dot {
+    background: #66bb6a;
+    box-shadow: 0 0 10px #66bb6a;
+    animation: none;
+}
+@keyframes apprPulse {
+    0%   { transform: scale(0.7); opacity: 0.9; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.twofa-verify-form {
+    background: rgba(33, 150, 243, 0.05);
+    border: 1px solid rgba(33, 150, 243, 0.14);
+    border-radius: 12px;
+    padding: 16px;
+}
+.twofa-verify-form .settings-input {
+    background: #0d1424;
+    border: 1px solid rgba(33, 150, 243, 0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-light, #e0e0e0);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.twofa-verify-form .settings-input:focus {
+    border-color: var(--blue-primary, #2196f3);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+}
+
+.twofa-code-input {
+    font-size: 22px !important;
+    letter-spacing: 10px !important;
+    text-align: center !important;
+    background: #0d1424 !important;
 }
 
 /* ---- Sessions List ---- */
@@ -1259,11 +1507,12 @@
     }
 
     .avatar-crown {
-        width: 24px;
-        height: 24px;
-        font-size: 12px;
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
         top: -4px;
         right: -4px;
+        transform: rotate(-20deg);
     }
 
     .online-dot {

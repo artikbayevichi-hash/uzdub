@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $subject = "UZDUB — Parolni tiklash kodi";
                     $message = "Tasdiqlash kodi: $code\n\nBu kod 5 daqiqa amal qiladi.\n\nUZDUB Platform";
-                    $htmlMessage = "<div style='font-family:Arial,sans-serif;max-width:400px;margin:auto;padding:20px;background:#0b0f19;color:#e0e0e0;border-radius:12px;'><h2 style='color:#2196f3;'>UZDUB</h2><p>Parolni tiklash kodi:</p><div style='font-size:32px;font-weight:bold;letter-spacing:6px;color:#fff;background:#1a2332;padding:16px;border-radius:8px;text-align:center;'>$code</div><p style='font-size:12px;color:#8899aa;margin-top:16px;'>Bu kod 5 daqiqa amal qiladi.</p></div>";
+                    $htmlMessage = email_layout('Parolni tiklash', email_paragraph('Parolingizni tiklash uchun quyidagi <b>tasdiqlash kodini</b> kiriting.') . email_code_card('Tasdiqlash kodi', $code, 'Bu kod 5 daqiqa amal qiladi.'));
                     send_email($email, $subject, $message, $htmlMessage);
 
                     $masked = substr($email, 0, 2) . str_repeat('*', max(0, strlen($email) - 6)) . substr($email, -4);
@@ -96,11 +96,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Parolni tiklash - UZDUB PLATFORM</title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <link rel="stylesheet" href="/uzdub/css/auth.css">
+<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
+<script src="/uzdub/js/emoji-blue.js" defer></script>
 </head>
 <body>
+<div class="auth-grid"></div>
 <div class="auth-wrap">
     <div class="auth-box">
-        <h1>🔒</h1>
+        <div class="auth-logo">
+            <span class="al-badge"><?php if ($step === 4): ?>✅<?php else: ?>🔒<?php endif; ?></span>
+            <span class="al-title">UZDUB</span>
+            <span class="al-sub">PLATFORM</span>
+        </div>
         <h2>
             <?php if ($step === 1): ?>Parolni unutdingizmi?
             <?php elseif ($step === 2): ?>Tasdiqlash kodi
@@ -113,49 +120,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($success): ?><div class="alert alert-success"><?php echo e($success); ?></div><?php endif; ?>
 
         <?php if ($step === 1): ?>
-        <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Email manzilingizni kiriting. Sizga tasdiqlash kodi yuboramiz.</p>
+        <p class="auth-sub-text">Email manzilingizni kiriting. Sizga tasdiqlash kodi yuboramiz.</p>
         <form method="post">
             <?php echo csrf_input(); ?>
             <input type="hidden" name="step" value="1">
             <label>Email</label>
-            <input type="email" name="email" placeholder="email@example.com" required autofocus>
+            <div class="field">
+                <span class="field-icon">📧</span>
+                <input type="email" name="email" placeholder="email@example.com" required autofocus>
+            </div>
             <button type="submit" class="btn">Davom etish</button>
         </form>
 
         <?php elseif ($step === 2): ?>
-        <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">
+        <p class="auth-sub-text">
             Kod <b style="color:var(--blue-primary,#2196f3);"><?php echo e($_SESSION['fp_email_masked'] ?? ''); ?></b> manziliga yuborildi.
         </p>
         <form method="post">
             <?php echo csrf_input(); ?>
             <input type="hidden" name="step" value="2">
             <label>6 xonali tasdiqlash kodi</label>
-            <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required autofocus autocomplete="one-time-code" style="text-align:center;font-size:24px;letter-spacing:8px;">
+            <input type="text" name="code" class="code-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required autofocus autocomplete="one-time-code">
             <button type="submit" class="btn">Tasdiqlash</button>
         </form>
         <div class="alt-link" style="margin-top:10px;"><a href="forgot-password.php">Qaytadan yuborish</a></div>
 
         <?php elseif ($step === 3): ?>
-        <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Yangi parolni kiriting.</p>
+        <p class="auth-sub-text">Yangi parolni kiriting.</p>
         <form method="post">
             <?php echo csrf_input(); ?>
             <input type="hidden" name="step" value="3">
             <label>Yangi parol</label>
-            <input type="password" name="new_password" required minlength="6" autocomplete="new-password">
+            <div class="field">
+                <span class="field-icon">🔑</span>
+                <input type="password" name="new_password" id="fpPass1" class="has-toggle" required minlength="6" autocomplete="new-password">
+                <button type="button" class="pass-toggle" data-target="fpPass1" aria-label="Parolni ko'rsatish">👁</button>
+            </div>
             <label>Parolni tasdiqlash</label>
-            <input type="password" name="confirm_password" required minlength="6" autocomplete="new-password">
+            <div class="field">
+                <span class="field-icon">✅</span>
+                <input type="password" name="confirm_password" id="fpPass2" class="has-toggle" required minlength="6" autocomplete="new-password">
+                <button type="button" class="pass-toggle" data-target="fpPass2" aria-label="Parolni ko'rsatish">👁</button>
+            </div>
             <button type="submit" class="btn">Saqlash</button>
         </form>
 
         <?php elseif ($step === 4): ?>
-        <div style="text-align:center;font-size:48px;margin:20px 0;">✅</div>
-        <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Parolingiz muvaffaqiyatli yangilandi. Endi yangi parol bilan kiring.</p>
-        <a href="login.php" class="btn" style="display:inline-block;text-decoration:none;text-align:center;">Tizimga kirish</a>
+        <div class="verify-icon">✅</div>
+        <p class="auth-sub-text">Parolingiz muvaffaqiyatli yangilandi. Endi yangi parol bilan kiring.</p>
+        <a href="login.php" class="btn" style="display:block;text-decoration:none;text-align:center;">Tizimga kirish</a>
 
         <?php endif; ?>
 
         <div class="alt-link" style="margin-top:12px;"><a href="login.php">⬅️ Kirish sahifasiga qaytish</a></div>
     </div>
 </div>
+<script>
+document.querySelectorAll('.pass-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var inp = document.getElementById(this.dataset.target);
+        if (!inp) return;
+        var show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        this.textContent = show ? '🙈' : '👁';
+    });
+});
+</script>
 </body>
 </html>

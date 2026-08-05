@@ -64,7 +64,7 @@ $is_premium_user = is_user() && !empty(current_user()['is_premium']);
   <svg viewBox="0 0 24 24">
     <path d="M12 2a10 10 0 1 0 3.6 19.33L22 22l-1.03-4.24A10 10 0 0 0 12 2zm0 2a8 8 0 1 1-4.24 14.79l-.4-.25-2.85.68.7-2.76-.27-.42A8 8 0 0 1 12 4z"/>
   </svg>
-  <span class="aic-premium-lock">⭐</span>
+  <span class="aic-premium-lock">👑</span>
 </button>
 <?php endif; ?>
 

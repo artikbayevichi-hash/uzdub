@@ -70,7 +70,7 @@ try {
 
     $dataStmt = $pdo->prepare("
         SELECT c.id, c.title, c.title_ru, c.title_en, c.poster, c.poster_thumb,
-               c.release_year, c.rating, c.views, c.status, c.is_series, c.is_premium,
+               c.release_year, c.rating, c.views, c.status, c.is_premium,
                cat.name AS cat_name, cat.slug AS cat_slug
         FROM content c
         JOIN content_genres cg ON c.id = cg.content_id

@@ -64,7 +64,7 @@ $plans = PREMIUM_PLANS;
         <td><?php echo e($u['email']); ?></td>
         <td>
             <?php if ($u['is_premium']): ?>
-                ⭐ <?php echo date('d.m.Y', strtotime($u['premium_expires_at'])); ?>gacha
+                👑 <?php echo date('d.m.Y', strtotime($u['premium_expires_at'])); ?>gacha
             <?php else: ?>
                 <span style="color:var(--text-muted);">Yo'q</span>
             <?php endif; ?>

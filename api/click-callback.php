@@ -50,6 +50,11 @@ if ($action !== 0 && $action !== 1) {
 }
 
 // 2) Imzoni tekshirish
+if (!CLICK_SECRET_KEY) {
+    http_response_code(503);
+    echo json_encode(['error' => -1, 'error_note' => 'Payment not configured']);
+    exit;
+}
 $expected_sign = md5($click_trans_id . $merchant_trans_id . $service_id . CLICK_SECRET_KEY . $amount . $action . $sign_time);
 if (!hash_equals($expected_sign, $sign_string)) {
     http_response_code(400);

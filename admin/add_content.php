@@ -33,20 +33,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($title === '' || $category_id === 0) {
         $error = 'Nomi va kategoriyani to\'ldiring.';
     } else {
-        // Poster yuklash
-        $poster = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
-        if ($poster === false) { $error = 'Poster rasm formati noto\'g\'ri (jpg, png, webp bo\'lishi kerak).'; }
+        // Poster: fayldan yoki internetdan (URL / Gemini nusxasi)
+        $poster = null;
+        $poster_url = trim($_POST['poster_url'] ?? '');
+        $poster_file = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
+
+        if ($poster_url !== '') {
+            $downloaded = download_poster($poster_url, __DIR__ . '/../uploads/posters/');
+            if ($downloaded) {
+                $poster = $downloaded;
+                if ($poster_file) @unlink(__DIR__ . '/../uploads/posters/' . $poster_file);
+            } else {
+                $error = 'Poster URL dan rasm yuklab bo\'lmadi (jpg/png/webp bo\'lishi kerak).';
+            }
+        } elseif ($poster_file === false) {
+            $error = 'Poster rasm formati noto\'g\'ri (jpg, png, webp bo\'lishi kerak).';
+        } elseif ($poster_file) {
+            $poster = $poster_file;
+        }
 
         $video_type = null;
         $video_url = null;
 
         if (!$error) {
             $video_type = $_POST['video_type'] ?? null;
-            $allowed_video_types = ['youtube', 'cloud', 'file'];
+            $allowed_video_types = ['youtube', 'cloud', 'telegram'];
             if (!in_array($video_type, $allowed_video_types, true)) $video_type = 'youtube';
-            if ($video_type === 'file') {
-                $video_url = upload_file('video_file', __DIR__ . '/../uploads/videos/', ['mp4','webm','mkv','ogg'], ['video/mp4','video/webm','video/x-matroska','video/ogg']);
-                if (!$video_url) { $error = 'Video fayl yuklashda xatolik (mp4, webm, mkv, ogg bo\'lishi kerak).'; }
+            if ($video_type === 'telegram') {
+                $video_url = telegram_normalize_url($_POST['telegram_url'] ?? '');
+                if (!$video_url) { $error = 'Telegram havolasini kiriting.'; }
             } else {
                 $video_url = trim($_POST['video_url'] ?? '');
                 if ($video_url === '') { $error = 'Video havolasini kiriting.'; }
@@ -144,7 +159,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <input type="number" name="rating" step="0.1" min="0" max="10">
 
     <label>Poster rasm</label>
-    <input type="file" name="poster" accept="image/*">
+    <div class="poster-box">
+        <div class="poster-paste" tabindex="0" id="poster_drop">
+            Rasmni nusxalang (masalan Gemini 4K) va shu yerga <b>Ctrl+V</b> bosing, yoki:
+            <label class="poster-choose">
+                <input type="file" name="poster" accept="image/*" id="poster_file"> Fayl tanlash
+            </label>
+        </div>
+        <input type="text" name="poster_url" id="poster_url" placeholder="Yoki internetdagi poster URL manzili: https://...">
+        <img id="poster_preview" class="poster-preview" style="display:none;" alt="poster preview">
+        <small style="opacity:.55;">Paste qilingan rasm yoki tanlangan fayl avtomatik yuklanadi.</small>
+    </div>
 
     <label style="margin-top:20px;">
         <input type="checkbox" name="is_premium" id="is_premium"> Premium tavsiya
@@ -155,15 +180,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="radio-group">
             <label><input type="radio" name="video_type" value="youtube" checked> YouTube</label>
             <label><input type="radio" name="video_type" value="cloud"> Cloud havola</label>
-            <label><input type="radio" name="video_type" value="file"> Fayl yuklash</label>
+            <label><input type="radio" name="video_type" value="telegram"> Telegram video</label>
         </div>
         <div id="video_url_block">
             <label>Video havolasi (YouTube yoki Cloud link)</label>
             <input type="text" name="video_url" placeholder="https://youtube.com/watch?v=... yoki cloud havola">
         </div>
-        <div id="video_file_block" style="display:none;">
-            <label>Video fayl</label>
-            <input type="file" name="video_file" accept="video/*">
+        <div id="video_telegram_block" style="display:none;">
+            <label>Telegram video havolasi</label>
+            <input type="text" name="telegram_url" placeholder="Telegram bot qaytargan video URL manzili (https://...)">
+            <small style="opacity:.55;">Botingizga video yuborganingizda qaytgan havolani shu yerga joylang.</small>
         </div>
     </div>
 
@@ -172,11 +198,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+function toggleVideoBlocks() {
+    var val = document.querySelector('input[name=video_type]:checked').value;
+    document.getElementById('video_url_block').style.display = val === 'youtube' || val === 'cloud' ? 'block' : 'none';
+    document.getElementById('video_telegram_block').style.display = val === 'telegram' ? 'block' : 'none';
+}
 document.querySelectorAll('input[name=video_type]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-        document.getElementById('video_url_block').style.display = this.value === 'file' ? 'none' : 'block';
-        document.getElementById('video_file_block').style.display = this.value === 'file' ? 'block' : 'none';
-    });
+    radio.addEventListener('change', toggleVideoBlocks);
+});
+
+var posterDrop = document.getElementById('poster_drop');
+var posterFile = document.getElementById('poster_file');
+var posterPreview = document.getElementById('poster_preview');
+
+function showPreview(file) {
+    posterPreview.src = URL.createObjectURL(file);
+    posterPreview.style.display = 'block';
+}
+posterFile.addEventListener('change', function() {
+    if (posterFile.files && posterFile.files[0]) showPreview(posterFile.files[0]);
+});
+document.addEventListener('paste', function(e) {
+    var items = (e.clipboardData || window.clipboardData).items;
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file' && items[i].type.indexOf('image/') === 0) {
+            var file = items[i].getAsFile();
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            posterFile.files = dt.files;
+            showPreview(file);
+            e.preventDefault();
+            return;
+        }
+    }
 });
 </script>
 

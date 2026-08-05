@@ -10,7 +10,7 @@ $hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN 
 // Faqat Kino, Anime, Multfilm (Serial olib tashlandi)
 $categories = $pdo->query("SELECT * FROM categories WHERE slug != 'serial' ORDER BY id")->fetchAll();
 
-// "Davom eting" — foydalanuvchi to'xtagan videolar
+// "Davom etish" — faqat ko'rib tugallanmaganlar (10 daqiqadan ko'p qolgan)
 $continue_items = [];
 if (is_user()) {
     $cw = $pdo->prepare(
@@ -18,6 +18,8 @@ if (is_user()) {
          FROM watch_progress wp
          JOIN content c ON c.id = wp.content_id
          WHERE wp.user_id = ?
+           AND wp.is_completed = 0
+           AND (wp.duration_seconds <= 0 OR wp.duration_seconds - wp.position_seconds > 600)
          ORDER BY wp.updated_at DESC
          LIMIT 12"
     );
@@ -35,20 +37,19 @@ include __DIR__ . '/includes/header.php';
         <div class="hero-content">
             <div class="hero-tags">
                 <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>
-                
             </div>
             <h1><?php echo e(t_title($hero)); ?></h1>
             <div class="hero-meta">
                 <span>&#9733; <?php echo e($hero['rating']); ?></span>
                 <span>&middot;</span>
-                <span>&#128197; <?php echo e($hero['release_year']); ?></span>
+                <span><?php echo e($hero['release_year']); ?></span>
                 <span>&middot;</span>
                 <span><?php echo e($hero['content_code'] ?? ''); ?></span>
             </div>
             <p><?php echo e(mb_strimwidth(t_desc($hero) ?? '', 0, 200, '...')); ?></p>
             <div>
                 <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-primary">&#9654; <?php echo t('watch'); ?></a>
-                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#8505; <?php echo t('details'); ?></a>
+                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#9432; <?php echo t('details'); ?></a>
             </div>
         </div>
     </div>
@@ -63,31 +64,6 @@ include __DIR__ . '/includes/header.php';
     <button class="hero-arrow hero-arrow-prev" aria-label="Oldingi">&#10094;</button>
     <button class="hero-arrow hero-arrow-next" aria-label="Keyingi">&#10095;</button>
     <?php endif; ?>
-</section>
-<?php endif; ?>
-
-<?php if (!empty($continue_items)): ?>
-<section class="content-section">
-    <h2>&#9199; <?php echo t('continue'); ?></h2>
-    <div class="row-wrap">
-        <div class="row-scroll">
-            <?php foreach ($continue_items as $item):
-                $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
-            ?>
-            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card card-continue">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
-                <div class="continue-progress" style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 10px;overflow:hidden;"><span style="display:block;height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:2px;transition:width 0.5s ease;"></span></div>
-                <div class="card-info">
-                    <h3><?php echo e(t_title($item)); ?></h3>
-                    <div class="meta">
-                        <span><?php echo e($item['release_year']); ?></span>
-                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
-                    </div>
-                </div>
-            </a>
-            <?php endforeach; ?>
-        </div>
-    </div>
 </section>
 <?php endif; ?>
 
@@ -111,7 +87,7 @@ if (is_user() && isset($_SESSION['user_id'])):
     }
     if (!empty($recommendations)):
 ?>
-<section class="content-section">
+<section class="content-section reveal">
     <h2>🤖 <?php echo t('recommended'); ?></h2>
     <div class="row-wrap">
         <div class="row-scroll">
@@ -139,7 +115,7 @@ if (is_user() && isset($_SESSION['user_id'])):
     $items = $stmt->fetchAll();
     if (empty($items)) continue;
 ?>
-<section class="content-section">
+<section class="content-section reveal">
     <h2><?php echo e($cat['name']); ?></h2>
     <div class="row-wrap">
         <div class="row-scroll">
@@ -162,6 +138,31 @@ if (is_user() && isset($_SESSION['user_id'])):
 
 <?php if (empty($categories)): ?>
 <div class="content-section"><p><?php echo t('no_content'); ?></p></div>
+<?php endif; ?>
+
+<?php if (!empty($continue_items)): ?>
+<section class="content-section reveal">
+    <h2>&#9199; <?php echo t('continue'); ?></h2>
+    <div class="row-wrap">
+        <div class="row-scroll">
+            <?php foreach ($continue_items as $item):
+                $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
+            ?>
+            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card card-continue">
+                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+                <div class="continue-progress" style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 10px;overflow:hidden;"><span style="display:block;height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:2px;transition:width 0.5s ease;"></span></div>
+                <div class="card-info">
+                    <h3><?php echo e(t_title($item)); ?></h3>
+                    <div class="meta">
+                        <span><?php echo e($item['release_year']); ?></span>
+                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
+                    </div>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
 <?php endif; ?>
 
 <script>
@@ -225,6 +226,26 @@ if (is_user() && isset($_SESSION['user_id'])):
     }
 
     resetTimer();
+})();
+
+/* Scroll-reveal */
+(function() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    var items = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+        items.forEach(function(el) { el.classList.add('in-view'); });
+        return;
+    }
+    var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(en) {
+            if (en.isIntersecting) {
+                en.target.classList.add('in-view');
+                io.unobserve(en.target);
+            }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    items.forEach(function(el) { io.observe(el); });
 })();
 </script>
 

@@ -5,6 +5,8 @@ define('CARD_NUMBER', env('CARD_NUMBER', '8600XXXX0000XXXX'));
 define('CARD_OWNER', env('CARD_OWNER', 'UZDUB PLATFORM'));
 define('TG_BOT_TOKEN', env('TG_BOT_TOKEN', ''));
 define('TG_CHAT_ID', env('TG_CHAT_ID', 'YOUR_CHAT_ID'));
+define('TG_2FA_BOT_TOKEN', env('TG_2FA_BOT_TOKEN', ''));
+define('TG_2FA_BOT_USERNAME', env('TG_2FA_BOT_USERNAME', 'UZDUB_2FA_BOT'));
 define('CLICK_MERCHANT_ID', env('CLICK_MERCHANT_ID', ''));
 define('CLICK_SERVICE_ID', env('CLICK_SERVICE_ID', ''));
 define('CLICK_USER_ID', env('CLICK_USER_ID', ''));
@@ -218,4 +220,64 @@ function uzum_verify_callback($data) {
 
 function generate_transaction_id() {
     return 'UZ' . date('ymd') . strtoupper(substr(bin2hex(random_bytes(8)), 0, 12));
+}
+
+// ===== Telegram 2FA bot (alohida bot, foydalanuvchining chat_id siga yuboradi) =====
+function tg_2fa_send_message($chat_id, $text) {
+    if (!TG_2FA_BOT_TOKEN || !$chat_id) return false;
+    $url = 'https://api.telegram.org/bot' . TG_2FA_BOT_TOKEN . '/sendMessage';
+    $data = [
+        'chat_id' => $chat_id,
+        'text' => $text,
+        'parse_mode' => 'HTML',
+        'disable_web_page_preview' => true,
+    ];
+    return tg_api_call($url, $data);
+}
+
+function tg_2fa_send_code($chat_id, $code) {
+    $text = "<b>🔐 UZDUB — tasdiqlash kodi</b>\n\n"
+        . "Kirish kodlaringiz: <code>$code</code>\n\n"
+        . "Bu kod 3 daqiqa amal qiladi. Agar siz bu kodni so'ramagan bo'lsangiz, parolingizni o'zgartiring.";
+    return tg_2fa_send_message($chat_id, $text);
+}
+
+// Kirishni tasdiqlash so'rovi — "Ha, bu menman" / "Yo'q, bu men emasman" tugmalari bilan
+function tg_2fa_send_approval($chat_id, $token, $ip, $time) {
+    if (!TG_2FA_BOT_TOKEN || !$chat_id) return false;
+    $url = 'https://api.telegram.org/bot' . TG_2FA_BOT_TOKEN . '/sendMessage';
+    $data = [
+        'chat_id' => $chat_id,
+        'text' => "<b>🔐 UZDUB — tizimga kirish so'rovi</b>\n\n"
+            . "Kimdir sizning akkauntingizga kirmoqda:\n"
+            . "🕒 Vaqt: <code>$time</code>\n"
+            . "🌐 IP: <code>$ip</code>\n\n"
+            . "Bu siz bo'lsangiz — \"Ha, bu menman\" tugmasini bosing.",
+        'parse_mode' => 'HTML',
+        'disable_web_page_preview' => true,
+        'reply_markup' => json_encode([
+            'inline_keyboard' => [
+                [['text' => '✅ Ha, bu menman', 'callback_data' => 'lg:yes:' . $token]],
+                [['text' => '🚫 Yo\'q, bu men emasman', 'callback_data' => 'lg:no:' . $token]],
+            ]
+        ]),
+    ];
+    return tg_api_call($url, $data);
+}
+
+function tg_2fa_get_bot_info() {
+    if (!TG_2FA_BOT_TOKEN) return null;
+    $url = 'https://api.telegram.org/bot' . TG_2FA_BOT_TOKEN . '/getMe';
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $res = curl_exec($ch);
+    curl_close($ch);
+    if ($res === false) return null;
+    $data = json_decode($res, true);
+    return ($data && $data['ok']) ? $data['result'] : null;
 }

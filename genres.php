@@ -265,7 +265,7 @@ include __DIR__ . '/includes/header.php';
         <div class="genre-grid">
             <?php foreach ($content_items as $item): ?>
             <a href="/uzdub/watch.php?id=<?php echo $item['id']; ?>" class="card" style="position:relative;">
-                <?php if ($item['is_premium']): ?><span class="genre-premium">⭐</span><?php endif; ?>
+                <?php if ($item['is_premium']): ?><span class="genre-premium">👑</span><?php endif; ?>
                 <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
                 <div class="card-info">
                     <h3><?php echo e(t_title($item)); ?></h3>

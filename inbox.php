@@ -71,10 +71,10 @@ include __DIR__ . '/includes/header.php';
 
     <?php if ($search_result !== null): ?>
         <?php foreach ($search_result as $su): ?>
-        <a href="chat.php?with=<?php echo e($su['user_id']); ?>" class="conv-item">
+        <a href="chat.php?with=<?php echo e($su['user_id']); ?>" class="conv-item emoji-keep">
             <img src="<?php echo avatar_url($su['avatar']); ?>" alt="">
             <div class="conv-info">
-                <div class="name"><?php echo e($su['username']); ?> <?php if ($su['is_premium']): ?>⭐<?php endif; ?></div>
+                <div class="name"><?php echo e($su['username']); ?> <?php if ($su['is_premium']): ?>👑<?php endif; ?></div>
                 <div class="last-msg">🆔 <?php echo e($su['user_id']); ?> — <?php echo t('start_chat'); ?></div>
             </div>
         </a>
@@ -84,10 +84,10 @@ include __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <?php foreach ($conversations as $c): ?>
-    <a href="chat.php?with=<?php echo e($c['user_id']); ?>" class="conv-item">
+    <a href="chat.php?with=<?php echo e($c['user_id']); ?>" class="conv-item emoji-keep">
         <img src="<?php echo avatar_url($c['avatar']); ?>" alt="">
         <div class="conv-info">
-            <div class="name"><?php echo e($c['username']); ?> <?php if ($c['is_premium']): ?>⭐<?php endif; ?></div>
+            <div class="name"><?php echo e($c['username']); ?> <?php if ($c['is_premium']): ?>👑<?php endif; ?></div>
             <div class="last-msg"><?php echo $c['last_message'] ? e($c['last_message']) : '📷 ' . t('image_gif_fallback'); ?></div>
         </div>
         <div class="conv-meta">

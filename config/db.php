@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/env.php';
 
+date_default_timezone_set('Asia/Tashkent');
+
 define('DB_HOST', env('DB_HOST', 'localhost'));
 define('DB_NAME', env('DB_NAME', 'uzdub'));
 define('DB_USER', env('DB_USER', 'root'));

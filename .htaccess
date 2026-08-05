@@ -1,7 +1,18 @@
     # Asosiy himoya — maxfiy fayllarni veb orqali kirishdan to'sish
-<FilesMatch "\.(env|env\.example|sql|bat|ps1|zip)$">
+<FilesMatch "\.(env|env\.example|sql|bat|ps1|zip|log|bak|sh|ini|yml|yaml)$">
     Require all denied
 </FilesMatch>
+
+# .htaccess o'zini ham himoya qilish
+<FilesMatch "^\.htaccess$">
+    Require all denied
+</FilesMatch>
+
+# Barcha nuqta-fayllar (.git, .env, .htaccess, .gitignore) ko'rinmasin
+RedirectMatch 404 /\..*$
+
+# Muhim kataloglarga to'g'ridan-to'g'ri kirishni bloklash
+RedirectMatch 404 ^/uzdub/(config|includes|vendor|cache|logs|database\.sql|upgrade\.sql)(/|$)
 
 # Index faylni ko'rsatishni to'xtatish
 Options -Indexes
@@ -12,6 +23,8 @@ Options -Indexes
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
 # Rewrite rules
@@ -20,4 +33,7 @@ Options -Indexes
 
     # /genre/{slug} -> /genres.php?genre={slug}
     RewriteRule ^genre/([a-z0-9\-]+)$ genres.php?genre=$1 [L,QSA]
+
+    # /sitemap.xml -> /sitemap.php
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
 </IfModule>

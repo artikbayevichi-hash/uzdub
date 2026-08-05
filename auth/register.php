@@ -42,9 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             refresh_user_session($pdo, $new_id);
             session_regenerate_id(true);
             record_user_session($pdo, $new_id);
-            $token = generate_switch_token($pdo, $new_id);
-            $_SESSION['switch_token'] = $token;
-            $_SESSION['switch_user_id'] = $uid;
             header('Location: /uzdub/auth/save-account.php');
             exit;
         }
@@ -60,29 +57,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Ro'yxatdan o'tish - UZDUB PLATFORM</title>
 <link rel="stylesheet" href="/uzdub/css/style.css">
 <link rel="stylesheet" href="/uzdub/css/auth.css">
+<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
+<script src="/uzdub/js/emoji-blue.js" defer></script>
 </head>
 <body>
+<div class="auth-grid"></div>
 <div class="auth-wrap">
     <div class="auth-box">
-        <h1>🎬 UZDUB PLATFORM</h1>
-        <h2 style="text-align:center;font-size:18px;margin-bottom:20px;color:var(--text-muted);">Ro'yxatdan o'tish</h2>
+        <div class="auth-logo">
+            <span class="al-badge">🎬</span>
+            <span class="al-title">UZDUB</span>
+            <span class="al-sub">PLATFORM</span>
+        </div>
+        <h2>Ro'yxatdan o'tish</h2>
         <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
         <?php if ($success): ?><div class="alert alert-success"><?php echo e($success); ?></div><?php else: ?>
         <form method="post">
             <?php echo csrf_input(); ?>
             <label>Foydalanuvchi nomi</label>
-            <input type="text" name="username" placeholder="Ali123" value="<?php echo e($_POST['username'] ?? ''); ?>" required>
+            <div class="field">
+                <span class="field-icon">👤</span>
+                <input type="text" name="username" placeholder="Ali123" value="<?php echo e($_POST['username'] ?? ''); ?>" required autofocus>
+            </div>
             <label>Email</label>
-            <input type="email" name="email" placeholder="email@example.com" value="<?php echo e($_POST['email'] ?? ''); ?>" required>
+            <div class="field">
+                <span class="field-icon">📧</span>
+                <input type="email" name="email" placeholder="email@example.com" value="<?php echo e($_POST['email'] ?? ''); ?>" required>
+            </div>
             <label>Parol</label>
-            <input type="password" name="password" placeholder="Kamida 6 belgi" required>
+            <div class="field">
+                <span class="field-icon">🔑</span>
+                <input type="password" name="password" id="regPass1" class="has-toggle" placeholder="Kamida 6 belgi" required>
+                <button type="button" class="pass-toggle" data-target="regPass1" aria-label="Parolni ko'rsatish">👁</button>
+            </div>
             <label>Parolni tasdiqlash</label>
-            <input type="password" name="confirm" placeholder="Parolni qayta kiriting" required>
+            <div class="field">
+                <span class="field-icon">✅</span>
+                <input type="password" name="confirm" id="regPass2" class="has-toggle" placeholder="Parolni qayta kiriting" required>
+                <button type="button" class="pass-toggle" data-target="regPass2" aria-label="Parolni ko'rsatish">👁</button>
+            </div>
             <button type="submit" class="btn">Ro'yxatdan o'tish</button>
         </form>
         <?php endif; ?>
         <div class="alt-link">Hisobingiz bormi? <a href="login.php">Kirish</a></div>
     </div>
 </div>
+<script>
+document.querySelectorAll('.pass-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var inp = document.getElementById(this.dataset.target);
+        if (!inp) return;
+        var show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        this.textContent = show ? '🙈' : '👁';
+    });
+});
+</script>
 </body>
 </html>

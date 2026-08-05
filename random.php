@@ -6,7 +6,7 @@ $page_title = t('random_page_title');
 
 $slug = $_GET['slug'] ?? '';
 if ($slug) {
-    $allowed = ['kino', 'anime', 'multfilm', 'serial'];
+    $allowed = ['kino', 'anime', 'multfilm'];
     if (in_array($slug, $allowed)) {
         try {
             $item = $pdo->prepare("SELECT c.id FROM content c JOIN categories cat ON c.category_id = cat.id WHERE cat.slug = ? ORDER BY RAND() LIMIT 1");

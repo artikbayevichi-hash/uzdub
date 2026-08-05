@@ -1,0 +1,18 @@
+{
+  "name": "UZDUB PLATFORM",
+  "short_name": "UZDUB",
+  "description": "Kino, Anime va Multfilmlar o'zbek tilida",
+  "start_url": "/uzdub/index.php",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f19",
+  "theme_color": "#2196f3",
+  "icons": [
+    {
+      "src": "/uzdub/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

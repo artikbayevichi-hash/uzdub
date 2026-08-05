@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/functions.php';
 $q = trim($_GET['q'] ?? '');
 $cat_filter = $_GET['cat'] ?? '';
 $page_title = t('search_results_for') . $q;
+$page_desc = t('search_results_for') . ' ' . $q . ' — ' . t('site_title');
 $items = [];
 $found_user = null;
 $found_content = null;
@@ -15,6 +16,10 @@ if (isset($_GET['ajax_autocomplete']) && $q !== '') {
     $stmt = $pdo->prepare("SELECT id, title, title_ru, title_en, poster, release_year, rating, content_code FROM content WHERE title LIKE ? OR title_ru LIKE ? OR title_en LIKE ? ORDER BY views DESC, rating DESC LIMIT 6");
     $stmt->execute(['%' . $q . '%', '%' . $q . '%', '%' . $q . '%']);
     $results = $stmt->fetchAll();
+    foreach ($results as &$r) {
+        $r['display_title'] = search_display_title($r, $q);
+    }
+    unset($r);
     echo json_encode($results, JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -35,11 +40,11 @@ if ($q !== '') {
 
     // Kategoriya filtri bilan qidiruv
     if ($cat_filter && in_array($cat_filter, ['kino', 'anime', 'multfilm'])) {
-        $stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE cat.slug = ? AND (c.title LIKE ? OR c.content_code LIKE ?) ORDER BY c.views DESC, c.rating DESC");
-        $stmt->execute([$cat_filter, '%' . $q . '%', '%' . $q . '%']);
+        $stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE cat.slug = ? AND (c.title LIKE ? OR c.title_ru LIKE ? OR c.title_en LIKE ? OR c.content_code LIKE ?) ORDER BY c.views DESC, c.rating DESC");
+        $stmt->execute([$cat_filter, '%' . $q . '%', '%' . $q . '%', '%' . $q . '%', '%' . $q . '%']);
     } else {
-        $stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.title LIKE ? OR c.content_code LIKE ? ORDER BY c.views DESC, c.rating DESC");
-        $stmt->execute(['%' . $q . '%', '%' . $q . '%']);
+        $stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.title LIKE ? OR c.title_ru LIKE ? OR c.title_en LIKE ? OR c.content_code LIKE ? ORDER BY c.views DESC, c.rating DESC");
+        $stmt->execute(['%' . $q . '%', '%' . $q . '%', '%' . $q . '%', '%' . $q . '%']);
     }
     $items = $stmt->fetchAll();
 }
@@ -77,7 +82,7 @@ include __DIR__ . '/includes/header.php';
     <div class="user-result-card">
         <img src="<?php echo avatar_url($found_user['avatar']); ?>" alt="">
         <div class="info">
-            <h3><?php echo e($found_user['username']); ?> <?php if ($found_user['is_premium']): ?>⭐<?php endif; ?></h3>
+            <h3><?php echo e($found_user['username']); ?> <?php if ($found_user['is_premium']): ?>👑<?php endif; ?></h3>
             <div class="uid">🆔 <?php echo e($found_user['user_id']); ?></div>
         </div>
         <a href="profile.php?uid=<?php echo e($found_user['user_id']); ?>" class="view-profile"><?php echo t('view_profile'); ?></a>
@@ -88,11 +93,11 @@ include __DIR__ . '/includes/header.php';
 <?php if ($found_content && empty($items)): $items = [$found_content]; endif; ?>
 
 <div class="grid-wrap">
-    <?php foreach ($items as $item): ?>
+    <?php foreach ($items as $item): $dtitle = search_display_title($item, $q); ?>
     <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($dtitle); ?>" alt="<?php echo e($dtitle); ?>">
         <div class="card-info">
-            <h3><?php echo e(t_title($item)); ?></h3>
+            <h3><?php echo e($dtitle); ?></h3>
             <div class="meta">
                 <span><?php echo e($item['content_code'] ?? ''); ?></span>
                 <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
@@ -101,7 +106,11 @@ include __DIR__ . '/includes/header.php';
     </a>
     <?php endforeach; ?>
     <?php if ($q !== '' && empty($items) && !$found_user): ?>
-        <p><?php echo t('nothing_found'); ?></p>
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);">
+            <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+            <p style="font-size:18px;font-weight:600;color:var(--text-light);margin-bottom:6px;"><?php echo t('nothing_found'); ?></p>
+            <p style="font-size:14px;">"<?php echo e($q); ?>" — topilmadi. Boshqa so'z bilan urinib ko'ring.</p>
+        </div>
     <?php endif; ?>
 </div>
 

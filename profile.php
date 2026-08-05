@@ -8,7 +8,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
     $uid_param = $_GET['uid'];
     $tab = $_GET['ajax_tab'] ?? 'history';
     $cat = $_GET['cat'] ?? 'all';
-    $allowed_tabs = ['history','watching','completed','favorites','settings','security'];
+    $allowed_tabs = ['history','completed','favorites','settings','security'];
     if (!in_array($tab, $allowed_tabs, true)) $tab = 'history';
     $allowed_cats = ['all','kino','anime','multfilm'];
     if (!in_array($cat, $allowed_cats, true)) $cat = 'all';
@@ -261,6 +261,11 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                             document.getElementById('rbxPassExpand').classList.add('active');
                             document.getElementById('rbxCurrentPass').focus();
                         }
+                        if(d.success_type==='pre-verify-username'){
+                            uDisplayRow.style.display='none';
+                            uEditRow.style.display='flex';
+                            uInput.focus();
+                        }
                         if(d.success_type==='email'){
                             origEmail=d.new_value;
                             document.getElementById('rbxEmailDisplay').innerHTML='<span>'+maskEmail(d.new_value)+'</span><span class="verified-label ok"><?php echo e(t('verified')); ?></span>';
@@ -319,9 +324,19 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
 
             if(uEditBtn){
                 uEditBtn.addEventListener('click',function(){
-                    uDisplayRow.style.display='none';
-                    uEditRow.style.display='flex';
-                    uInput.focus();
+                    uEditBtn.disabled=true;
+                    fetch('/uzdub/api/otp-send.php',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+                        body:JSON.stringify({type:'pre-verify-username',csrf_token:csrf})
+                    })
+                    .then(function(r){return r.json();})
+                    .then(function(d){
+                        uEditBtn.disabled=false;
+                        if(d.ok){openOTP('pre-verify-username',d.message);}
+                        else{if(window.showToast)showToast(d.error||'Xatolik','error');}
+                    })
+                    .catch(function(){uEditBtn.disabled=false;if(window.showToast)showToast('Xatolik','error');});
                 });
             }
             if(uCancelBtn){
@@ -369,17 +384,25 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
 
             if(eEditBtn){
                 eEditBtn.addEventListener('click',function(){
+                    eEditBtn.disabled=true;
                     fetch('/uzdub/api/otp-send.php',{
                         method:'POST',
                         headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-                        body:JSON.stringify({type:'pre-verify-email',csrf_token:csrf})
+                        body:JSON.stringify({type:'email-bot',csrf_token:csrf})
                     })
                     .then(function(r){return r.json();})
                     .then(function(d){
-                        if(d.ok){openOTP('pre-verify-email',d.message);}
-                        else{if(window.showToast)showToast(d.error||'Xatolik','error');}
+                        eEditBtn.disabled=false;
+                        if(d.ok){openOTP('email-bot',d.message);}
+                        else{
+                            if(window.showToast)showToast(d.error||'Xatolik','error');
+                            // 2FA yoqilmagan bo'lsa — Xavfsizlik bo'limiga yo'naltirish
+                            if(d.error && d.error.indexOf('2 bosqichli himoya') !== -1 && window.PF_TABS && window.PF_TABS.open){
+                                setTimeout(function(){ window.PF_TABS.open('security'); }, 1600);
+                            }
+                        }
                     })
-                    .catch(function(){if(window.showToast)showToast('Xatolik','error');});
+                    .catch(function(){eEditBtn.disabled=false;if(window.showToast)showToast('Xatolik','error');});
                 });
             }
             if(eCancelBtn){
@@ -483,7 +506,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
     // ===== Security tab =====
     if ($tab === 'security' && $is_own) {
     require_once __DIR__ . '/includes/lang.php';
-    $stmt = $pdo->prepare("SELECT two_factor_enabled, email FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT two_factor_enabled, email, telegram_chat_id, telegram_phone FROM users WHERE id = ?");
     $stmt->execute([$uid]);
     $sec_user = $stmt->fetch();
     ?>
@@ -506,35 +529,26 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php if (!empty($sec_user['telegram_phone'])): ?>
+                <div class="twofa-phone-info">📱 <?php echo e(t('twofa_linked_phone')); ?> <code><?php echo e(mask_phone($sec_user['telegram_phone'])); ?></code></div>
+                <?php endif; ?>
                 <div id="twofaSetupArea" class="twofa-setup-area" style="display:none;">
-                    <div class="twofa-steps">
-                        <div class="twofa-step">
-                            <div class="twofa-step-num">1</div>
-                            <div class="twofa-step-text">
-                                <strong><?php echo e(t('twofa_step1_title')); ?></strong>
-                                <span><?php echo e(t('twofa_step1_desc')); ?></span>
-                            </div>
-                        </div>
-                        <div class="twofa-step">
-                            <div class="twofa-step-num">2</div>
-                            <div class="twofa-step-text">
-                                <strong><?php echo e(t('twofa_step2_title')); ?></strong>
-                                <span><?php echo e(t('twofa_step2_desc')); ?></span>
-                            </div>
-                        </div>
-                        <div class="twofa-step">
-                            <div class="twofa-step-num">3</div>
-                            <div class="twofa-step-text">
-                                <strong><?php echo e(t('twofa_step3_title')); ?></strong>
-                                <span><?php echo e(t('twofa_step3_desc')); ?></span>
-                            </div>
+                    <div class="twofa-tg-step" id="tgStep1">
+                        <div class="twofa-step-text">
+                            <strong><?php echo e(t('twofa_step1_title')); ?></strong>
+                            <span><?php echo e(t('twofa_step1_desc')); ?></span>
+                            <a id="tgBotLink" href="#" target="_blank" rel="noopener" class="twofa-bot-btn">✈️ <span id="tgBotName">@UZDUB_2FA_BOT</span></a>
                         </div>
                     </div>
-                    <div class="twofa-qr-wrap">
-                        <img id="twofaQR" src="" alt="QR Code" class="twofa-qr-img">
+                    <div class="twofa-step">
+                        <div class="twofa-step-num">2</div>
+                        <div class="twofa-step-text">
+                            <strong><?php echo e(t('twofa_step2_title')); ?></strong>
+                            <span><?php echo e(t('twofa_step2_desc')); ?></span>
+                        </div>
                     </div>
                     <div class="twofa-secret-block">
-                        <div class="twofa-secret-label"><?php echo t('twofa_secret_key'); ?></div>
+                        <div class="twofa-secret-label"><?php echo e(t('twofa_link_code')); ?></div>
                         <div class="twofa-secret-row">
                             <code class="twofa-secret-code" id="twofaSecret"></code>
                             <button type="button" class="twofa-copy-btn" id="twofaCopyBtn" title="Nusxalash">
@@ -542,16 +556,25 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                             </button>
                         </div>
                     </div>
-                    <div class="twofa-verify-form">
-                        <label><?php echo t('twofa_enter_code'); ?></label>
+                    <div class="twofa-step">
+                        <div class="twofa-step-num">3</div>
+                        <div class="twofa-step-text">
+                            <strong><?php echo e(t('twofa_step3_title')); ?></strong>
+                            <span><?php echo e(t('twofa_step3_desc')); ?></span>
+                        </div>
+                    </div>
+                    <div class="twofa-link-status" id="twofaLinkStatus"><span class="dot"></span><span id="twofaLinkText"><?php echo e(t('twofa_waiting')); ?></span></div>
+                    <div class="twofa-verify-form" id="twofaVerifyForm" style="display:none;">
+                        <label><?php echo e(t('twofa_enter_code')); ?></label>
                         <input type="text" id="twofaCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input twofa-code-input" autocomplete="one-time-code">
-                        <label><?php echo t('twofa_current_pass'); ?></label>
+                        <label><?php echo e(t('twofa_current_pass')); ?></label>
                         <input type="password" id="twofaPassInput" class="settings-input" autocomplete="current-password">
-                        <button type="button" class="pf-btn pf-btn-blue" id="twofaConfirmBtn"><?php echo t('otp_verify_btn'); ?></button>
+                        <button type="button" class="pf-btn pf-btn-blue" id="twofaConfirmBtn"><?php echo t('twofa_verify_btn'); ?></button>
                     </div>
                 </div>
                 <div id="twofaDisableArea" class="twofa-setup-area" style="display:none;">
                     <div class="twofa-verify-form">
+                        <div class="twofa-link-status">Telegram botingizga <code>/code</code> buyrug'ini yuboring va yangi tasdiqlash kodini oling.</div>
                         <label><?php echo t('twofa_enter_code'); ?></label>
                         <input type="text" id="twofaDisableCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input" style="text-align:center;font-size:20px;letter-spacing:6px;max-width:200px;">
                         <label><?php echo t('twofa_current_pass'); ?></label>
@@ -596,12 +619,14 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     }
                     var html = '';
                     d.sessions.forEach(function(s) {
-                        var icon = s.device === 'mobile' ? '📱' : (s.device === 'tablet' ? '📟' : '💻');
+                        var icon = s.device === 'mobile' ? '📱' : (s.device === 'tablet' ? '📟' : (s.device === 'bot' ? '🤖' : '💻'));
                         var label = s.is_current ? '<span class="session-current"><?php echo e(t('sessions_current')); ?></span>' : '';
+                        var osPart = (s.os_label && s.os_label.indexOf('Unknown') === -1) ? ' · ' + s.os_label : '';
+                        var brPart = (s.browser_label && s.browser_label.indexOf('Unknown') === -1) ? s.browser_label + ' · ' : '';
                         html += '<div class="session-item' + (s.is_current ? ' session-active' : '') + '">';
                         html += '<div class="session-info">';
-                        html += '<div class="session-device">' + icon + ' ' + s.browser + ' — ' + s.os + ' ' + label + '</div>';
-                        html += '<div class="session-meta">' + s.ip + ' · ' + s.last_active + '</div>';
+                        html += '<div class="session-device">' + icon + ' ' + s.device_label + osPart + ' ' + label + '</div>';
+                        html += '<div class="session-meta">' + brPart + s.ip + ' · ' + s.last_active + '</div>';
                         html += '</div>';
                         if (!s.is_current) {
                             html += '<button class="pf-btn pf-btn-ghost session-logout-btn" data-id="' + s.id + '"><?php echo e(t('sessions_logout_one')); ?></button>';
@@ -637,28 +662,102 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 .then(function(d) { if (d.ok) { if (window.showToast) showToast(d.message, 'success'); loadSessions(); } else { if (window.showToast) showToast(d.error, 'error'); } });
             });
 
-            // ===== 2FA Enable =====
+            // ===== 2FA Enable (Telegram) =====
             var enableBtn = document.getElementById('twofaEnableBtn');
             var setupArea = document.getElementById('twofaSetupArea');
             var confirmBtn = document.getElementById('twofaConfirmBtn');
+            var linkStatus = document.getElementById('twofaLinkStatus');
+            var linkText = document.getElementById('twofaLinkText');
+            var verifyForm = document.getElementById('twofaVerifyForm');
+            var tgBotLink = document.getElementById('tgBotLink');
+            var tgBotName = document.getElementById('tgBotName');
+            var linkCode = '';
+            var linkTimer = null;
+            var disableBtn = document.getElementById('twofaDisableBtn');
+            var disableArea = document.getElementById('twofaDisableArea');
+            var disableConfirmBtn = document.getElementById('twofaDisableConfirmBtn');
 
-            if (enableBtn) {
-                enableBtn.addEventListener('click', function() {
+            function setLink(msg, on) {
+                if (linkText) linkText.textContent = msg;
+                if (linkStatus) linkStatus.className = 'twofa-link-status' + (on ? ' status-on' : '');
+            }
+
+            function renderSecret(code) {
+                var el = document.getElementById('twofaSecret');
+                el.textContent = code;
+                el.classList.remove('twofa-secret-boxes');
+                if (code && code.length > 0) {
+                    el.classList.add('twofa-secret-boxes');
+                    var frag = document.createDocumentFragment();
+                    for (var i = 0; i < code.length; i++) {
+                        var b = document.createElement('span');
+                        b.textContent = code[i];
+                        frag.appendChild(b);
+                    }
+                    el.appendChild(frag);
+                }
+            }
+
+            function bindDisableBtn(btn) {
+                if (!btn) return;
+                btn.addEventListener('click', function() {
+                    disableArea.style.display = disableArea.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+            bindDisableBtn(disableBtn);
+
+            function bindEnableBtn(btn) {
+                if (!btn) return;
+                btn.addEventListener('click', function() {
                     var fd = new FormData();
                     fd.append('action', 'generate');
                     fd.append('csrf_token', csrfVal);
                     fetch('/uzdub/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
-                        if (d.ok) {
-                            document.getElementById('twofaQR').src = d.qr_url;
-                            document.getElementById('twofaSecret').textContent = d.secret;
-                            setupArea.style.display = 'block';
+                        if (!d.ok) { if (window.showToast) showToast(d.error, 'error'); return; }
+                        linkCode = d.link_code;
+                        renderSecret(d.link_code);
+                        if (tgBotName) tgBotName.textContent = '@' + d.bot_username;
+                        if (tgBotLink) tgBotLink.href = 'https://t.me/' + d.bot_username;
+                        setupArea.style.display = 'block';
+                        verifyForm.style.display = 'none';
+                        setLink('<?php echo e(t("twofa_waiting")); ?>', false);
+                        if (d.telegram_linked) {
+                            // Telegram allaqachon bog'langan — kod form'ni darhol ochamiz
+                            setLink('<?php echo e(t("twofa_linked")); ?>', true);
+                            verifyForm.style.display = 'flex';
                         } else {
-                            if (window.showToast) showToast(d.error, 'error');
+                            startLinkPolling();
                         }
                     });
                 });
+            }
+            if (enableBtn) bindEnableBtn(enableBtn);
+
+            // ===== Telegram bog'lanish holatini kuzatish =====
+            function startLinkPolling() {
+                if (linkTimer) clearInterval(linkTimer);
+                linkTimer = setInterval(function() {
+                    var fd = new FormData();
+                    fd.append('action', 'check_link');
+                    fd.append('csrf_token', csrfVal);
+                    fetch('/uzdub/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (!d.ok) return;
+                        if (d.telegram_linked) {
+                            // Telegram bog'landi — input form'ni ko'rsatamiz
+                            clearInterval(linkTimer);
+                            linkTimer = null;
+                            setupArea.style.display = 'block';
+                            setLink('<?php echo e(t("twofa_linked")); ?>' + (d.masked_phone ? ' 📱 ' + d.masked_phone : ''), true);
+                            verifyForm.style.display = 'flex';
+                        } else {
+                            setLink('<?php echo e(t("twofa_waiting")); ?>', false);
+                        }
+                    });
+                }, 3000);
             }
 
             // ===== Copy secret key =====
@@ -710,9 +809,12 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                             if (window.showToast) showToast(d.message, 'success');
                             twofaStatus.textContent = <?php echo json_encode(t('twofa_enabled'), JSON_UNESCAPED_UNICODE); ?>;
                             twofaStatus.className = 'security-status status-on';
-                            enableBtn.replaceWith(Object.assign(document.createElement('button'), {
+                            var newDisableBtn = Object.assign(document.createElement('button'), {
                                 className: 'pf-btn pf-btn-danger', id: 'twofaDisableBtn', textContent: <?php echo json_encode(t('twofa_disable_btn'), JSON_UNESCAPED_UNICODE); ?>
-                            }));
+                            });
+                            enableBtn.replaceWith(newDisableBtn);
+                            disableBtn = newDisableBtn;
+                            bindDisableBtn(disableBtn);
                             setupArea.style.display = 'none';
                         } else {
                             if (window.showToast) showToast(d.error, 'error');
@@ -722,16 +824,6 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
             }
 
             // ===== 2FA Disable =====
-            var disableBtn = document.getElementById('twofaDisableBtn');
-            var disableArea = document.getElementById('twofaDisableArea');
-            var disableConfirmBtn = document.getElementById('twofaDisableConfirmBtn');
-
-            if (disableBtn) {
-                disableBtn.addEventListener('click', function() {
-                    disableArea.style.display = disableArea.style.display === 'none' ? 'block' : 'none';
-                });
-            }
-
             if (disableConfirmBtn) {
                 disableConfirmBtn.addEventListener('click', function() {
                     var code = document.getElementById('twofaDisableCodeInput').value;
@@ -752,9 +844,12 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                             if (window.showToast) showToast(d.message, 'success');
                             twofaStatus.textContent = <?php echo json_encode(t('twofa_disabled'), JSON_UNESCAPED_UNICODE); ?>;
                             twofaStatus.className = 'security-status status-off';
-                            disableBtn.replaceWith(Object.assign(document.createElement('button'), {
+                            var newEnableBtn = Object.assign(document.createElement('button'), {
                                 className: 'pf-btn pf-btn-blue', id: 'twofaEnableBtn', textContent: <?php echo json_encode(t('twofa_enable_btn'), JSON_UNESCAPED_UNICODE); ?>
-                            }));
+                            });
+                            disableBtn.replaceWith(newEnableBtn);
+                            enableBtn = newEnableBtn;
+                            bindEnableBtn(enableBtn);
                             disableArea.style.display = 'none';
                         } else {
                             if (window.showToast) showToast(d.error, 'error');
@@ -775,8 +870,9 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
     }
     $collection_items = [];
     if ($tab === 'history') {
-        $sql = "SELECT DISTINCT wh.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name, MAX(wh.watched_at) as last_watched
+        $sql = "SELECT wh.content_id, c.title, c.poster, c.release_year, c.duration, cat.slug as category, cat.name as category_name, MAX(wh.watched_at) as last_watched, wp.position_seconds, wp.duration_seconds
                 FROM watch_history wh JOIN content c ON c.id = wh.content_id JOIN categories cat ON cat.id = c.category_id
+                LEFT JOIN watch_progress wp ON wp.content_id = wh.content_id AND wp.user_id = wh.user_id
                 WHERE wh.user_id = ? $cat_filter GROUP BY wh.content_id ORDER BY last_watched DESC LIMIT 50";
         $stmt = $pdo->prepare($sql); $stmt->execute([$uid]); $collection_items = $stmt->fetchAll();
     } elseif ($tab === 'favorites') {
@@ -790,7 +886,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 ) AS favs $fav_where ORDER BY sort_date DESC LIMIT 50";
         $stmt = $pdo->prepare($sql); $stmt->execute([$uid, $uid]); $collection_items = $stmt->fetchAll();
     } else {
-        $status_map = ['watching'=>'watching','completed'=>'completed'];
+        $status_map = ['completed'=>'completed'];
         $status_val = $status_map[$tab] ?? $tab;
         $sql = "SELECT ucs.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name
                 FROM user_content_status ucs JOIN content c ON c.id = ucs.content_id JOIN categories cat ON cat.id = c.category_id
@@ -806,7 +902,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
         <p><?php echo t('section_empty'); ?></p>
     </div>
     <?php else: ?>
-    <div class="collection-grid">
+    <div class="collection-grid <?php echo $tab === 'history' ? 'history-grid' : ''; ?>">
         <?php foreach ($collection_items as $item): ?>
         <a href="watch.php?id=<?php echo $item['content_id']; ?>" class="collection-card">
             <div class="collection-poster">
@@ -816,6 +912,11 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 <div class="no-poster">🎬</div>
                 <?php endif; ?>
                 <div class="collection-cat-badge"><?php echo e($item['category_name']); ?></div>
+                <?php if ($tab === 'history' && !empty($item['position_seconds']) && !empty($item['duration_seconds']) && $item['duration_seconds'] > 0): $pct = min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)); ?>
+                <div class="history-progress" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);">
+                    <div style="height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:0 2px 0 0;transition:width 0.3s;"></div>
+                </div>
+                <?php endif; ?>
             </div>
             <div class="collection-info">
                 <div class="collection-title"><?php echo e(t_title($item)); ?></div>
@@ -868,7 +969,11 @@ if ($is_own && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $new_username = trim($_POST['new_username'] ?? '');
     if ($new_username && $new_username !== $profile_user['username']) {
-        if (!empty($profile_user['username_changed_at'])) {
+        $verified_at = $_SESSION['settings_verified_at'] ?? 0;
+        if (($_SESSION['settings_verified_for'] ?? '') !== 'username' || (time() - $verified_at) > 600) {
+            $resp['ok'] = false;
+            $resp['msg'] .= 'Login o\'zgartirish uchun emailga yuborilgan tasdiqlash kodini kiriting. ';
+        } elseif (!empty($profile_user['username_changed_at'])) {
             $changed = new DateTime($profile_user['username_changed_at']);
             $now = new DateTime();
             $diff = $now->diff($changed);
@@ -891,6 +996,8 @@ if ($is_own && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $pdo->prepare("UPDATE users SET username=?, username_changed_at=NOW() WHERE id=?")->execute([$new_username, $profile_user['id']]);
                     $profile_user['username'] = $new_username;
+                    unset($_SESSION['settings_verified_for'], $_SESSION['settings_verified_at']);
+                    $resp['msg'] .= t('otp_username_changed') . ' ';
                 }
             }
         }
@@ -1006,7 +1113,7 @@ if ($streak_dates) {
 include __DIR__ . '/includes/header.php';
 ?>
 
-<link rel="stylesheet" href="/uzdub/css/profile.css">
+<link rel="stylesheet" href="/uzdub/css/profile.css?v=<?php echo @filemtime(__DIR__ . '/css/profile.css') ?: 1; ?>">
 
 <div class="profile-page">
 
@@ -1019,7 +1126,7 @@ include __DIR__ . '/includes/header.php';
             <div class="profile-avatar-wrap">
                 <img src="<?php echo avatar_url($profile_user['avatar']); ?>" alt="Avatar" id="avatar-img" class="profile-avatar-img">
                 <?php if ($profile_user['is_premium']): ?>
-                <div class="avatar-crown">⭐</div>
+                <div class="avatar-crown">👑</div>
                 <?php endif; ?>
                 <div class="online-dot"></div>
 
@@ -1039,13 +1146,13 @@ include __DIR__ . '/includes/header.php';
                     <span id="sessionTimer">00h 00m 00s</span>
                 </span>
                 <?php if ($profile_user['is_premium']): ?>
-                <span class="meta-item meta-role" style="color:#f9a825;">⭐ <?php echo t('premium_badge'); ?></span>
+                <span class="meta-item meta-role" style="color:#f9a825;">👑 <?php echo t('premium_badge'); ?></span>
                 <?php endif; ?>
                 <span class="meta-item meta-id"><?php echo t('id_label'); ?><?php echo e($profile_user['user_id']); ?></span>
             </div>
             <div class="profile-actions-row">
                 <?php if ($is_own): ?>
-                <a href="premium.php" class="pf-btn pf-btn-gold">⭐ <?php echo t('get_premium_btn'); ?></a>
+                <a href="premium.php" class="pf-btn pf-btn-gold">👑 <?php echo t('get_premium_btn'); ?></a>
                 <a href="auth/logout.php" class="pf-btn pf-btn-ghost">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                     <?php echo t('logout_btn'); ?>
@@ -1099,10 +1206,6 @@ include __DIR__ . '/includes/header.php';
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <?php echo t('tab_history'); ?>
         </button>
-        <button class="pf-tab" data-tab="watching">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <?php echo t('tab_watching'); ?>
-        </button>
         <button class="pf-tab" data-tab="completed">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <?php echo t('tab_completed'); ?>
@@ -1128,8 +1231,9 @@ include __DIR__ . '/includes/header.php';
     // Pre-render initial "history" tab server-side
     $init_tab = 'history';
     $init_cat_filter = '';
-    $init_sql = "SELECT DISTINCT wh.content_id, c.title, c.poster, c.release_year, cat.slug as category, cat.name as category_name, MAX(wh.watched_at) as last_watched
+    $init_sql = "SELECT wh.content_id, c.title, c.poster, c.release_year, c.duration, cat.slug as category, cat.name as category_name, MAX(wh.watched_at) as last_watched, wp.position_seconds, wp.duration_seconds
             FROM watch_history wh JOIN content c ON c.id = wh.content_id JOIN categories cat ON cat.id = c.category_id
+            LEFT JOIN watch_progress wp ON wp.content_id = wh.content_id AND wp.user_id = wh.user_id
             WHERE wh.user_id = ? $init_cat_filter GROUP BY wh.content_id ORDER BY last_watched DESC LIMIT 50";
     $init_stmt = $pdo->prepare($init_sql); $init_stmt->execute([$uid]); $init_items = $init_stmt->fetchAll();
     if (empty($init_items)):
@@ -1148,7 +1252,12 @@ include __DIR__ . '/includes/header.php';
                     <?php else: ?>
                     <div class="no-poster">🎬</div>
                     <?php endif; ?>
-                    <div class="collection-cat-badge"><?php echo e($item['category_name']); ?></div>
+                <div class="collection-cat-badge"><?php echo e($item['category_name']); ?></div>
+                <?php if ($init_tab === 'history' && !empty($item['position_seconds']) && !empty($item['duration_seconds']) && $item['duration_seconds'] > 0): $pct = min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)); ?>
+                <div class="history-progress" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);">
+                    <div style="height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:0 2px 0 0;transition:width 0.3s;"></div>
+                </div>
+                <?php endif; ?>
                 </div>
                 <div class="collection-info">
                     <div class="collection-title"><?php echo e(t_title($item)); ?></div>
@@ -1252,6 +1361,19 @@ var PF_CURRENT_CAT = 'all';
             loadTab(tabName);
         });
     });
+
+    window.PF_TABS = {
+        open: function(tabName) {
+            var btn = null;
+            tabs.forEach(function(t) { if (t.dataset.tab === tabName) btn = t; });
+            if (!btn) return;
+            if (tabName === activeTab) return;
+            activeTab = tabName;
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            btn.classList.add('active');
+            loadTab(tabName);
+        }
+    };
 
     // Load initial tab
     loadTab(activeTab);

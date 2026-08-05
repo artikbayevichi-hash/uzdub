@@ -61,7 +61,7 @@ if ($action === 'send_code') {
 
     $subject = "UZDUB — Parolni tiklash kodi / Password Reset Code";
     $message = "Tasdiqlash kodi: $code\n\nBu kod 5 daqiqa amal qiladi.\n\nUZDUB Platform";
-    $htmlMessage = "<div style='font-family:Arial,sans-serif;max-width:400px;margin:auto;padding:20px;background:#0b0f19;color:#e0e0e0;border-radius:12px;'><h2 style='color:#2196f3;'>UZDUB</h2><p>Parolni tiklash kodi:</p><div style='font-size:32px;font-weight:bold;letter-spacing:6px;color:#fff;background:#1a2332;padding:16px;border-radius:8px;text-align:center;'>$code</div><p style='font-size:12px;color:#8899aa;margin-top:16px;'>Bu kod 5 daqiqa amal qiladi.</p></div>";
+    $htmlMessage = email_layout('Parolni tiklash', email_paragraph('Parolingizni tiklash uchun quyidagi <b>tasdiqlash kodini</b> kiriting.') . email_code_card('Tasdiqlash kodi', $code, 'Bu kod 5 daqiqa amal qiladi.'));
     send_email($email, $subject, $message, $htmlMessage);
 
     $masked = substr($email, 0, 2) . str_repeat('*', max(0, strlen($email) - 6)) . substr($email, -4);

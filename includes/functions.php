@@ -252,22 +252,19 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
     $genreJoin = "LEFT JOIN (SELECT cg.content_id, GROUP_CONCAT(g.name SEPARATOR ', ') AS genre_names "
                . "FROM content_genres cg JOIN genres g ON g.id=cg.genre_id GROUP BY cg.content_id) gr ON gr.content_id=c.id";
 
-    // Epizodlar sonini olish
-    $epJoin = "LEFT JOIN (SELECT content_id, COUNT(*) AS episode_count FROM episodes GROUP BY content_id) ep ON ep.content_id=c.id";
-
     // Umumiy fallback (odatiy tartibda eng ko'p ko'rilganlar)
-    $fallback = function () use ($pdo, $cols, $limit, $userId, $genreJoin, $epJoin) {
-        $extraCols = ", gr.genre_names, ep.episode_count";
+    $fallback = function () use ($pdo, $cols, $limit, $userId, $genreJoin) {
+        $extraCols = ", gr.genre_names";
         if ($userId) {
             $stmt = $pdo->prepare("SELECT $cols $extraCols, IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp JOIN content c2 ON wp.content_id=c2.id JOIN categories cat2 ON c2.category_id=cat2.id WHERE wp.user_id=?), 1, 0) AS pref
                 FROM content c
                 JOIN categories cat ON c.category_id = cat.id
-                $genreJoin $epJoin
+                $genreJoin 
                 ORDER BY pref DESC, c.views DESC
                 LIMIT $limit");
             $stmt->execute([$userId]);
         } else {
-            $stmt = $pdo->query("SELECT $cols $extraCols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin $epJoin ORDER BY c.views DESC LIMIT $limit");
+            $stmt = $pdo->query("SELECT $cols $extraCols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin  ORDER BY c.views DESC LIMIT $limit");
         }
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     };
@@ -282,13 +279,13 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
                 $extraSelect = ', IF(c.category_id IN (SELECT DISTINCT cat2.id FROM watch_progress wp2 JOIN content c3 ON wp2.content_id=c3.id JOIN categories cat2 ON c3.category_id=cat2.id WHERE wp2.user_id=?), 1, 0) AS pref';
                 $extraParams = [$userId];
             }
-            $extraCols = ", gr.genre_names, ep.episode_count";
+            $extraCols = ", gr.genre_names";
             $stmt = $pdo->prepare("SELECT DISTINCT $cols $extraCols $extraSelect
                     FROM content c
                     JOIN categories cat ON c.category_id = cat.id
                     JOIN content_genres cg ON cg.content_id = c.id
                     JOIN genres g ON g.id = cg.genre_id
-                    $genreJoin $epJoin
+                    $genreJoin 
                     WHERE g.slug IN ($ph)
                     ORDER BY pref DESC, c.rating DESC, c.views DESC
                     LIMIT $limit");
@@ -326,11 +323,11 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
         $prefSql = '0';
     }
 
-    $extraCols = ", gr.genre_names, ep.episode_count";
+    $extraCols = ", gr.genre_names";
     $stmt = $pdo->prepare("SELECT $cols $extraCols, ($scoreSql) AS score, ($prefSql) AS pref
             FROM content c
             JOIN categories cat ON c.category_id = cat.id
-            $genreJoin $epJoin
+            $genreJoin 
             HAVING score > 0
             ORDER BY pref DESC, score DESC, c.views DESC
             LIMIT $limit");
@@ -351,7 +348,7 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
     }
     if (!empty($likeConds)) {
         $likeWhere = implode(' OR ', $likeConds);
-        $stmt = $pdo->prepare("SELECT $cols $extraCols, 1 AS score, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin $epJoin WHERE $likeWhere ORDER BY c.views DESC LIMIT $limit");
+        $stmt = $pdo->prepare("SELECT $cols $extraCols, 1 AS score, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin  WHERE $likeWhere ORDER BY c.views DESC LIMIT $limit");
         $stmt->execute($likeParams);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         if ($rows) return ['matched' => true, 'rows' => $rows];
@@ -362,7 +359,7 @@ function findBestMatches(PDO $pdo, string $message, int $limit = 3, ?int $userId
     $lowerMsg = mb_strtolower($message);
     foreach ($topWords as $tw) {
         if (mb_strpos($lowerMsg, $tw) !== false) {
-            $stmt = $pdo->prepare("SELECT $cols $extraCols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin $epJoin ORDER BY c.rating DESC, c.views DESC LIMIT $limit");
+            $stmt = $pdo->prepare("SELECT $cols $extraCols, 0 AS pref FROM content c JOIN categories cat ON c.category_id = cat.id $genreJoin  ORDER BY c.rating DESC, c.views DESC LIMIT $limit");
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if ($rows) return ['matched' => true, 'rows' => $rows];
@@ -412,7 +409,6 @@ function ai_build_recommendations(array $rows): array {
             'director'   => $r['director'] ?? null,
             'duration'   => $r['duration'] ?? null,
             'status'     => $r['status'] ?? null,
-            'episodes'   => isset($r['episode_count']) ? (int)$r['episode_count'] : null,
             'description'=> !empty($r['description']) ? mb_substr(trim(strip_tags($r['description'])), 0, 150) : null,
         ];
     }
@@ -428,12 +424,6 @@ function refresh_user_session($pdo, $user_db_id) {
         $_SESSION['user_id'] = $u['id'];
         $_SESSION['user_data'] = $u;
     }
-}
-
-function generate_switch_token($pdo, $user_db_id) {
-    $token = bin2hex(random_bytes(32));
-    $pdo->prepare("UPDATE users SET switch_token = ? WHERE id = ?")->execute([$token, $user_db_id]);
-    return $token;
 }
 
 function find_or_create_google_user($pdo, $google_id, $email, $name) {
@@ -511,6 +501,11 @@ function client_ip() {
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
+// ===== AJAX so'rov ekanligini aniqlash =====
+function is_ajax_request() {
+    return strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest';
+}
+
 // ===== Brute-force himoyasi (login urinishlari) =====
 define('LOGIN_MAX_ATTEMPTS', 5);
 define('LOGIN_LOCKOUT_MINUTES', 15);
@@ -535,8 +530,136 @@ function login_clear_attempts($pdo, $identifier) {
     $pdo->prepare("DELETE FROM login_attempts WHERE identifier = ?")->execute([$identifier]);
 }
 
+// ===== Telegram video havolasini stream proxy URL ga aylantirish =====
+function telegram_stream_src($video_url) {
+    $v = trim((string)$video_url);
+    if ($v === '') return null;
+    if (strpos($v, 'tg:') === 0) {
+        return '/uzdub/stream.php?tg=' . urlencode(substr($v, 3));
+    }
+    if (preg_match('#^https?://#i', $v)) {
+        return '/uzdub/stream.php?url=' . urlencode($v);
+    }
+    return null;
+}
+
+// ===== Telegram havolasini saqlashga tayyorlash =====
+// api.telegram.org/file/bot<TOKEN>/<path> -> tg:<path> (token serverda qoladi)
+// qolgan barcha https havolalar o'zicha saqlanadi
+function telegram_normalize_url($url) {
+    $u = trim((string)$url);
+    if ($u === '') return null;
+    if (preg_match('#^https?://api\.telegram\.org/file/bot[^/]+/(.+)$#i', $u, $m)) {
+        return 'tg:' . $m[1];
+    }
+    return $u;
+}
+
+// ===== Internetdan poster rasmini yuklab olish =====
+// URL dan rasm yuklab, uploads/posters/ ga saqlaydi; muvaffaqiyatda fayl nomini qaytaradi.
+// SSRF himoyasi: barcha DNS yozuvlari tekshiriladi, redirect'lar har qadamda qayta tekshiriladi.
+function url_is_private_ip(string $ip): bool {
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        $l = ip2long($ip);
+        if ($l === false) return true;
+        if (($l & 0xFF000000) === 0x7F000000) return true;               // 127/8
+        if (($l & 0xFF000000) === 0x0A000000) return true;               // 10/8
+        if (($l & 0xFFF00000) === 0xAC100000) return true;               // 172.16/12
+        if (($l & 0xFFFF0000) === 0xC0A80000) return true;               // 192.168/16
+        if (($l & 0xFFFF0000) === 0xA9FE0000) return true;               // 169.254/16
+        if (($l & 0xC0000000) === 0x64400000) return true;               // 100.64/10 CGNAT
+        if ($l === 0) return true;
+        if (($l & 0xE0000000) === 0xE0000000) return true;               // multicast/reserved
+        return false;
+    }
+    $ip = strtolower($ip);
+    if ($ip === '::1' || $ip === '::') return true;
+    if (strpos($ip, '::ffff:') === 0) return url_is_private_ip(substr($ip, 7));
+    $bin = @inet_pton($ip);
+    if ($bin === false) return true;
+    if (($bin[0] & 0xFE) === 0xFC) return true;                          // fc00::/7 ULA
+    if (($bin[0] & 0xFF) === 0xFE && ($bin[1] & 0xC0) === 0x80) return true; // fe80::/10
+    return false;
+}
+
+function url_host_is_private(string $url): bool {
+    $parts = parse_url($url);
+    if (!$parts || empty($parts['host'])) return true;
+    if (isset($parts['user']) || isset($parts['pass'])) return true;
+    $host = strtolower($parts['host']);
+    if (filter_var($host, FILTER_VALIDATE_IP)) {
+        return url_is_private_ip($host);
+    }
+    $records = @dns_get_record($host, DNS_A | DNS_AAAA);
+    if ($records) {
+        $checked = 0;
+        foreach ($records as $r) {
+            $ip = $r['type'] === 'AAAA' ? ($r['ipv6'] ?? '') : ($r['ip'] ?? '');
+            if ($ip === '') continue;
+            $checked++;
+            if (url_is_private_ip($ip)) return true;
+        }
+        return $checked === 0;
+    }
+    $ip = @gethostbyname($host);
+    if ($ip === false || $ip === $host || !filter_var($ip, FILTER_VALIDATE_IP)) return true;
+    return url_is_private_ip($ip);
+}
+
+function download_poster($url, $target_dir) {
+    $u = trim((string)$url);
+    if ($u === '') return null;
+    if (!preg_match('#^https?://#i', $u)) return false;
+    if (url_host_is_private($u)) return false;
+
+    $current = $u;
+    for ($i = 0; $i <= 5; $i++) {
+        if (url_host_is_private($current)) return false;
+
+        $ch = curl_init($current);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_MAXREDIRS      => 0,
+            CURLOPT_TIMEOUT        => 20,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; Uzdub/1.0)',
+        ]);
+        $data = curl_exec($ch);
+        $mime = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $redirect = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+        curl_close($ch);
+
+        if ($status >= 300 && $status < 400 && $redirect) {
+            if (preg_match('#^https?://#i', $redirect)) {
+                $current = $redirect;
+            } else {
+                $parts = parse_url($current);
+                if (!$parts) return false;
+                $base = $parts['scheme'] . '://' . $parts['host'];
+                if (isset($parts['port'])) $base .= ':' . $parts['port'];
+                $current = $redirect[0] === '/' ? $base . $redirect : $base . substr($parts['path'] ?? '/', 0, strrpos($parts['path'] ?? '/', '/') + 1) . $redirect;
+            }
+            continue;
+        }
+
+        if ($data === false || $data === '') return false;
+        if (strlen($data) > MAX_UPLOAD_SIZE) return false;
+
+        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+        $mime = strtolower(trim(explode(';', (string)$mime)[0]));
+        if (!isset($allowed[$mime])) return false;
+
+        $name = uniqid('p_', true) . '.' . $allowed[$mime];
+        if (file_put_contents($target_dir . $name, $data)) return $name;
+        return false;
+    }
+    return false;
+}
+
 // ===== Video player (subtitrlar bilan) =====
-function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo') {
+function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo', $poster = null) {
     $subs_html = '';
     foreach ($subtitles as $sub) {
         $src = '/uzdub/uploads/subtitles/' . e($sub['file_path']);
@@ -552,20 +675,63 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/', 
     } elseif ($video_type === 'cloud') {
         return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen></iframe></div>';
     } elseif ($video_type === 'file') {
-        return '<div class="player-wrap"><video id="' . e($player_id) . '" controls autoplay crossorigin="anonymous" src="' . e($base_path) . e($video_url) . '">' . $subs_html . '</video></div>';
+        $stream_url = '/uzdub/stream.php?url=' . urlencode($base_path . $video_url);
+        return build_video_player($player_id, $stream_url, $poster, $subs_html);
+    } elseif ($video_type === 'telegram') {
+        $stream_url = telegram_stream_src($video_url);
+        if ($stream_url) return build_video_player($player_id, $stream_url, $poster, $subs_html);
+        return '<p class="player-error">Telegram havolasi noto\'g\'ri.</p>';
     }
     return '';
 }
 
-function get_content_subtitles(PDO $pdo, int $content_id, ?int $episode_id = null): array {
+// ===== HTML5 video player (yagona, xatolik fallback bilan) =====
+function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '') {
+    // controlsList="nodownload" — brauzer playeridagi "Yuklab olish" tugmasini o'chiradi
+    // oncontextmenu="return false" — o'ng tugma "Video saqlash" ni bloklaydi
+    $attrs = 'controls playsinline preload="metadata" crossorigin="anonymous" controlsList="nodownload" oncontextmenu="return false"';
+    if ($poster) $attrs .= ' poster="' . e($poster) . '"';
+    $html = '<div class="player-wrap"><video id="' . e($player_id) . '" ' . $attrs . ' src="' . e($stream_url) . '">' . $subs_html . '</video></div>';
+
+    $pid = json_encode($player_id);
+    $html .= '<script>
+(function(){
+    var v = document.getElementById(' . $pid . ');
+    if (!v) return;
+    v.addEventListener("error", function(){
+        if (v.dataset.errHandled) return;
+        v.dataset.errHandled = "1";
+        var wrap = v.parentNode;
+        var box = document.createElement("div");
+        box.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,0.85);color:#fff;z-index:5;text-align:center;padding:20px;";
+        var txt = document.createElement("div");
+        txt.style.fontWeight = "700";
+        txt.textContent = "\u26a0 Video yuklanmadi";
+        var sub = document.createElement("div");
+        sub.style.cssText = "font-size:12px;opacity:.75";
+        sub.textContent = "Internet yoki server holatini tekshiring";
+        var retry = document.createElement("button");
+        retry.textContent = "\u{1f504} Qayta urinish";
+        retry.style.cssText = "background:#2196f3;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:700;cursor:pointer;";
+        retry.onclick = function(){
+            delete v.dataset.errHandled;
+            v.load();
+            if (box.parentNode) box.remove();
+        };
+        box.appendChild(txt);
+        box.appendChild(sub);
+        box.appendChild(retry);
+        wrap.appendChild(box);
+    });
+})();
+</script>';
+    return $html;
+}
+
+function get_content_subtitles(PDO $pdo, int $content_id): array {
     try {
-        if ($episode_id) {
-            $stmt = $pdo->prepare("SELECT * FROM content_subtitles WHERE content_id = ? AND (episode_id = ? OR episode_id IS NULL) ORDER BY episode_id DESC");
-            $stmt->execute([$content_id, $episode_id]);
-        } else {
-            $stmt = $pdo->prepare("SELECT * FROM content_subtitles WHERE content_id = ? AND episode_id IS NULL");
-            $stmt->execute([$content_id]);
-        }
+        $stmt = $pdo->prepare("SELECT * FROM content_subtitles WHERE content_id = ?");
+        $stmt->execute([$content_id]);
         return $stmt->fetchAll() ?: [];
     } catch (PDOException $e) {
         return [];
@@ -604,34 +770,17 @@ function is_content_watched(PDO $pdo, int $user_id, int $content_id): bool {
     }
 }
 
-function mark_content_watched(PDO $pdo, int $user_id, int $content_id, ?int $episode_id = null): void {
+function mark_content_watched(PDO $pdo, int $user_id, int $content_id): void {
     try {
         $pdo->prepare("INSERT INTO watch_history (user_id, content_id) VALUES (?,?)
             ON DUPLICATE KEY UPDATE watched_at = CURRENT_TIMESTAMP")
             ->execute([$user_id, $content_id]);
         $pdo->prepare("UPDATE watch_progress SET position_seconds = duration_seconds WHERE user_id = ? AND content_id = ?")
             ->execute([$user_id, $content_id]);
+        $pdo->prepare("INSERT INTO user_content_status (user_id, content_id, status) VALUES (?,?,'completed')
+            ON DUPLICATE KEY UPDATE status = IF(status = 'favorite', 'favorite', 'completed'), updated_at = CURRENT_TIMESTAMP")
+            ->execute([$user_id, $content_id]);
     } catch (PDOException $e) {}
-}
-
-function get_content_episodes(PDO $pdo, int $content_id): array {
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM episodes WHERE content_id = ? ORDER BY season ASC, episode_number ASC");
-        $stmt->execute([$content_id]);
-        return $stmt->fetchAll() ?: [];
-    } catch (PDOException $e) {
-        return [];
-    }
-}
-
-function get_next_episode(PDO $pdo, int $content_id, int $current_episode_id): ?array {
-    $episodes = get_content_episodes($pdo, $content_id);
-    $found = false;
-    foreach ($episodes as $ep) {
-        if ($found) return $ep;
-        if ((int)$ep['id'] === $current_episode_id) $found = true;
-    }
-    return null;
 }
 
 // ===== API rate limiting =====
@@ -704,13 +853,53 @@ function t_desc($item) {
     return $item['description'] ?? '';
 }
 
+/**
+ * Qidiruv natijasida nomni yozilgan tilga qarab ko'rsatadi:
+ *  - ruscha (kirill) yozilsa -> title_ru
+ *  - lotin yozuvda inglizcha nomga mos tushsa -> title_en
+ *  - aks holda title (o'zbekcha)
+ */
+function search_display_title($item, $q = '') {
+    $q = mb_strtolower(trim((string)$q));
+    if ($q !== '' && preg_match('/[а-яё]/u', $q)) {
+        return !empty($item['title_ru']) ? $item['title_ru'] : ($item['title'] ?? '');
+    }
+    if ($q !== '' && !empty($item['title_en'])) {
+        $en = mb_strtolower($item['title_en']);
+        if (mb_strpos($en, $q) !== false) return $item['title_en'];
+    }
+    return t_title($item);
+}
+
 // ===== Session tracking (user_sessions) =====
+// Xuddi shu turdagi qurilmaning (telefon/planshet/kompyuter) eski seanslarini o'chiradi
+// — shunda ro'yxatda har qurilma turidan faqat bittasi qoladi
+function dedupe_device_sessions($pdo, $user_id, $exclude_token, $ua) {
+    $device = parse_user_agent($ua)['device'] ?? 'desktop';
+    if ($device !== 'mobile' && $device !== 'tablet' && $device !== 'desktop') return;
+
+    $stmt = $pdo->prepare("SELECT id, user_agent FROM user_sessions WHERE user_id = ? AND session_token != ?");
+    $stmt->execute([$user_id, $exclude_token]);
+    $deleteIds = [];
+    foreach ($stmt->fetchAll() as $old) {
+        if ((parse_user_agent($old['user_agent'])['device'] ?? 'desktop') === $device) {
+            $deleteIds[] = (int)$old['id'];
+        }
+    }
+    if ($deleteIds) {
+        $pdo->exec("DELETE FROM user_sessions WHERE id IN (" . implode(',', $deleteIds) . ")");
+    }
+}
+
 function record_user_session($pdo, $user_id) {
     $token = session_id();
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     $ip = client_ip();
 
     $pdo->prepare("DELETE FROM user_sessions WHERE session_token = ?")->execute([$token]);
+
+    // Xuddi shu turdagi qurilmadagi (telefon/planshet/kompyuter) eski seansni o'chirib, dublikat oldini olamiz
+    dedupe_device_sessions($pdo, $user_id, $token, $ua);
 
     $stmt = $pdo->prepare("INSERT INTO user_sessions (user_id, session_token, user_agent, ip_address, last_activity) VALUES (?, ?, ?, ?, NOW())");
     $stmt->execute([$user_id, $token, $ua, $ip]);
@@ -727,25 +916,112 @@ function touch_user_session($pdo) {
     }
 }
 
-function parse_user_agent($ua) {
-    $browser = 'Unknown';
+// Telefon raqamni maskalash: +998 33 *** ** 09
+function mask_phone($phone) {
+    $d = preg_replace('/[^0-9]/', '', (string)$phone);
+    if (strlen($d) >= 10) {
+        $country = substr($d, 0, 3);
+        $operator = substr($d, 3, 2);
+        $last2 = substr($d, -2);
+        return '+' . $country . ' ' . $operator . ' *** ** ' . $last2;
+    }
+    return $phone;
+}
+
+// Foydalanuvchining barcha faol sessiyalarini bekor qiladi (chiqarib yuboradi)
+function revoke_user_sessions($pdo, $user_id) {
+    $stmt = $pdo->prepare("SELECT session_token FROM user_sessions WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $tokens = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $pdo->prepare("DELETE FROM user_sessions WHERE user_id = ?")->execute([$user_id]);
+
+    // PHP session fayllarini ham o'chiramiz (best-effort)
+    $savePath = ini_get('session.save_path');
+    if (!$savePath) $savePath = sys_get_temp_dir();
+    $savePath = rtrim($savePath, '/\\');
+    foreach ($tokens as $t) {
+        if ($t !== '') @unlink($savePath . DIRECTORY_SEPARATOR . 'sess_' . $t);
+    }
+    return count($tokens);
+}
+
+function parse_user_agent($ua = '') {
+    $ua = (string)$ua;
+
     $os = 'Unknown';
+    $os_version = '';
+    $browser = 'Unknown';
+    $browser_version = '';
+    $device = 'desktop'; // desktop | mobile | tablet
 
-    if (preg_match('/Windows/i', $ua)) $os = 'Windows';
-    elseif (preg_match('/Macintosh|Mac OS X/i', $ua)) $os = 'macOS';
-    elseif (preg_match('/Linux/i', $ua)) $os = 'Linux';
-    elseif (preg_match('/Android/i', $ua)) $os = 'Android';
-    elseif (preg_match('/iPhone|iPad/i', $ua)) $os = 'iOS';
+    // ---- Operatsion tizim ----
+    if (preg_match('/Windows NT ([\d.]+)/i', $ua, $m)) {
+        $os = 'Windows';
+        $win = ['10.0' => '10', '6.3' => '8.1', '6.2' => '8', '6.1' => '7', '6.0' => 'Vista', '5.1' => 'XP', '5.0' => '2000'];
+        $os_version = $win[$m[1]] ?? $m[1];
+    } elseif (preg_match('/Mac OS X ([\d_]+)/i', $ua, $m)) {
+        $os = 'macOS';
+        $os_version = str_replace('_', '.', $m[1]);
+    } elseif (preg_match('/iPad.*?OS ([\d_]+)/i', $ua, $m) || preg_match('/iOS ([\d_]+)/i', $ua, $m)) {
+        $os = preg_match('/iPad/i', $ua) ? 'iPadOS' : 'iOS';
+        $os_version = str_replace('_', '.', $m[1]);
+    } elseif (preg_match('/iPhone OS ([\d_]+)/i', $ua, $m)) {
+        $os = 'iOS';
+        $os_version = str_replace('_', '.', $m[1]);
+    } elseif (preg_match('/Android ([\d.]+)/i', $ua, $m)) {
+        $os = 'Android';
+        $os_version = $m[1];
+    } elseif (preg_match('/CrOS/i', $ua)) {
+        $os = 'ChromeOS';
+    } elseif (preg_match('/Linux/i', $ua)) {
+        $os = 'Linux';
+    } elseif (preg_match('/Windows Phone/i', $ua)) {
+        $os = 'Windows Phone';
+    }
 
-    if (preg_match('/Chrome\/(\d+)/i', $ua, $m)) $browser = 'Chrome ' . $m[1];
-    elseif (preg_match('/Firefox\/(\d+)/i', $ua, $m)) $browser = 'Firefox ' . $m[1];
-    elseif (preg_match('/Safari\/(\d+)/i', $ua, $m)) $browser = 'Safari ' . $m[1];
-    elseif (preg_match('/Edge\/(\d+)/i', $ua, $m)) $browser = 'Edge ' . $m[1];
-    elseif (preg_match('/Opera|OPR\/(\d+)/i', $ua, $m)) $browser = 'Opera';
+    // ---- Brauzer ----
+    if (preg_match('/Edg[eA]?\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Edge'; $browser_version = $m[1];
+    } elseif (preg_match('/OPR\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Opera'; $browser_version = $m[1];
+    } elseif (preg_match('/YaBrowser\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Yandex Browser'; $browser_version = $m[1];
+    } elseif (preg_match('/SamsungBrowser\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Samsung Internet'; $browser_version = $m[1];
+    } elseif (preg_match('/UCBrowser\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'UC Browser'; $browser_version = $m[1];
+    } elseif (preg_match('/FxiOS\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Firefox'; $browser_version = $m[1];
+    } elseif (preg_match('/CriOS\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Chrome'; $browser_version = $m[1];
+    } elseif (preg_match('/Firefox\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Firefox'; $browser_version = $m[1];
+    } elseif (preg_match('/Chrome\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Chrome'; $browser_version = $m[1];
+    } elseif (preg_match('/Safari\/([\d.]+)/i', $ua, $m)) {
+        $browser = 'Safari'; $browser_version = $m[1];
+    }
 
-    $device = preg_match('/Mobile|Android|iPhone|iPad/i', $ua) ? 'mobile' : 'desktop';
+    // ---- Qurilma turi ----
+    if (preg_match('/curl\/|wget\/|python-requests|Python-urllib|Googlebot|bingbot|YandexBot|DuckDuckBot|TelegramBot|okhttp|node-fetch|axios|http\.client|PostmanRuntime|bot\//i', $ua)) {
+        $device = 'bot';
+    } elseif (preg_match('/iPad/i', $ua) || preg_match('/Tablet|PlayBook|Silk/i', $ua)) {
+        $device = 'tablet';
+    } elseif (preg_match('/Mobile|iPhone|Android|Windows Phone|BlackBerry|Opera Mini|IEMobile/i', $ua)) {
+        $device = 'mobile';
+    } else {
+        $device = 'desktop';
+    }
 
-    return compact('browser', 'os', 'device');
+    // iPad'da os iPadOS deb belgilansin (Android planshet bo'lsa ham Android)
+    if ($device === 'tablet' && $os === 'iOS') $os = 'iPadOS';
+
+    $device_label = ($device === 'mobile') ? 'phone' : ($device === 'tablet' ? 'tablet' : ($device === 'bot' ? 'bot' : 'computer'));
+    $os_label = $os . ($os_version !== '' ? ' ' . $os_version : '');
+    $browser_label = $browser . ($browser_version !== '' ? ' ' . $browser_version : '');
+
+    return compact('browser', 'browser_version', 'browser_label', 'os', 'os_version', 'os_label', 'device', 'device_label');
 }
 
 function send_email($to, $subject, $textBody, $htmlBody = null) {
@@ -832,4 +1108,70 @@ function mask_email($email) {
         $masked = mb_substr($name, 0, 1) . str_repeat('*', max(1, $len - 2)) . mb_substr($name, -1);
     }
     return $masked . '@' . $domain;
+}
+
+/**
+ * Chiroyli email tashqi qobig'i (full HTML). Barcha xatlar shu orqali yuboriladi.
+ * $contentHtml — ichki mazmun (HTML).
+ */
+function email_layout(string $title, string $contentHtml): string {
+    $brand = e(getenv('SMTP_FROM_NAME') ?: 'UZDUB');
+    $year = date('Y');
+    return '<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>' . $title . '</title>
+</head>
+<body style="margin:0;padding:0;background:#060a13;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#060a13;padding:32px 16px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0d1424;border:1px solid #1e2b45;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+<tr><td style="background:linear-gradient(135deg,#0a1a33,#0d4f9e);padding:32px 40px;text-align:center;">
+<div style="font-size:40px;line-height:1;">🛡️</div>
+<div style="margin-top:10px;font-size:28px;font-weight:800;letter-spacing:3px;color:#ffffff;">' . $brand . '</div>
+<div style="margin-top:6px;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#8fc3ff;">' . $title . '</div>
+</td></tr>
+<tr><td style="padding:36px 40px;background:#0d1424;">
+' . $contentHtml . '
+</td></tr>
+<tr><td style="padding:24px 40px;border-top:1px solid #1e2b45;text-align:center;background:#0a0f1c;">
+<div style="font-size:12px;color:#5a6b85;line-height:1.8;">
+© ' . $year . ' ' . $brand . ' Platform. Barcha huquqlar himoyalangan.<br>
+Agar bu xatni siz so\'ramagan bo\'lsangiz, shunchaki e\'tiborsiz qoldiring.
+</div>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>';
+}
+
+/**
+ * Tasdiqlash kodi uchun chiroyli karta.
+ * $label — kod nima uchun (masalan "Tasdiqlash kodi")
+ * $code — 6 xonali kod
+ * $note — izoh (masalan "Bu kod 5 daqiqa amal qiladi.")
+ */
+function email_code_card(string $label, string $code, string $note = ''): string {
+    $safeCode = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
+    $safeLabel = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+    $safeNote = htmlspecialchars($note, ENT_QUOTES, 'UTF-8');
+    $codeSpaced = implode(' ', str_split($safeCode));
+    return '<div style="text-align:center;">
+<div style="font-size:15px;color:#a9bbd6;font-weight:600;">' . $safeLabel . '</div>
+<div style="margin:22px auto 0;padding:20px 24px;background:#081021;border:1px solid #2a4a7f;border-radius:14px;display:inline-block;">
+<div style="font-size:36px;font-weight:800;letter-spacing:8px;color:#ffffff;font-family:\'Courier New\',monospace;">' . $codeSpaced . '</div>
+</div>
+' . ($safeNote ? '<div style="margin-top:20px;font-size:12.5px;color:#7c8db0;">' . $safeNote . '</div>' : '') . '
+</div>';
+}
+
+/**
+ * Email ichiga oddiy chiroyli blok (tushuntirish matni uchun).
+ */
+function email_paragraph(string $html): string {
+    return '<div style="font-size:14.5px;line-height:1.7;color:#c9d6ea;text-align:center;">' . $html . '</div>';
 }

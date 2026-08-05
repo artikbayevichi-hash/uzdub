@@ -72,7 +72,7 @@ if (!$user) {
 }
 
 /* ===== Pre-verify: identity check only, set session flag ===== */
-if ($pending['type'] === 'pre-verify-email') {
+if ($pending['type'] === 'pre-verify-email' || $pending['type'] === 'email-bot') {
     unset($_SESSION['otp_code'], $_SESSION['otp_pending'], $_SESSION['otp_expires']);
     $_SESSION['settings_verified_for'] = 'email';
     $_SESSION['settings_verified_at'] = time();
@@ -90,6 +90,17 @@ if ($pending['type'] === 'pre-verify-password') {
     $response['ok'] = true;
     $response['message'] = t('otp_success');
     $response['success_type'] = 'pre-verify-password';
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($pending['type'] === 'pre-verify-username') {
+    unset($_SESSION['otp_code'], $_SESSION['otp_pending'], $_SESSION['otp_expires']);
+    $_SESSION['settings_verified_for'] = 'username';
+    $_SESSION['settings_verified_at'] = time();
+    $response['ok'] = true;
+    $response['message'] = t('otp_success');
+    $response['success_type'] = 'pre-verify-username';
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit;
 }

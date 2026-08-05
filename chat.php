@@ -79,7 +79,7 @@ include __DIR__ . '/includes/header.php';
 .chat-send-btn { padding:11px 22px; background:var(--blue-primary); border:none; border-radius:8px; color:#fff; font-weight:600; cursor:pointer; font-size:14px; }
 .chat-send-btn:hover { background:var(--blue-glow); }
 .chat-attach-btn { width:42px; height:42px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(33,150,243,0.25); color:var(--text-light); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
-.chat-attach-btn.locked::after { content:'⭐'; position:absolute; top:-6px; right:-6px; font-size:11px; }
+.chat-attach-btn.locked::after { content:'👑'; position:absolute; top:-6px; right:-6px; font-size:11px; }
 .attach-preview-bar { padding:0 16px; }
 .attach-preview-bar img { max-height:80px; border-radius:8px; margin:8px 0; }
 .attach-preview-bar button { margin-left:10px; background:none; border:none; color:#ef5350; cursor:pointer; font-size:13px; }
@@ -89,11 +89,11 @@ include __DIR__ . '/includes/header.php';
 .emoji-picker span:hover { background:rgba(33,150,243,0.15); border-radius:6px; }
 </style>
 
-<div class="chat-page">
+<div class="chat-page emoji-keep">
     <div class="dm-header">
         <img src="<?php echo avatar_url($other['avatar']); ?>" alt="">
         <div>
-            <h1><?php echo e($other['username']); ?> <?php if ($other['is_premium']): ?>⭐<?php endif; ?></h1>
+            <h1><?php echo e($other['username']); ?> <?php if ($other['is_premium']): ?>👑<?php endif; ?></h1>
             <div class="uid">🆔 <?php echo e($other['user_id']); ?></div>
         </div>
     </div>

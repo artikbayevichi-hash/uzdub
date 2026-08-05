@@ -142,3 +142,86 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+/* ---- Search autocomplete ---- */
+(function() {
+    var input = document.getElementById('searchInput');
+    var suggestions = document.getElementById('searchSuggestions');
+    if (!input || !suggestions) return;
+
+    var timer = null;
+
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    input.addEventListener('input', function() {
+        clearTimeout(timer);
+        var val = input.value.trim();
+        if (val.length < 2) { suggestions.classList.remove('active'); suggestions.innerHTML = ''; return; }
+        timer = setTimeout(function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/uzdub/search.php?ajax_autocomplete=1&q=' + encodeURIComponent(val), true);
+            xhr.onload = function() {
+                if (xhr.status !== 200) return;
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                } catch(e) { return; }
+                if (!data || !data.length) { suggestions.classList.remove('active'); suggestions.innerHTML = ''; return; }
+                var html = '';
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    var contentId = parseInt(item.id, 10);
+                    if (!contentId) continue;
+                    var poster = item.poster ? escHtml('/uzdub/uploads/posters/' + item.poster) : 'https://via.placeholder.com/40x56/121a2b/2196f3?text=';
+                    var title = escHtml(item.display_title || item.title_uz || item.title_ru || item.title_en || item.title);
+                    var year = escHtml(item.release_year);
+                    var rating = escHtml(item.rating);
+                    html += '<a href="/uzdub/watch.php?id=' + contentId + '" class="search-suggestion-item">';
+                    html += '<img src="' + poster + '" alt="" style="width:28px;height:40px;object-fit:cover;border-radius:4px;">';
+                    html += '<span style="flex:1;font-size:13px;">' + title + '</span>';
+                    html += '<span style="font-size:11px;color:var(--text-muted);">' + year + ' ★' + rating + '</span>';
+                    html += '</a>';
+                }
+                suggestions.innerHTML = html;
+                suggestions.classList.add('active');
+            };
+            xhr.send();
+        }, 300);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!suggestions.contains(e.target) && e.target !== input) {
+            suggestions.classList.remove('active');
+        }
+    });
+})();
+
+/* ---- Skeleton loading helper ---- */
+window.skeleton = {
+    show: function(selector, type) {
+        var container = document.querySelector(selector);
+        if (!container) return;
+        type = type || 'grid';
+        var html = '';
+        if (type === 'grid') {
+            for (var i = 0; i < 12; i++) {
+                html += '<div class="skeleton skeleton-card"></div>';
+            }
+            container.innerHTML = '<div class="skeleton-grid">' + html + '</div>';
+        } else if (type === 'hero') {
+            container.innerHTML = '<div class="skeleton skeleton-hero"></div>';
+        } else if (type === 'text') {
+            html = '<div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text-short"></div>';
+            container.innerHTML = html;
+        }
+    },
+    hide: function(selector) {
+        var container = document.querySelector(selector);
+        if (!container) return;
+        var skeletons = container.querySelectorAll('.skeleton, .skeleton-grid');
+        skeletons.forEach(function(el) { el.remove(); });
+    }
+};

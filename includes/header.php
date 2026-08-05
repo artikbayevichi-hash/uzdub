@@ -3,26 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="<?php echo isset($page_desc) ? e($page_desc) : t('footer_desc'); ?>">
+<meta name="keywords" content="uzdub, kino, anime, multfilm, uzbek tilida, online kinoteatr">
+<meta property="og:title" content="<?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?>">
+<meta property="og:description" content="<?php echo isset($page_desc) ? e($page_desc) : t('footer_desc'); ?>">
+<meta property="og:image" content="<?php echo isset($page_image) ? e($page_image) : '/uzdub/og-image.png'; ?>">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?></title>
 <script>if(localStorage.getItem('uzdub_splash_seen')!=='1'){window.location.replace('/uzdub/splash.php');}</script>
+<link rel="icon" type="image/svg+xml" href="/uzdub/favicon.svg">
+<link rel="shortcut icon" href="/uzdub/favicon.svg">
+<link rel="manifest" href="/uzdub/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="/uzdub/css/style.css">
+<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
 <script src="/uzdub/js/online-tracker.js" defer></script>
+<script src="/uzdub/js/emoji-blue.js" defer></script>
 </head>
 <body>
 <script>window.UZDUB_IS_LOGGED_IN = <?php echo is_user() ? 'true' : 'false'; ?>;</script>
-<script>
-(function(){
-    if(window.UZDUB_IS_LOGGED_IN) return;
-    try {
-        var acc = JSON.parse(localStorage.getItem('uzdub_current_account'));
-        if(acc && acc.user_id && acc.switch_token) {
-            var redirect = encodeURIComponent(window.location.pathname + window.location.search);
-            window.location.replace('/uzdub/auth/switch.php?uid=' + encodeURIComponent(acc.user_id) + '&token=' + encodeURIComponent(acc.switch_token) + '&redirect=' + redirect);
-        }
-    } catch(e) {}
-})();
-</script>
-
 <div class="ambient-dust">
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>
@@ -48,10 +49,10 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             <span class="drawer-title">☰ Menyu</span>
             <button class="drawer-close" onclick="closeDrawer()">&times;</button>
         </li>
-        <li class="mobile-hide"><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"><?php echo t('home'); ?></a></li>
-        <li class="mobile-hide"><a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a></li>
-        <li class="mobile-hide"><a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a></li>
-        <li class="mobile-hide"><a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">🏠 <?php echo t('home'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/category.php?slug=kino">🎬 <?php echo t('movies'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/category.php?slug=anime">🎌 <?php echo t('anime'); ?></a></li>
+        <li class="mobile-hide"><a href="/uzdub/category.php?slug=multfilm">🧸 <?php echo t('cartoons'); ?></a></li>
         <li class="random-dropdown">
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
             <div class="random-menu">
@@ -117,8 +118,8 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             </div>
         </li>
         <?php if (is_user()): ?>
-        <li><a href="/uzdub/inbox.php"><?php echo t('messages'); ?></a></li>
-        <li><a href="/uzdub/premium.php" style="color:#f9a825;">⭐ <?php echo t('premium'); ?></a></li>
+        <li><a href="/uzdub/inbox.php">📨 <?php echo t('messages'); ?></a></li>
+        <li><a href="/uzdub/premium.php" style="color:#f9a825;">👑 <?php echo t('premium'); ?></a></li>
         <?php endif; ?>
         <li class="mobile-only-items">
             <div>
@@ -315,28 +316,8 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
         <?php if (is_user()): $u = current_user(); ?>
         <a href="/uzdub/profile.php?uid=<?php echo e($u['user_id']); ?>" class="header-avatar-link">
             <img src="<?php echo avatar_url($u['avatar']); ?>" class="header-avatar-img" alt="">
-            <?php if ($u['is_premium']): ?><span class="header-premium-badge">⭐</span><?php endif; ?>
+            <?php if ($u['is_premium']): ?><span class="header-premium-badge">👑</span><?php endif; ?>
         </a>
-        <div class="acc-switcher-wrap">
-            <button class="acc-switcher-btn" id="accSwitcherBtn" title="<?php echo t('accounts'); ?>">⋮</button>
-            <div class="acc-switcher-dropdown" id="accSwitcherDropdown">
-                <div class="acc-dropdown-current">
-                    <img src="<?php echo avatar_url($u['avatar']); ?>" class="acc-dd-avatar" alt="">
-                    <div class="acc-dd-info">
-                        <span class="acc-dd-name"><?php echo e($u['username']); ?></span>
-                        <?php if ($u['is_premium']): ?><span class="acc-dd-premium">⭐ Premium</span><?php endif; ?>
-                        <span class="acc-dd-id">ID: <?php echo e($u['user_id']); ?></span>
-                    </div>
-                    <span class="acc-dd-check">✓</span>
-                </div>
-                <div class="acc-dropdown-divider"></div>
-                <div class="acc-dropdown-list" id="accDropdownList"></div>
-                <a href="/uzdub/auth/login.php?new=1" class="acc-dropdown-add">
-                    <span class="acc-add-icon">+</span>
-                    <?php echo t('add_account'); ?>
-                </a>
-            </div>
-        </div>
         <?php else: ?>
         <a href="/uzdub/auth/login.php" class="header-login-btn"><?php echo t('login'); ?></a>
         <?php endif; ?>
@@ -395,57 +376,6 @@ document.addEventListener('keydown', function(e) {
 document.getElementById('navLinks').addEventListener('click', function(e) {
     if(e.target.tagName === 'A') closeDrawer();
 });
-
-// Akkaunt switcher
-(function() {
-    var btn = document.getElementById('accSwitcherBtn');
-    var dd = document.getElementById('accSwitcherDropdown');
-    var list = document.getElementById('accDropdownList');
-    if (!btn || !dd || !list) return;
-
-    var currentUserId = <?php echo is_user() ? json_encode(current_user()['user_id']) : 'null'; ?>;
-
-    function getAccounts() {
-        try { return JSON.parse(localStorage.getItem('uzdub_accounts')) || []; } catch(e) { return []; }
-    }
-
-    function escHtml(s) {
-        var d = document.createElement('div');
-        d.appendChild(document.createTextNode(s));
-        return d.innerHTML;
-    }
-
-    function renderAccounts() {
-        var accounts = getAccounts();
-        list.innerHTML = '';
-        accounts.forEach(function(acc) {
-            if (String(acc.user_id) === String(currentUserId)) return;
-            var item = document.createElement('a');
-            item.className = 'acc-dd-item';
-            item.href = '/uzdub/auth/switch.php?uid=' + encodeURIComponent(acc.user_id) + '&token=' + encodeURIComponent(acc.switch_token || '');
-            var avatarSrc = escHtml(acc.avatar || '/uzdub/uploads/avatars/default.png');
-            var displayName = escHtml(acc.username || '');
-            item.innerHTML = '<img src="' + avatarSrc + '" class="acc-dd-item-avatar" alt="">' +
-                '<div class="acc-dd-item-info">' +
-                    '<span class="acc-dd-item-name">' + displayName + '</span>' +
-                    (acc.is_premium ? '<span class="acc-dd-item-premium">⭐ Premium</span>' : '') +
-                '</div>';
-            list.appendChild(item);
-        });
-    }
-
-    renderAccounts();
-
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dd.classList.toggle('open');
-        renderAccounts();
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!dd.contains(e.target) && e.target !== btn) dd.classList.remove('open');
-    });
-})();
 
 // Tasodifiy dropdown
 (function() {

@@ -33,6 +33,8 @@ $item = $stmt->fetch();
 if (!$item) { header('Location: index.php'); exit; }
 
 $page_title = t_title($item);
+$page_desc = t_desc($item);
+$page_image = $item['poster'] ? '/uzdub/uploads/posters/' . $item['poster'] : '';
 $pdo->prepare("UPDATE content SET views = views + 1 WHERE id = ?")->execute([$id]);
 
 // Janrlarni olish
@@ -51,12 +53,26 @@ $stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? AND id != ? O
 $stmt->execute([$item['category_id'], $id]);
 $similar = $stmt->fetchAll();
 
+// Aktyorlar va treyler
+$actors = [];
+$act = $pdo->prepare("SELECT * FROM content_actors WHERE content_id = ? ORDER BY sort_order ASC");
+$act->execute([$id]);
+$actors = $act->fetchAll();
+
+$trailer_url = $item['trailer_url'] ?? '';
+
+// Related content (agar related_content jadvalida ma'lumot bo'lsa)
+$related = [];
+$rel = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM related_content rc JOIN content c ON rc.related_id = c.id LEFT JOIN categories cat ON c.category_id = cat.id WHERE rc.content_id = ? LIMIT 12");
+$rel->execute([$id]);
+$related = $rel->fetchAll();
+
 // ===== PREMIUM PAYWALL (server tomonidan majburiy tekshiruv) =====
 $is_locked = (bool)$item['is_premium'] && !has_premium_access($pdo);
 
-// ===== "Davom eting" — saqlangan pozitsiyani olish (faqat file turidagi videolar uchun) =====
+// ===== "Davom eting" — saqlangan pozitsiyani olish (file/telegram turidagi videolar uchun) =====
 $resume_position = 0;
-if (is_user() && !$is_locked && $item['video_type'] === 'file') {
+if (is_user() && !$is_locked && in_array($item['video_type'], ['file', 'telegram'], true)) {
     $rp = $pdo->prepare("SELECT position_seconds FROM watch_progress WHERE user_id = ? AND content_id = ?");
     $rp->execute([$_SESSION['user_id'], $id]);
     $row = $rp->fetch();
@@ -67,7 +83,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 <style>
 .watch-player-section { position:relative; margin-bottom:24px; }
-.content-id-tag { position:absolute; top:-12px; right:0; background:var(--card-bg); border:1px solid var(--blue-primary); color:var(--blue-glow); font-size:12px; padding:4px 12px; border-radius:20px; font-family:monospace; z-index:3; }
+.content-id-tag { position:absolute; top:-12px; right:0; background:var(--card-bg); border:1px solid var(--blue-primary); color:var(--blue-glow); font-size:12px; padding:4px 12px; border-radius:20px; font-family:monospace; z-index:60; box-shadow:0 4px 12px rgba(0,0,0,0.6); }
 .watch-action-bar { display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
 .watch-btn { display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:8px; border:1px solid rgba(33,150,243,0.3); background:var(--card-bg); color:var(--text-light); cursor:pointer; font-size:14px; font-weight:600; text-decoration:none; transition:0.2s; }
 .watch-btn:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.1); }
@@ -100,16 +116,33 @@ include __DIR__ . '/includes/header.php';
                 <h3><?php echo t('premium_content'); ?></h3>
                 <p>"<?php echo e(t_title($item)); ?>" <?php echo t('premium_needed'); ?></p>
                 <?php if (is_user()): ?>
-                <a href="premium.php" class="btn-unlock">⭐ <?php echo t('get_premium'); ?></a>
+                <a href="premium.php" class="btn-unlock">👑 <?php echo t('get_premium'); ?></a>
                 <?php else: ?>
                 <a href="auth/login.php?redirect=<?php echo urlencode('/uzdub/watch.php?id=' . $id); ?>" class="btn-unlock"><?php echo t('login_and_premium'); ?></a>
                 <?php endif; ?>
             </div>
         </div>
         <?php else: ?>
-        <?php echo render_player($item['video_type'], $item['video_url'], 'uploads/videos/'); ?>
+        <?php
+        $subtitles = [];
+        try {
+            $subs_data = $pdo->prepare("SELECT * FROM content_subtitles WHERE content_id = ?");
+            $subs_data->execute([$id]);
+            $subtitles = $subs_data->fetchAll();
+        } catch (PDOException $e) {}
+        echo render_player($item['video_type'], $item['video_url'], 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? 'uploads/posters/' . e($item['poster']) : null);
+        ?>
         <?php endif; ?>
     </div>
+
+    <?php if ($trailer_url): ?>
+    <div class="trailer-section" style="margin:20px 0;border-radius:12px;overflow:hidden;">
+        <h3 style="font-size:16px;margin-bottom:10px;">&#127916; <?php echo t('trailer'); ?></h3>
+        <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;background:#000;">
+            <iframe src="<?php echo e($trailer_url); ?>" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="watch-action-bar">
         <button class="fav-btn <?php echo $in_watchlist ? 'active' : ''; ?>" id="watchlistBtn" onclick="toggleFav(<?php echo $id; ?>)" title="<?php echo $in_watchlist ? t('removed_from_watchlist') : t('added_to_watchlist'); ?>">
@@ -120,7 +153,7 @@ include __DIR__ . '/includes/header.php';
     <div class="detail-header">
         <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
         <div>
-            <h1><?php echo e(t_title($item)); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">⭐ <?php echo t('premium_tag'); ?></span><?php endif; ?></h1>
+            <h1><?php echo e(t_title($item)); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">👑 <?php echo t('premium_tag'); ?></span><?php endif; ?></h1>
             <div class="meta">
                 <?php echo e($item['cat_name']); ?> &middot;
                 <?php echo e($item['release_year']); ?> &middot;
@@ -146,11 +179,26 @@ include __DIR__ . '/includes/header.php';
             <?php endif; ?>
 
             <p class="desc"><?php echo nl2br(e(t_desc($item))); ?></p>
+
+            <?php if (!empty($actors)): ?>
+            <div style="margin-top:16px;">
+                <h4 style="font-size:14px;color:var(--text-muted);margin-bottom:8px;"><?php echo t('actors'); ?></h4>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <?php foreach ($actors as $a): ?>
+                    <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.15);border-radius:8px;padding:4px 10px;font-size:13px;">
+                        <?php if ($a['image']): ?><img src="<?php echo e($a['image']); ?>" alt="" style="width:20px;height:20px;border-radius:50%;object-fit:cover;"><?php endif; ?>
+                        <?php echo e($a['name']); ?>
+                        <?php if ($a['role']): ?><span style="color:var(--text-muted);font-size:11px;">(<?php echo e($a['role']); ?>)</span><?php endif; ?>
+                    </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 
     <link rel="stylesheet" href="/uzdub/css/comments.css">
-    <section class="cmt-section" id="commentSection">
+    <section class="cmt-section emoji-keep" id="commentSection">
         <div class="cmt-header">
             <h3><?php echo t('comments'); ?></h3>
             <span class="cmt-count" id="cmtCount">0</span>
@@ -509,7 +557,7 @@ function toggleFav(contentId) {
     setInterval(pollCommentReactions, 5000);
 })();
 </script>
-<?php if (is_user() && !$is_locked && $item['video_type'] === 'file'): ?>
+<?php if (is_user() && !$is_locked && in_array($item['video_type'], ['file', 'telegram'], true)): ?>
 <script>
 var WT2 = <?php echo json_encode([
     'resuming_from' => t('resuming_from'),

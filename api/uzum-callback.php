@@ -3,6 +3,12 @@
    api/uzum-callback.php
    Uzum (Payme) to'lov tizimidan kelgan callback-ni qabul qiladi
    va to'lov muvaffaqiyatli bo'lsa Premiumni avtomatik yoqadi.
+
+   XAVFSIZLIK:
+   - Payme formatidagi barcha so'rovlar imzo bilan tekshiriladi:
+     base64(sha1(method . json_encode(params, JSON_UNESCAPED_UNICODE) . UZUM_SECRET_KEY))
+   - Oddiy Uzum formatidagi so'rovlar ham imzo bilan tekshiriladi.
+   - UZUM_SECRET_KEY sozlanmagan bo'lsa, barcha so'rovlar rad etiladi.
    ============================================================ */
 
 require_once __DIR__ . '/../config/db.php';
@@ -11,24 +17,25 @@ require_once __DIR__ . '/../config/payment.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $raw = file_get_contents('php://input');
-$data = json_decode($raw, true) ?? $_POST;
+$data = json_decode($raw, true);
 
-// Method va transaction_id ni erta olish
-$method = $data['method'] ?? '';
-$params = $data['params'] ?? [];
+$payme_methods = ['CheckPerformTransaction', 'CreateTransaction', 'PerformTransaction', 'CancelTransaction'];
+$has_payme_method = is_array($data) && isset($data['method']) && in_array($data['method'], $payme_methods, true);
 
-if ($method !== '' && in_array($method, ['Payme','CheckPerformTransaction','CreateTransaction','PerformTransaction','CancelTransaction'])) {
-    $account = $params['account'] ?? [];
-    $transaction_id = $account['transaction_id'] ?? ($params['transaction_id'] ?? '');
-    $amount = $params['amount'] ?? 0;
-    $status = $method;
-} else {
-    $transaction_id = $data['transaction_id'] ?? ($params['transaction_id'] ?? '');
-    $status = $data['status'] ?? ($params['status'] ?? '');
-    $amount = $data['amount'] ?? 0;
+if (!$has_payme_method) {
+    $data = is_array($data) ? $data : ($_POST ?: []);
 }
 
-// Log (sezgirsiz)
+$method = $data['method'] ?? '';
+$params = is_array($data['params'] ?? null) ? $data['params'] : [];
+$sign = $data['sign'] ?? '';
+$account = is_array($params['account'] ?? null) ? $params['account'] : [];
+
+$transaction_id = $account['transaction_id'] ?? ($params['transaction_id'] ?? ($data['transaction_id'] ?? ''));
+$amount = $params['amount'] ?? ($data['amount'] ?? 0);
+$status = $method;
+
+// --- Log (sezgirsiz) ---
 $log_file = __DIR__ . '/../logs/uzum_payments.log';
 $log_dir = dirname($log_file);
 if (!is_dir($log_dir)) mkdir($log_dir, 0755, true);
@@ -40,9 +47,23 @@ $safe_log = json_encode([
 ], JSON_UNESCAPED_UNICODE);
 file_put_contents($log_file, $safe_log . "\n", FILE_APPEND);
 
-// Oddiy format uchun — signature tekshirish
-$has_payme_method = $method !== '' && in_array($method, ['Payme','CheckPerformTransaction','CreateTransaction','PerformTransaction','CancelTransaction']);
-if (!$has_payme_method && UZUM_SECRET_KEY) {
+// --- Imzo tekshirish (majburiy) ---
+if (!UZUM_SECRET_KEY) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Payment not configured']);
+    exit;
+}
+
+if ($has_payme_method) {
+    // Payme: base64(sha1(method . json_encode(params) . key))
+    $expected = base64_encode(sha1($method . json_encode($params, JSON_UNESCAPED_UNICODE) . UZUM_SECRET_KEY, true));
+    if (!is_string($sign) || !hash_equals($expected, $sign)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Invalid signature']);
+        exit;
+    }
+} else {
+    // Oddiy Uzum formati
     if (!uzum_verify_callback($data)) {
         http_response_code(403);
         echo json_encode(['error' => 'Invalid signature']);
@@ -50,7 +71,7 @@ if (!$has_payme_method && UZUM_SECRET_KEY) {
     }
 }
 
-// Transaction ID dan ma'lumotlarni olish
+// --- Transaction ID parse: USER_ID_PLAN_KEY_TRANSACTION_ID ---
 $parts = explode('_', $transaction_id);
 if (count($parts) < 3) {
     http_response_code(200);
@@ -69,23 +90,34 @@ if (!isset($plans[$plan_key])) {
     exit;
 }
 
-$expected_amount = $plans[$plan_key]['price'];
+$expected_amount = (int)$plans[$plan_key]['price'];
 
-// === Payme formatidagi so'rovlarni qayta ishlash ===
+// Payme formatida summa tiyinda keladi (so'm * 100)
+if ($has_payme_method && $amount !== '' && $amount !== null && (int)$amount !== $expected_amount * 100) {
+    http_response_code(200);
+    echo json_encode(['error' => ['code' => -50, 'message' => 'Noto\'g\'ri summa']]);
+    exit;
+}
+
+// === Payme format ===
 if ($method === 'CheckPerformTransaction') {
     echo json_encode(['result' => ['allowed' => true]]);
     exit;
 }
 
 if ($method === 'CreateTransaction') {
-    $stmt = $pdo->prepare("SELECT id FROM premium_payments WHERE transaction_id = ?");
-    $stmt->execute([$custom_trans_id]);
+    $stmt = $pdo->prepare("SELECT id, status FROM premium_payments WHERE transaction_id = ? AND user_id = ?");
+    $stmt->execute([$custom_trans_id, $user_db_id]);
     $existing = $stmt->fetch();
 
     if (!$existing) {
         $expires_at = date('Y-m-d H:i:s', strtotime('+' . $plans[$plan_key]['days'] . ' days'));
         $stmt = $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, transaction_id, status, payment_system, expires_at) VALUES (?, ?, ?, ?, 'pending', 'uzum', ?)");
-        $stmt->execute([$user_db_id, $plan_key, (int)$expected_amount, $custom_trans_id, $expires_at]);
+        $stmt->execute([$user_db_id, $plan_key, $expected_amount, $custom_trans_id, $expires_at]);
+    } elseif ($existing['status'] === 'approved') {
+        // Allaqachon tasdiqlangan — yangi transaksiya ochmaslik
+        echo json_encode(['error' => ['code' => -50, 'message' => 'Allaqachon to\'langan']]);
+        exit;
     }
 
     echo json_encode([
@@ -99,18 +131,25 @@ if ($method === 'CreateTransaction') {
 }
 
 if ($method === 'PerformTransaction') {
-    $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE transaction_id = ? AND status='pending' AND payment_system='uzum'");
-    $stmt->execute([$custom_trans_id]);
+    $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE transaction_id = ? AND user_id = ? AND status='pending' AND payment_system='uzum'");
+    $stmt->execute([$custom_trans_id, $user_db_id]);
     $payment = $stmt->fetch();
 
     if (!$payment) {
-        echo json_encode([
-            'result' => [
-                'transaction' => $custom_trans_id,
-                'perform_time' => time() * 1000,
-                'state' => 2,
-            ]
-        ]);
+        $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE transaction_id = ? AND user_id = ? AND status='approved'");
+        $stmt->execute([$custom_trans_id, $user_db_id]);
+        $approved = $stmt->fetch();
+        if ($approved) {
+            echo json_encode([
+                'result' => [
+                    'transaction' => $custom_trans_id,
+                    'perform_time' => time() * 1000,
+                    'state' => 2,
+                ]
+            ]);
+            exit;
+        }
+        echo json_encode(['error' => ['code' => -50, 'message' => 'Transaksiya topilmadi']]);
         exit;
     }
 
@@ -131,8 +170,8 @@ if ($method === 'PerformTransaction') {
 }
 
 if ($method === 'CancelTransaction') {
-    $stmt = $pdo->prepare("UPDATE premium_payments SET status='rejected' WHERE transaction_id = ?");
-    $stmt->execute([$custom_trans_id]);
+    $stmt = $pdo->prepare("UPDATE premium_payments SET status='rejected' WHERE transaction_id = ? AND user_id = ?");
+    $stmt->execute([$custom_trans_id, $user_db_id]);
 
     echo json_encode([
         'result' => [
@@ -144,10 +183,10 @@ if ($method === 'CancelTransaction') {
     exit;
 }
 
-// Oddiy format
+// === Oddiy Uzum format ===
 if ($status === 'completed' || $status === 'success') {
-    $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE transaction_id = ? AND status='pending' AND payment_system='uzum'");
-    $stmt->execute([$custom_trans_id]);
+    $stmt = $pdo->prepare("SELECT * FROM premium_payments WHERE transaction_id = ? AND user_id = ? AND status='pending' AND payment_system='uzum'");
+    $stmt->execute([$custom_trans_id, $user_db_id]);
     $payment = $stmt->fetch();
 
     if ($payment) {

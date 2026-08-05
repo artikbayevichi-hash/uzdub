@@ -384,7 +384,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const statusMap = { ongoing: 'Davom etmoqda', completed: 'Tugagan', upcoming: 'Kelayotgan' };
         parts.push(statusMap[item.status] || item.status);
       }
-      if (item.episodes) parts.push(item.episodes + ' ep.');
       if (item.duration) parts.push(item.duration);
       meta.textContent = parts.join(' \u00b7 ');
       if (item.is_premium) {

@@ -21,9 +21,12 @@ $splash_user = is_user() ? current_user() : null;
     <title>UZDUB PLATFORM — <?php echo t('splash_line1'); ?></title>
     <meta name="description" content="Kino, Anime, Multfilmlar — O'zbek tilida. Barcha sevimli kontentlaringiz bir joyda.">
     <link rel="stylesheet" href="/uzdub/css/landing-splash.css">
+    <link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
+    <script src="/uzdub/js/emoji-blue.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 </head>
 <body class="ls-page">
     <div class="ls-particles" id="lsParticles"></div>
@@ -76,7 +79,7 @@ $splash_user = is_user() ? current_user() : null;
                 <div>
                     <div class="ls-user-name"><?php echo e($splash_user['username']); ?></div>
                     <?php if (!empty($splash_user['is_premium'])): ?>
-                    <div class="ls-user-premium">⭐ Premium</div>
+                    <div class="ls-user-premium">👑 Premium</div>
                     <?php endif; ?>
                 </div>
             </div>

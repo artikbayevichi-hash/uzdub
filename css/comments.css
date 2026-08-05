@@ -46,11 +46,15 @@
 .cmt-input-box {
     display: flex;
     gap: 14px;
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
-    border-radius: var(--c-radius);
-    padding: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px;
     margin-bottom: 28px;
+}
+
+.cmt-input-box:focus-within {
+    border-color: var(--c-accent);
 }
 
 .cmt-avatar {
@@ -59,6 +63,7 @@
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+    align-self: flex-start;
     background: var(--c-input-bg);
 }
 
@@ -69,23 +74,17 @@
 
 .cmt-textarea {
     width: 100%;
-    min-height: 60px;
+    min-height: 80px;
     max-height: 200px;
-    background: var(--c-input-bg);
-    border: 1px solid var(--c-border);
-    border-radius: 8px;
-    color: var(--c-text);
-    font-size: 14px;
-    padding: 10px 12px;
-    resize: vertical;
+    background: transparent;
+    border: none;
     outline: none;
+    color: #fff;
+    font-size: 14px;
+    padding: 4px 8px;
+    resize: vertical;
     font-family: inherit;
     line-height: 1.5;
-    transition: border-color 0.2s;
-}
-
-.cmt-textarea:focus {
-    border-color: var(--c-accent);
 }
 
 .cmt-textarea::placeholder {
@@ -94,9 +93,10 @@
 
 .cmt-toolbar {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 4px;
-    margin-top: 8px;
+    margin-top: 10px;
     flex-wrap: wrap;
 }
 
@@ -175,7 +175,7 @@
     display: flex;
     gap: 12px;
     padding: 14px 0;
-    border-bottom: 1px solid var(--c-border);
+    margin-bottom: 16px;
     animation: cmtFadeIn 0.3s ease;
 }
 
@@ -185,12 +185,7 @@
 }
 
 .cmt-card:last-child {
-    border-bottom: none;
-}
-
-.cmt-card .cmt-avatar {
-    width: 36px;
-    height: 36px;
+    margin-bottom: 0;
 }
 
 .cmt-body {
@@ -217,7 +212,7 @@
 }
 
 .cmt-author.premium::after {
-    content: '\2B50';
+    content: '\1F451';
     margin-left: 4px;
     font-size: 11px;
 }
@@ -263,7 +258,8 @@
 .cmt-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 16px;
+    margin-top: 8px;
     flex-wrap: wrap;
 }
 
@@ -415,7 +411,6 @@
     }
 
     .cmt-textarea {
-        min-height: 50px;
         font-size: 13px;
     }
 

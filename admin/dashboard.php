@@ -265,7 +265,7 @@ $daw_json = json_encode($daw_data);
     <div class="stat-mini"><div class="num" style="color:var(--blue-glow);"><?php echo $total_views; ?></div><div class="label">👁️ Jami ko'rishlar</div><div class="sub">shu oy +<?php echo $monthly_views; ?></div></div>
     <div class="stat-mini"><div class="num" style="color:#4caf50;"><?php echo $active_today; ?></div><div class="label">📅 Bugun faol</div><div class="sub">foydalanuvchilar</div></div>
     <div class="stat-mini"><div class="num" style="color:#ffb300;"><?php echo $total_users; ?></div><div class="label">👥 Foydalanuvchilar</div><div class="sub">+<?php echo $this_month_new; ?> shu oy</div></div>
-    <div class="stat-mini"><div class="num" style="color:#e040fb;"><?php echo $premium_users; ?></div><div class="label">⭐ Premium</div><div class="sub"><?php echo number_format($total_pay_sum, 0, '.', ' '); ?> so'm</div></div>
+    <div class="stat-mini"><div class="num" style="color:#e040fb;"><?php echo $premium_users; ?></div><div class="label">👑 Premium</div><div class="sub"><?php echo number_format($total_pay_sum, 0, '.', ' '); ?> so'm</div></div>
 </div>
 
 <!-- ============================================================ -->
@@ -517,7 +517,7 @@ $daw_json = json_encode($daw_data);
             <a href="list_content.php?export=csv">📥 CSV eksport</a>
             <a href="list_content.php?export=json">📥 JSON eksport</a>
             <a href="../index.php" target="_blank">🌐 Saytni ko'rish</a>
-            <a href="../premium.php" target="_blank">⭐ Premium sahifasi</a>
+            <a href="../premium.php" target="_blank">👑 Premium sahifasi</a>
         </div>
     </div>
 </div>

@@ -88,10 +88,10 @@ include __DIR__ . '/includes/header.php';
 </style>
 
 <div class="premium-page">
-    <h1>⭐ <?php echo t('premium_subscription'); ?></h1>
+    <h1>👑 <?php echo t('premium_subscription'); ?></h1>
     <p class="subtitle"><?php echo t('premium_desc'); ?></p>
 
-    <?php if ($msg): ?><div class="alert alert-success">⭐ <?php echo e($msg); ?></div><?php endif; ?>
+    <?php if ($msg): ?><div class="alert alert-success">👑 <?php echo e($msg); ?></div><?php endif; ?>
     <?php if ($error): ?><div class="alert alert-error"><?php echo e($error); ?></div><?php endif; ?>
 
     <?php if ($user['is_premium'] && $user['premium_expires_at']): ?>

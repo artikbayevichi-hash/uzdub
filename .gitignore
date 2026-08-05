@@ -1,3 +1,8 @@
 .env
 /vendor/
 /uploads/
+/cache/
+*.apk
+*.db
+*.db-shm
+*.db-wal

@@ -40,7 +40,6 @@ CREATE TABLE IF NOT EXISTS users (
     bio TEXT DEFAULT NULL,
     is_premium TINYINT(1) DEFAULT 0,
     premium_expires_at DATETIME DEFAULT NULL,
-    switch_token VARCHAR(64) DEFAULT NULL,
     google_id VARCHAR(100) DEFAULT NULL,
     last_login_at DATETIME DEFAULT NULL,
     last_login DATETIME DEFAULT NULL,
@@ -71,8 +70,9 @@ CREATE TABLE IF NOT EXISTS content (
     release_year INT DEFAULT NULL,
     rating DECIMAL(3,1) DEFAULT 0,
     is_premium TINYINT(1) DEFAULT 0,
-    video_type ENUM('youtube','cloud','file') DEFAULT NULL,
+    video_type ENUM('youtube','cloud','file','telegram') DEFAULT NULL,
     video_url VARCHAR(500) DEFAULT NULL,
+    trailer_url VARCHAR(500) DEFAULT NULL,
     studio VARCHAR(255) DEFAULT NULL,
     director VARCHAR(255) DEFAULT NULL,
     duration VARCHAR(50) DEFAULT NULL,
@@ -120,23 +120,6 @@ INSERT IGNORE INTO genres (name, slug, color) VALUES
 ('Sport', 'sport', '#009688');
 
 -- =====================================================
--- EPISODES
--- =====================================================
-CREATE TABLE IF NOT EXISTS episodes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    content_id INT NOT NULL,
-    season INT DEFAULT 1,
-    episode_number INT NOT NULL,
-    title VARCHAR(255) DEFAULT NULL,
-    thumbnail VARCHAR(255) DEFAULT NULL,
-    video_type ENUM('youtube','cloud','file') NOT NULL,
-    video_url VARCHAR(500) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
-    INDEX idx_content (content_id)
-);
-
--- =====================================================
 -- WATCHLIST & PROGRESS
 -- =====================================================
 CREATE TABLE IF NOT EXISTS watchlist (
@@ -169,12 +152,22 @@ CREATE TABLE IF NOT EXISTS watched_content (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     content_id INT NOT NULL,
-    episode_id INT DEFAULT NULL,
     completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uniq_user_content (user_id, content_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
     INDEX idx_user (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS watch_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_id INT NOT NULL,
+    watched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    progress_seconds INT DEFAULT 0,
+    UNIQUE KEY uniq_user_content (user_id, content_id),
+    INDEX idx_user_history (user_id, watched_at),
+    INDEX idx_content (content_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_content_status (
@@ -253,10 +246,20 @@ FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM promo_codes WHERE code='UZDUBPLATFORM2
 CREATE TABLE IF NOT EXISTS content_subtitles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     content_id INT NOT NULL,
-    episode_id INT DEFAULT NULL,
     language VARCHAR(10) NOT NULL DEFAULT 'uz',
     label VARCHAR(50) DEFAULT 'O''zbek',
     file_path VARCHAR(255) NOT NULL,
+    FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
+    INDEX idx_content (content_id)
+);
+
+CREATE TABLE IF NOT EXISTS content_actors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(255) DEFAULT NULL,
+    image VARCHAR(500) DEFAULT NULL,
+    sort_order INT DEFAULT 0,
     FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
     INDEX idx_content (content_id)
 );
@@ -394,5 +397,19 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     user_agent TEXT NOT NULL,
     ip_address VARCHAR(45) NOT NULL,
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS login_approvals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    status ENUM('pending','approved','denied','expired') NOT NULL DEFAULT 'pending',
+    ip_address VARCHAR(45) DEFAULT '',
+    user_agent TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    decided_at DATETIME NULL,
+    INDEX (user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

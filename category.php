@@ -39,14 +39,14 @@ include __DIR__ . '/includes/header.php';
             <div class="hero-meta">
                 <span>&#9733; <?php echo e($hero['rating']); ?></span>
                 <span>&middot;</span>
-                <span>&#128197; <?php echo e($hero['release_year']); ?></span>
+                <span><?php echo e($hero['release_year']); ?></span>
                 <span>&middot;</span>
                 <span><?php echo e($hero['content_code'] ?? ''); ?></span>
             </div>
             <p><?php echo e(mb_strimwidth(t_desc($hero) ?? '', 0, 200, '...')); ?></p>
             <div>
                 <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-primary">&#9654; <?php echo t('watch'); ?></a>
-                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#8505; <?php echo t('details'); ?></a>
+                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#9432; <?php echo t('details'); ?></a>
             </div>
         </div>
     </div>

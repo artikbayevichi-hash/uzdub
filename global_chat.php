@@ -293,7 +293,7 @@ include __DIR__ . '/includes/header.php';
 .chat-send-btn { padding:11px 22px; background:var(--blue-primary); border:none; border-radius:8px; color:#fff; font-weight:600; cursor:pointer; font-size:14px; }
 .chat-send-btn:hover { background:var(--blue-glow); }
 .chat-attach-btn { width:42px; height:42px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(33,150,243,0.25); color:var(--text-light); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
-.chat-attach-btn.locked::after { content:'⭐'; position:absolute; top:-6px; right:-6px; font-size:11px; }
+.chat-attach-btn.locked::after { content:'👑'; position:absolute; top:-6px; right:-6px; font-size:11px; }
 .chat-attach-btn:hover { border-color:var(--blue-primary); }
 .need-login { text-align:center; padding:18px; color:var(--text-muted); font-size:14px; }
 .need-login a { color:var(--blue-glow); }
@@ -325,7 +325,7 @@ include __DIR__ . '/includes/header.php';
 .forward-modal-box .fm-cancel { margin-top:8px; width:100%; padding:10px; background:none; border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:var(--text-muted); cursor:pointer; font-size:13px; }
 </style>
 
-<div class="chat-page">
+<div class="chat-page emoji-keep">
     <div class="chat-cat-tabs">
         <?php foreach (['kino', 'anime', 'multfilm'] as $c): ?>
         <a href="?cat=<?php echo $c; ?>" class="chat-cat-tab <?php echo $c === $cat ? 'active' : ''; ?>"><?php echo $cat_icons[$c] . ' ' . $cat_labels[$c]; ?></a>
@@ -366,13 +366,13 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<div class="emoji-picker" id="emojiPicker">
+<div class="emoji-picker emoji-keep" id="emojiPicker">
     <?php foreach (['😀','😂','😍','😎','🥰','😢','😡','👍','👎','❤️','🔥','🎉','🍿','🎬','⭐','🤔','😴','🙌','👀','💯'] as $emo): ?>
     <span data-emoji="<?php echo $emo; ?>"><?php echo $emo; ?></span>
     <?php endforeach; ?>
 </div>
 
-<div class="ctx-menu" id="ctxMenu">
+<div class="ctx-menu emoji-keep" id="ctxMenu">
     <button data-action="reply">↩️ <?php echo t('reply'); ?></button>
     <button data-action="react">😀 <?php echo t('reaction'); ?></button>
     <button data-action="forward">↪️ <?php echo t('forward'); ?></button>
@@ -383,7 +383,7 @@ include __DIR__ . '/includes/header.php';
     <button id="ctxPinBtn" data-action="pin" style="display:none;">📌 <?php echo t('pin_message'); ?></button>
 </div>
 
-<div class="react-picker" id="reactPicker">
+<div class="react-picker emoji-keep" id="reactPicker">
     <span data-emoji="👍">👍</span>
     <span data-emoji="❤️">❤️</span>
     <span data-emoji="🔥">🔥</span>
@@ -469,7 +469,7 @@ function renderMsg(msg) {
     }
     var isOwn = currentUserId && msg.user_id == currentUserId;
     var avatar = msg.avatar ? '/uzdub/uploads/avatars/' + msg.avatar : defaultAvatar;
-    var prem = msg.is_premium == 1 ? '<span class="msg-prem">⭐</span>' : '';
+    var prem = msg.is_premium == 1 ? '<span class="msg-prem">👑</span>' : '';
     var body = '';
 
     if (msg.forwarded_from) body += '<div class="msg-forward-badge">↪️ ' + escHtml(T.forwarded) + '</div>';
