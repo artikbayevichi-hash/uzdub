@@ -11,12 +11,6 @@
     filter: var(--emoji-blue-filter);
 }
 
-/* CSS content orqali generatsiya qilingan emoji (profil 2FA tugmasi) */
-.twofa-bot-btn::after {
-    display: inline-block;
-    filter: var(--emoji-blue-filter);
-}
-
 /* Google orqali kirish tugmasi logosi ham ko'k rangda */
 .google-btn svg {
     filter: var(--emoji-blue-filter);

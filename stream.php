@@ -14,11 +14,33 @@
 
 require_once __DIR__ . '/config/payment.php';
 
+// Faqat ro'yxatdan o'tgan foydalanuvchilar video oqimini ko'rishi mumkin
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'httponly' => true,
+        'secure' => isset($_SERVER['HTTPS']),
+        'samesite' => 'Lax'
+    ]);
+    session_start();
+}
+if (empty($_SESSION['user_id'])) {
+    header('Location: /uzdub/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    exit;
+}
+// Streaming uzoq davom etishi mumkin — sessiya lock'ini bo'shatamiz, aks holda
+// xuddi shu foydalanuvchining parallel (seek) so'rovlari sessiya faylini kutib
+// bloklanib qoladi.
+if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+
 $tg = trim($_GET['tg'] ?? '');
 $url = trim($_GET['url'] ?? '');
+$tgCandidates = [];
 
 if ($tg !== '') {
-    if (!TG_BOT_TOKEN) {
+    $tokens = [];
+    if (TG_ADMIN_BOT_TOKEN) $tokens[] = TG_ADMIN_BOT_TOKEN;
+    if (TG_BOT_TOKEN && TG_BOT_TOKEN !== TG_ADMIN_BOT_TOKEN) $tokens[] = TG_BOT_TOKEN;
+    if (!$tokens) {
         http_response_code(500);
         die('Telegram bot token sozlanmagan');
     }
@@ -26,7 +48,10 @@ if ($tg !== '') {
         http_response_code(403);
         die('Access denied');
     }
-    $url = 'https://api.telegram.org/file/bot' . TG_BOT_TOKEN . '/' . ltrim($tg, '/');
+    foreach ($tokens as $tok) {
+        $tgCandidates[] = 'https://api.telegram.org/file/bot' . $tok . '/' . ltrim($tg, '/');
+    }
+    $url = $tgCandidates[0];
 } elseif ($url === '') {
     http_response_code(400);
     die('Missing url parameter');
@@ -72,8 +97,8 @@ function stream_is_private_ip(string $ip, bool $allow_loopback): bool {
     if ($ip === '::') return true;
     $bin = @inet_pton($ip);
     if ($bin === false) return true;
-    if (($bin[0] & 0xFE) === 0xFC) return true;                          // fc00::/7 ULA
-    if (($bin[0] & 0xFF) === 0xFE && ($bin[1] & 0xC0) === 0x80) return true; // fe80::/10 link-local
+    if ((ord($bin[0]) & 0xFE) === 0xFC) return true;                          // fc00::/7 ULA
+    if ((ord($bin[0]) & 0xFF) === 0xFE && (ord($bin[1]) & 0xC0) === 0x80) return true; // fe80::/10 link-local
     return false;
 }
 
@@ -164,13 +189,14 @@ function http_probe($url, $allow_loopback) {
     $res = stream_request($url, [
         CURLOPT_NOBODY => true,
         CURLOPT_MAXREDIRS => 5,
-        CURLOPT_TIMEOUT => 10,
+        CURLOPT_TIMEOUT => 25,
         CURLOPT_CONNECTTIMEOUT => 10,
     ], $allow_loopback);
     $fileSize = 0;
     $acceptRanges = 'bytes';
+    $errCode = '';
 
-    if (isset($res['error'])) return [0, '', 0, 'none'];
+    if (isset($res['error'])) return [0, '', 0, 'none', ''];
     $status = $res['status'];
     $headers = $res['body'];
 
@@ -182,28 +208,110 @@ function http_probe($url, $allow_loopback) {
     // Ba'zi serverlar HEAD'ni qo'llamaydi -> Range GET bilan proba
     if ($status >= 400 || $status === 0 || !$fileSize) {
         $res2 = stream_request($url, [
-            CURLOPT_TIMEOUT => 15,
+            CURLOPT_TIMEOUT => 30,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_RANGE => '0-0',
         ], $allow_loopback);
-        if (isset($res2['error'])) return [0, '', 0, 'none'];
+        if (isset($res2['error'])) return [0, '', 0, 'none', ''];
         $status = $res2['status'];
         $body = $res2['body'];
         if (preg_match('/Content-Range:\s*bytes\s+0-0\/(\d+)/i', $body, $m)) $fileSize = (int)$m[1];
         if (preg_match('/Content-Type:\s*([^\r\n]+)/i', $body, $m)) $contentType = trim($m[1]);
         if (!preg_match('/Accept-Ranges:\s*bytes/i', $body)) $acceptRanges = 'none';
+        // JSON xatolik tanasidan sababni aniqlaymiz (Pixeldrain hotlink / max_concurrent va h.k.)
+        if (preg_match('/"value"\s*:\s*"([^"]+)"/i', $body, $m)) $errCode = $m[1];
     }
 
-    return [$status, $contentType, $fileSize, $acceptRanges];
+    return [$status, $contentType, $fileSize, $acceptRanges, $errCode];
 }
 
-// Get file info
-[$httpCode, $contentType, $fileSize, $acceptRanges] = http_probe($url, $allow_loopback);
+// ================= HLS (m3u8) playlist proxy =================
+// RuTube kabi HLS manbalari uchun: playlist ichidagi barcha havolalar o'z serverimizga
+// qayta yoziladi (segmentlar ham shu endpoint orqali oqimlanadi). Shunda brauzer CORS
+// muammosisiz hls.js bilan o'ynata oladi. Playlist so'rovlarini farqlash uchun ?hls=1.
+$hls = ($_GET['hls'] ?? '') === '1';
+if ($hls) {
+    $pl_res = stream_request($url, [
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CONNECTTIMEOUT => 10,
+    ], $allow_loopback, 5);
+    if (isset($pl_res['error']) || (int)($pl_res['status'] ?? 0) >= 400) {
+        http_response_code(502);
+        die('Failed to fetch HLS playlist');
+    }
+    $pl_body = $pl_res['body'];
+    $sep = strpos($pl_body, "\r\n\r\n");
+    if ($sep !== false) $pl_body = substr($pl_body, $sep + 4);
+    $pl_base = $pl_res['url'];
 
-if ($httpCode >= 400 || $httpCode === 0) {
-    http_response_code(502);
-    die('Failed to fetch remote resource');
+    $rewritten = [];
+    foreach (preg_split('/\r?\n/', $pl_body) as $line) {
+        $t = trim($line);
+        if ($t === '' || $t[0] === '#') {
+            $rewritten[] = $line;
+            continue;
+        }
+        $abs = stream_resolve_redirect($pl_base, $t);
+        if ($abs === '') {
+            $rewritten[] = $line;
+            continue;
+        }
+        // Faqat m3u8 (playlist) havolalari qayta yozish orqali o'tadi; segmentlar (.ts)
+        // oddiy range-proxy yo'li bilan oqimlanadi (hls=1 segmentni playlist deb adashmaslik uchun).
+        $is_m3u8 = (bool)preg_match('~\.m3u8(?:[?#].*)?$~i', $abs);
+        $rewritten[] = '/uzdub/stream.php?url=' . rawurlencode($abs) . ($is_m3u8 ? '&hls=1' : '');
+    }
+
+    header('Content-Type: application/vnd.apple.mpegurl');
+    header('Content-Disposition: inline');
+    header('X-Content-Type-Options: nosniff');
+    header('Access-Control-Allow-Origin: *');
+    header('Cache-Control: private, max-age=3600');
+    echo implode("\n", $rewritten);
+    exit;
 }
+
+// Get file info — birinchi ishlaydigan token (admin bot, so'ng video bot)
+// DIQQAT: /dl/<msg_id> havolasi birinchi marta ochilganda video hali diskka
+// yuklab olinayotgan bo'lishi mumkin (bot avval yuklab bo'lgach link beradi,
+// lekin eski/avtomatik havolalarda yuklash hozir boshlanadi). Probe muvaffaq
+// bo'lmaguncha bir necha marta KUTIB qayta urinamiz — aks holda "Video
+// yuklanmadi" xatosi chiqib qolardi (probe 502 qaytaradi).
+$candidates = $tgCandidates ?: [$url];
+$probe = null;
+$lastProbe = [0, '', 0, 'none', ''];
+for ($attempt = 0; $attempt < 8 && !$probe; $attempt++) {
+    foreach ($candidates as $cand) {
+        if (!stream_validate_host($cand, $allow_loopback)) continue;
+        [$h, $ct, $fs, $ar, $ec] = http_probe($cand, $allow_loopback);
+        if ($h >= 200 && $h < 400) {
+            $url = $cand;
+            $probe = [$h, $ct, $fs, $ar];
+            break;
+        }
+        $lastProbe = [$h, $ct, $fs, $ar, $ec];
+        // Pixeldrain va o'xshashlar: ulanishlar band / hotlink — bu vaqtinchalik yoki
+        // doimiy himoya; qayta urinish foyda bermaydi, darhol chiqamiz.
+        if (in_array($ec, ['max_concurrent_downloads', 'hotlink_detected', 'rate_limited', 'insufficient_balance'], true)) {
+            $attempt = 99;
+            break 2;
+        }
+    }
+    if (!$probe && $attempt < 7) sleep(12);
+}
+if (!$probe) {
+    [$httpCode, $contentType, $fileSize, $acceptRanges, $errCode] = $lastProbe;
+    $friendly = [
+        'max_concurrent_downloads' => 'Yuklab olishlar band — boshqa videolar yopilgach qayta urinib ko\'ring.',
+        'hotlink_detected'         => 'Manba hotlink himoyasiga ega — uni o\'ynatib bo\'lmaydi.',
+        'rate_limited'             => 'Manba so\'rovlar chegarasiga yetdi.',
+        'insufficient_balance'     => 'Manba akkaunti balansi yetarli emas.',
+    ];
+    $msg = $friendly[$errCode] ?? 'Uzoq manbadan video olinmadi';
+    http_response_code(503);
+    die($msg);
+}
+[$httpCode, $contentType, $fileSize, $acceptRanges] = $probe;
 
 // Faqat video-ga o'xshash kontent oqimlanadi (ochiq proksi sifatida ishlatilishining oldini oladi)
 $ctype = strtolower(trim(explode(';', $contentType)[0]));
@@ -222,30 +330,51 @@ header('Content-Disposition: inline');
 header('X-Content-Type-Options: nosniff');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Expose-Headers: Content-Range, Accept-Ranges, Content-Length, Content-Disposition');
-header('Cache-Control: no-store');
+header('Cache-Control: private, max-age=3600');
 if ($acceptRanges === 'bytes') header('Accept-Ranges: bytes');
 
 // Handle Range requests (for seeking support)
 $range = $_SERVER['HTTP_RANGE'] ?? '';
 $start = 0;
 $end = ($fileSize > 0) ? ($fileSize - 1) : null;
-if ($range) {
-    if (preg_match('/bytes=(\d+)-(\d*)/', $range, $m)) {
-        $start = (int)$m[1];
-        if ($m[2] !== '') $end = (int)$m[2];
-        if ($fileSize > 0 && $start >= $fileSize) {
-            http_response_code(416);
-            header('Content-Range: bytes */' . $fileSize);
-            exit;
+$isRange = false;
+if ($range !== '' && preg_match('/bytes\s*=\s*([^,\s]+)/i', $range, $rm)) {
+    // Ko'p qismli Range (a-b,c-d) bo'lsa birinchi qismini ishlatamiz.
+    // Suffix range (bytes=-N) ham qo'llab-quvvatlanadi.
+    if (preg_match('/^(\d*)-(\d*)$/', $rm[1], $m)) {
+        $a = ($m[1] !== '') ? (int)$m[1] : null;
+        $b = ($m[2] !== '') ? (int)$m[2] : null;
+        if ($a === null && $b !== null) {
+            // bytes=-N: oxirgi N bayt (Safari moov atomini shu bilan so'raydi)
+            $start = ($fileSize > 0) ? max(0, $fileSize - $b) : 0;
+            $end = ($fileSize > 0) ? ($fileSize - 1) : null;
+            $isRange = true;
+        } elseif ($a !== null) {
+            $start = $a;
+            if ($b === null) {
+                $end = ($fileSize > 0) ? ($fileSize - 1) : null;
+            } else {
+                $end = ($fileSize > 0 && $b >= $fileSize) ? ($fileSize - 1) : $b;
+            }
+            $isRange = true;
         }
-        if ($fileSize > 0 && $end >= $fileSize) $end = $fileSize - 1;
-        http_response_code(206);
-        header('Content-Range: bytes ' . $start . '-' . $end . '/' . ($fileSize > 0 ? $fileSize : '*'));
-        header('Content-Length: ' . ($end - $start + 1));
-    } else {
+    }
+    if ($isRange && $fileSize > 0 && $start >= $fileSize) {
+        http_response_code(416);
+        header('Content-Range: bytes */' . $fileSize);
+        exit;
+    }
+    if ($isRange && $end !== null && $end < $start) {
         http_response_code(416);
         header('Content-Range: bytes */' . ($fileSize > 0 ? $fileSize : '*'));
         exit;
+    }
+    if ($isRange) {
+        http_response_code(206);
+        header('Content-Range: bytes ' . $start . '-' . $end . '/' . ($fileSize > 0 ? $fileSize : '*'));
+        header('Content-Length: ' . ($end - $start + 1));
+    } elseif ($fileSize > 0) {
+        header('Content-Length: ' . $fileSize);
     }
 } elseif ($fileSize > 0) {
     header('Content-Length: ' . $fileSize);
@@ -254,9 +383,9 @@ if ($range) {
 // Stream the file — cURL output directly to the browser (redirect-safe)
 $current = $url;
 $rangeSpec = null;
-if ($range || $start > 0) {
+if ($isRange) {
     // DIQQAT: CURLOPT_RANGE "bytes=" PREFIKSISIZ bo'lishi kerak.
-    $rangeSpec = $start . '-' . ($end !== null ? $end : '');
+    $rangeSpec = $start . '-' . $end;
 } elseif ($acceptRanges === 'none') {
     $rangeSpec = '0-';
 }

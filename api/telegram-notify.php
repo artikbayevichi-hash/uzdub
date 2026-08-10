@@ -13,6 +13,7 @@
    ============================================================ */
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/payment.php';
 
 // CLI orqali chaqirilsa (cron)
@@ -33,11 +34,17 @@ if (php_sapi_name() === 'cli' && isset($argv[1])) {
                 . "⭐ Reyting: " . ($content['rating'] ?: 'Noma\'lum') . "\n\n"
                 . "👉 /uzdub/watch.php?id=" . $content_id;
 
-            $photo_path = $content['poster'] ? (__DIR__ . '/../uploads/posters/' . $content['poster']) : null;
-            if ($photo_path && file_exists($photo_path)) {
-                tg_send_photo($photo_path, $message);
+            // Poster: URL bo'lsa to'g'ridan-to'g'ri yuboriladi, eski fayl bo'lsa lokaldan olinadi
+            $poster = $content['poster'] ? poster_url($content['poster']) : null;
+            if ($poster && preg_match('#^https?://#i', $poster)) {
+                tg_send_photo($poster, $message);
             } else {
-                tg_send_message($message);
+                $photo_path = $poster ? (__DIR__ . '/../' . ltrim($poster, '/')) : null;
+                if ($photo_path && file_exists($photo_path)) {
+                    tg_send_photo($photo_path, $message);
+                } else {
+                    tg_send_message($message);
+                }
             }
             echo "Xabar yuborildi: {$content['title']}\n";
         } else {

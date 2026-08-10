@@ -14,6 +14,7 @@ if (!validate_csrf($input['csrf_token'] ?? '')) {
 }
 
 $content_id = (int)($input['content_id'] ?? 0);
+$episode_id = (int)($input['episode_id'] ?? 0);
 $position = max(0, (int)($input['position'] ?? 0));
 $duration = max(0, (int)($input['duration'] ?? 0));
 $completed = !empty($input['completed']);
@@ -25,18 +26,18 @@ if (!$content_id) { echo json_encode(['ok'=>false]); exit; }
 $is_completed = $completed || ($duration > 600 && $position >= $duration - 600);
 
 try {
-    $pdo->prepare("INSERT INTO watch_progress (user_id, content_id, position_seconds, duration_seconds, is_completed)
-        VALUES (?,?,?,?,?)
+    $pdo->prepare("INSERT INTO watch_progress (user_id, content_id, episode_id, position_seconds, duration_seconds, is_completed)
+        VALUES (?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE position_seconds=VALUES(position_seconds), duration_seconds=VALUES(duration_seconds), is_completed=GREATEST(is_completed, VALUES(is_completed))")
-        ->execute([$_SESSION['user_id'], $content_id, $position, $duration, $is_completed ? 1 : 0]);
+        ->execute([$_SESSION['user_id'], $content_id, $episode_id, $position, $duration, $is_completed ? 1 : 0]);
 
     // Tarixda barcha kirilgan kontentlar ko'rinishi uchun har safar yoziladi
-    $pdo->prepare("INSERT INTO watch_history (user_id, content_id, progress_seconds) VALUES (?,?,?)
+    $pdo->prepare("INSERT INTO watch_history (user_id, content_id, episode_id, progress_seconds) VALUES (?,?,?,?)
         ON DUPLICATE KEY UPDATE watched_at = CURRENT_TIMESTAMP, progress_seconds = VALUES(progress_seconds)")
-        ->execute([$_SESSION['user_id'], $content_id, $position]);
+        ->execute([$_SESSION['user_id'], $content_id, $episode_id, $position]);
 
     if ($is_completed) {
-        mark_content_watched($pdo, $_SESSION['user_id'], $content_id);
+        mark_content_watched($pdo, $_SESSION['user_id'], $content_id, $episode_id);
     }
     echo json_encode(['ok'=>true]);
 } catch (PDOException $e) {

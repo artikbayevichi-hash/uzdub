@@ -3,7 +3,6 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $slug = $_GET['slug'] ?? '';
-if ($slug === 'serial') { header('Location: /uzdub/index.php'); exit; }
 $stmt = $pdo->prepare("SELECT * FROM categories WHERE slug = ?");
 $stmt->execute([$slug]);
 $category = $stmt->fetch();
@@ -30,7 +29,7 @@ include __DIR__ . '/includes/header.php';
 <?php if (!empty($hero_items)): ?>
 <section class="hero-carousel">
     <?php foreach ($hero_items as $i => $hero): ?>
-    <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? 'uploads/posters/' . e($hero['poster']) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=' . urlencode(e($hero['cat_name'])); ?>');">
+    <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? e(poster_url($hero['poster'])) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=' . urlencode(e($hero['cat_name'])); ?>');">
         <div class="hero-content">
             <div class="hero-tags">
                 <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>
@@ -114,7 +113,7 @@ include __DIR__ . '/includes/header.php';
 <div class="grid-wrap">
     <?php foreach ($items as $item): ?>
     <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+        <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
         <div class="card-info">
             <h3><?php echo e(t_title($item)); ?></h3>
             <div class="meta">

@@ -24,48 +24,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $studio = trim($_POST['studio'] ?? '');
     $director = trim($_POST['director'] ?? '');
     $duration = trim($_POST['duration'] ?? '');
+    $intro_start = (int)($_POST['intro_start'] ?? 0);
+    $intro_end = (int)($_POST['intro_end'] ?? 0);
     $status = $_POST['status'] ?? 'completed';
     $selected_genres = $_POST['genres'] ?? [];
+    $is_anime = isset($_POST['is_anime_series']) ? 1 : 0;
 
     $allowed_statuses = ['completed', 'ongoing', 'upcoming'];
     if (!in_array($status, $allowed_statuses, true)) $status = 'completed';
 
-    if ($title === '' || $category_id === 0) {
+    if ($title === '' || ($category_id === 0 && !$is_anime)) {
         $error = 'Nomi va kategoriyani to\'ldiring.';
     } else {
-        // Poster: fayldan yoki internetdan (URL / Gemini nusxasi)
+        // Poster: faqat internetdagi to'liq URL (https://...) — saytga yuklanmaydi
         $poster = null;
         $poster_url = trim($_POST['poster_url'] ?? '');
-        $poster_file = upload_file('poster', __DIR__ . '/../uploads/posters/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
-
         if ($poster_url !== '') {
-            $downloaded = download_poster($poster_url, __DIR__ . '/../uploads/posters/');
-            if ($downloaded) {
-                $poster = $downloaded;
-                if ($poster_file) @unlink(__DIR__ . '/../uploads/posters/' . $poster_file);
+            if (preg_match('#^https?://#i', $poster_url)) {
+                $poster = $poster_url;
             } else {
-                $error = 'Poster URL dan rasm yuklab bo\'lmadi (jpg/png/webp bo\'lishi kerak).';
+                $error = 'Poster to\'liq URL manzili bo\'lishi kerak (https://... bilan boshlansin).';
             }
-        } elseif ($poster_file === false) {
-            $error = 'Poster rasm formati noto\'g\'ri (jpg, png, webp bo\'lishi kerak).';
-        } elseif ($poster_file) {
-            $poster = $poster_file;
         }
 
+        $is_series = 0;
         $video_type = null;
         $video_url = null;
 
-        if (!$error) {
-            $video_type = $_POST['video_type'] ?? null;
-            $allowed_video_types = ['youtube', 'cloud', 'telegram'];
-            if (!in_array($video_type, $allowed_video_types, true)) $video_type = 'youtube';
-            if ($video_type === 'telegram') {
-                $video_url = telegram_normalize_url($_POST['telegram_url'] ?? '');
-                if (!$video_url) { $error = 'Telegram havolasini kiriting.'; }
-            } else {
-                $video_url = trim($_POST['video_url'] ?? '');
-                if ($video_url === '') { $error = 'Video havolasini kiriting.'; }
-            }
+        if ($is_anime) {
+            // Ko'p qismli anime — qismlar alohida "Qismlar boshqaruvi"dan qo'shiladi
+            $cat_stmt = $pdo->prepare("SELECT id FROM categories WHERE slug = 'anime'");
+            $cat_stmt->execute();
+            $category_id = (int)$cat_stmt->fetchColumn();
+            if (!$category_id) $error = 'Anime kategoriyasi topilmadi.';
+            $is_series = 1;
+            $video_type = 'cloud';
+            $video_url = null;
+            $status = 'ongoing';
+        } elseif (!$error) {
+            $video_type = 'cloud';
+            $video_url = trim($_POST['video_url'] ?? '');
+            if ($video_url === '') { $error = 'Video havolasini kiriting.'; }
         }
 
         if (!$error) {
@@ -74,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cat_slug = $cat_stmt->fetch()['slug'] ?? 'kino';
             $content_code = generate_content_code($pdo, $cat_slug);
 
-            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, title_ru, title_en, description, description_ru, description_en, poster, category_id, release_year, rating, is_premium, video_type, video_url, studio, director, duration, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->execute([$content_code, $title, $title_ru ?: null, $title_en ?: null, $description, $description_ru ?: null, $description_en ?: null, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_premium, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $status]);
+            $stmt = $pdo->prepare("INSERT INTO content (content_code, title, title_ru, title_en, description, description_ru, description_en, poster, category_id, release_year, rating, is_premium, is_series, video_type, video_url, studio, director, duration, intro_start, intro_end, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([$content_code, $title, $title_ru ?: null, $title_en ?: null, $description, $description_ru ?: null, $description_en ?: null, $poster ?: null, $category_id, $release_year ?: null, $rating, $is_premium, $is_series, $video_type, $video_url, $studio ?: null, $director ?: null, $duration ?: null, $intro_start, $intro_end, $status]);
             $content_id = (int)$pdo->lastInsertId();
 
             // Janrlarni saqlash
@@ -86,7 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $message = "Kontent muvaffaqiyatli qo'shildi! ID: <b>$content_code</b>";
+            if ($is_anime) {
+                $message = "Kontent muvaffaqiyatli qo'shildi! ID: <b>$content_code</b> — endi <a href='episodes.php' style='color:#2196f3;'>Qismlar boshqaruvi</a> dan qismlarni cloud havola bilan qo'shing.";
+            } else {
+                $message = "Kontent muvaffaqiyatli qo'shildi! ID: <b>$content_code</b>";
+            }
         }
     }
     }
@@ -101,6 +104,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="card-box">
 <form method="post" enctype="multipart/form-data">
     <?php echo csrf_input(); ?>
+
+    <div class="card-box anime-mode-card" style="margin-bottom:18px;background:rgba(224,64,251,0.06);border:1px solid rgba(224,64,251,0.25);">
+        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;margin:0;">
+            <input type="checkbox" name="is_anime_series" id="is_anime_series" style="width:18px;height:18px;margin-top:2px;">
+            <span>
+                <strong>🎌 Bu ko'p qismli anime bo'lishi mumkin</strong>
+                <small style="display:block;opacity:.75;font-size:12px;font-weight:normal;margin-top:2px;">
+                    Belgilansa: faqat asosiy ma'lumot saqlanadi (poster, nom, janrlar, studiya, rejissyor, davomiylik, yil, reyting).
+                    Qismlar alohida «Qismlar boshqaruvi» bo'limida 1-qismdan boshlab qo'shiladi.
+                </small>
+            </span>
+        </label>
+        <div id="animeModeNote" class="alert" style="display:none;margin:12px 0 0;">
+            🎬 Kontent saqlangach, <a href="episodes.php"><b>Qismlar boshqaruvi</b></a> bo'limidan qismlarni cloud havola bilan qo'shing.
+        </div>
+    </div>
+
     <label>Nomi *</label>
     <input type="text" name="title" required>
 
@@ -110,17 +130,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Nomi (Inglizcha)</label>
     <input type="text" name="title_en" placeholder="English title">
 
-    <label>Tavsif</label>
-    <textarea name="description"></textarea>
+    <label class="regular-only">Tavsif</label>
+    <textarea name="description" class="regular-only"></textarea>
 
-    <label>Tavsif (Ruscha)</label>
-    <textarea name="description_ru" placeholder="Описание на русском"></textarea>
+    <label class="regular-only">Tavsif (Ruscha)</label>
+    <textarea name="description_ru" class="regular-only" placeholder="Описание на русском"></textarea>
 
-    <label>Tavsif (Inglizcha)</label>
-    <textarea name="description_en" placeholder="Description in English"></textarea>
+    <label class="regular-only">Tavsif (Inglizcha)</label>
+    <textarea name="description_en" class="regular-only" placeholder="Description in English"></textarea>
 
-    <label>Kategoriya *</label>
-    <select name="category_id" required>
+    <label class="regular-only">Kategoriya *</label>
+    <select name="category_id" class="regular-only" required>
         <option value="">-- tanlang --</option>
         <?php foreach ($categories as $cat): ?>
         <option value="<?php echo $cat['id']; ?>"><?php echo e($cat['name']); ?></option>
@@ -145,8 +165,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Davomiylik</label>
     <input type="text" name="duration" placeholder="Masalan: 24 daqiqa, 1 soat 45 daqiqa">
 
-    <label>Holati</label>
-    <select name="status">
+    <label class="regular-only">Intro oralig'i (soniyada)</label>
+    <div class="regular-only ep-fields">
+        <div><label>Boshlanishi</label><input type="number" name="intro_start" min="0" max="3600" value="0" placeholder="15"></div>
+        <div><label>Tugashi</label><input type="number" name="intro_end" min="0" max="3600" value="0" placeholder="40"></div>
+    </div>
+    <p class="regular-only" style="margin-top:4px;font-size:12px;opacity:.7;">Intro yo'q bo'lsa ikkalasini ham 0 qoldiring. Misol: 15-40 → pleyer 15-40 soniya orasida "Intro'ni o'tkazish" tugmasini ko'rsatadi.</p>
+
+    <label class="regular-only">Holati</label>
+    <select name="status" class="regular-only">
         <option value="completed">Tugallangan</option>
         <option value="ongoing">Davom etmoqda</option>
         <option value="upcoming">Yangi</option>
@@ -160,37 +187,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <label>Poster rasm</label>
     <div class="poster-box">
-        <div class="poster-paste" tabindex="0" id="poster_drop">
-            Rasmni nusxalang (masalan Gemini 4K) va shu yerga <b>Ctrl+V</b> bosing, yoki:
-            <label class="poster-choose">
-                <input type="file" name="poster" accept="image/*" id="poster_file"> Fayl tanlash
-            </label>
-        </div>
-        <input type="text" name="poster_url" id="poster_url" placeholder="Yoki internetdagi poster URL manzili: https://...">
+        <input type="text" name="poster_url" id="poster_url" placeholder="Internetdagi poster URL manzili: https://... (masalan Gemini orqali)">
         <img id="poster_preview" class="poster-preview" style="display:none;" alt="poster preview">
-        <small style="opacity:.55;">Paste qilingan rasm yoki tanlangan fayl avtomatik yuklanadi.</small>
+        <small style="opacity:.55;">Poster to'liq URL bo'lishi kerak (https://... bilan boshlansin). Saytga yuklanmaydi.</small>
     </div>
 
     <label style="margin-top:20px;">
         <input type="checkbox" name="is_premium" id="is_premium"> Premium tavsiya
     </label>
 
-    <div id="single-video-block">
-        <label>Video manbasi</label>
-        <div class="radio-group">
-            <label><input type="radio" name="video_type" value="youtube" checked> YouTube</label>
-            <label><input type="radio" name="video_type" value="cloud"> Cloud havola</label>
-            <label><input type="radio" name="video_type" value="telegram"> Telegram video</label>
-        </div>
-        <div id="video_url_block">
-            <label>Video havolasi (YouTube yoki Cloud link)</label>
-            <input type="text" name="video_url" placeholder="https://youtube.com/watch?v=... yoki cloud havola">
-        </div>
-        <div id="video_telegram_block" style="display:none;">
-            <label>Telegram video havolasi</label>
-            <input type="text" name="telegram_url" placeholder="Telegram bot qaytargan video URL manzili (https://...)">
-            <small style="opacity:.55;">Botingizga video yuborganingizda qaytgan havolani shu yerga joylang.</small>
-        </div>
+    <div id="single-video-block" class="regular-only">
+        <input type="hidden" name="video_type" value="cloud">
+        <label>Video havolasi *</label>
+        <input type="text" name="video_url" placeholder="https://... cloud havola (VK, mp4, RuTube va h.k.)" style="width:100%;box-sizing:border-box;">
+        <small style="opacity:.55;">Cloud havola: to'g'ridan-to'g'ri mp4, VK video yoki RuTube havolasi.</small>
     </div>
 
     <button type="submit" class="btn">Saqlash</button>
@@ -198,40 +208,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-function toggleVideoBlocks() {
-    var val = document.querySelector('input[name=video_type]:checked').value;
-    document.getElementById('video_url_block').style.display = val === 'youtube' || val === 'cloud' ? 'block' : 'none';
-    document.getElementById('video_telegram_block').style.display = val === 'telegram' ? 'block' : 'none';
+// ===== Ko'p qismli anime rejimi =====
+var animeToggle = document.getElementById('is_anime_series');
+var animeModeNote = document.getElementById('animeModeNote');
+var regularOnly = document.querySelectorAll('.regular-only');
+
+function applyAnimeMode() {
+    var on = animeToggle.checked;
+    regularOnly.forEach(function(el) { el.style.display = on ? 'none' : ''; });
+    if (animeModeNote) animeModeNote.style.display = on ? 'block' : 'none';
+    var cat = document.querySelector('select[name="category_id"]');
+    if (cat) cat.required = !on;
 }
-document.querySelectorAll('input[name=video_type]').forEach(function(radio) {
-    radio.addEventListener('change', toggleVideoBlocks);
-});
+if (animeToggle) animeToggle.addEventListener('change', applyAnimeMode);
 
-var posterDrop = document.getElementById('poster_drop');
-var posterFile = document.getElementById('poster_file');
 var posterPreview = document.getElementById('poster_preview');
+var posterUrl = document.getElementById('poster_url');
 
-function showPreview(file) {
-    posterPreview.src = URL.createObjectURL(file);
+function showPosterUrlPreview(url) {
+    posterPreview.src = url;
     posterPreview.style.display = 'block';
 }
-posterFile.addEventListener('change', function() {
-    if (posterFile.files && posterFile.files[0]) showPreview(posterFile.files[0]);
-});
-document.addEventListener('paste', function(e) {
-    var items = (e.clipboardData || window.clipboardData).items;
-    for (var i = 0; i < items.length; i++) {
-        if (items[i].kind === 'file' && items[i].type.indexOf('image/') === 0) {
-            var file = items[i].getAsFile();
-            var dt = new DataTransfer();
-            dt.items.add(file);
-            posterFile.files = dt.files;
-            showPreview(file);
-            e.preventDefault();
-            return;
-        }
-    }
-});
+if (posterUrl) {
+    posterUrl.addEventListener('change', function() { if (posterUrl.value.trim() !== '') showPosterUrlPreview(posterUrl.value.trim()); });
+    posterUrl.addEventListener('input', function() { if (posterUrl.value.trim() !== '') showPosterUrlPreview(posterUrl.value.trim()); });
+}
 </script>
 
 <?php include __DIR__ . '/includes/admin_footer.php'; ?>

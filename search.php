@@ -18,6 +18,7 @@ if (isset($_GET['ajax_autocomplete']) && $q !== '') {
     $results = $stmt->fetchAll();
     foreach ($results as &$r) {
         $r['display_title'] = search_display_title($r, $q);
+        $r['poster'] = $r['poster'] ? poster_url($r['poster']) : null;
     }
     unset($r);
     echo json_encode($results, JSON_UNESCAPED_UNICODE);
@@ -95,7 +96,7 @@ include __DIR__ . '/includes/header.php';
 <div class="grid-wrap">
     <?php foreach ($items as $item): $dtitle = search_display_title($item, $q); ?>
     <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($dtitle); ?>" alt="<?php echo e($dtitle); ?>">
+        <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($dtitle); ?>" alt="<?php echo e($dtitle); ?>">
         <div class="card-info">
             <h3><?php echo e($dtitle); ?></h3>
             <div class="meta">

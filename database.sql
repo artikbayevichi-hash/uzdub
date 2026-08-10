@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS content (
     release_year INT DEFAULT NULL,
     rating DECIMAL(3,1) DEFAULT 0,
     is_premium TINYINT(1) DEFAULT 0,
-    video_type ENUM('youtube','cloud','file','telegram') DEFAULT NULL,
+    video_type ENUM('cloud','file','telegram','embed') DEFAULT 'cloud',
     video_url VARCHAR(500) DEFAULT NULL,
     trailer_url VARCHAR(500) DEFAULT NULL,
     studio VARCHAR(255) DEFAULT NULL,

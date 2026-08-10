@@ -402,7 +402,7 @@ function ai_build_recommendations(array $rows): array {
             'rating'     => $r['rating'] !== null ? (float)$r['rating'] : null,
             'category'   => $r['cat_name'] ?? null,
             'is_premium' => !empty($r['is_premium']),
-            'poster'     => $r['poster'] ? '/uzdub/uploads/posters/' . $r['poster'] : null,
+            'poster'     => $r['poster'] ? poster_url($r['poster']) : null,
             'url'        => '/uzdub/watch.php?id=' . (int)$r['id'],
             'genres'     => $r['genre_names'] ?? null,
             'studio'     => $r['studio'] ?? null,
@@ -454,8 +454,47 @@ function generate_user_id($pdo) {
 }
 
 // ===== Kontent uchun avtomatik ID (masalan: KN0001, AN0002, MF0003, SR0004) =====
-function generate_content_code($pdo, $category_slug) {
-    $prefix_map = ['kino' => 'KN', 'anime' => 'AN', 'multfilm' => 'MF'];
+// ===== Slug generator (anime nomidan URL qism yasash) =====
+// O'zbek/Rus lotin/kirill harflarini ASCII ga o'girib, toza slug hosil qiladi.
+function generate_slug($title) {
+    $s = trim((string)$title);
+    if ($s === '') return null;
+    $map = [
+        'а'=>'a','б'=>'b','в'=>'v','г'=>'g','д'=>'d','е'=>'e','ё'=>'yo','ж'=>'j','з'=>'z',
+        'и'=>'i','й'=>'y','к'=>'k','л'=>'l','м'=>'m','н'=>'n','о'=>'o','п'=>'p','р'=>'r',
+        'с'=>'s','т'=>'t','у'=>'u','ф'=>'f','х'=>'h','ц'=>'ts','ч'=>'ch','ш'=>'sh','щ'=>'sch',
+        'ъ'=>'','ы'=>'y','ь'=>'','э'=>'e','ю'=>'yu','я'=>'ya','ў'=>'o','қ'=>'q','ғ'=>'g',
+        'ҳ'=>'h','ґ'=>'g','є'=>'e','і'=>'i','ї'=>'yi','ә'=>'a','ө'=>'o','ү'=>'u','ң'=>'n',
+        'А'=>'a','Б'=>'b','В'=>'v','Г'=>'g','Д'=>'d','Е'=>'e','Ё'=>'yo','Ж'=>'j','З'=>'z',
+        'И'=>'i','Й'=>'y','К'=>'k','Л'=>'l','М'=>'m','Н'=>'n','О'=>'o','П'=>'p','Р'=>'r',
+        'С'=>'s','Т'=>'t','У'=>'u','Ф'=>'f','Х'=>'h','Ц'=>'ts','Ч'=>'ch','Ш'=>'sh','Щ'=>'sch',
+        'Ъ'=>'','Ы'=>'y','Ь'=>'','Э'=>'e','Ю'=>'yu','Я'=>'ya','Ў'=>'o','Қ'=>'q','Ғ'=>'g',
+        'Ҳ'=>'h','Ґ'=>'g','Є'=>'e','І'=>'i','Ї'=>'yi','Ә'=>'a','Ө'=>'o','Ү'=>'u','Ң'=>'n',
+    ];
+    $s = strtr($s, $map);
+    $s = mb_strtolower($s, 'UTF-8');
+    $s = preg_replace('/[^a-z0-9]+/u', '-', $s);
+    $s = trim($s, '-');
+    return $s !== '' ? substr($s, 0, 120) : null;
+}
+
+// Slugnning DB da yagonaligini ta'minlaydi: takrorlansa oxiriga -2, -3 ... qo'shadi.
+function unique_slug($pdo, $title, $ignore_id = 0) {
+    $base = generate_slug($title);
+    if (!$base) return null;
+    $slug = $base;
+    $i = 2;
+    while (true) {
+        $stmt = $pdo->prepare("SELECT id FROM content WHERE slug = ? AND id != ?");
+        $stmt->execute([$slug, $ignore_id]);
+        if (!$stmt->fetch()) break;
+        $slug = $base . '-' . $i;
+        $i++;
+    }
+    return $slug;
+}
+
+function generate_content_code($pdo, $category_slug) {    $prefix_map = ['kino' => 'KN', 'anime' => 'AN', 'multfilm' => 'MF'];
     $prefix = $prefix_map[$category_slug] ?? 'CN';
     do {
         $num = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
@@ -466,10 +505,436 @@ function generate_content_code($pdo, $category_slug) {
     return $code;
 }
 
-// ===== YouTube ID =====
-function get_youtube_id($url) {
-    $pattern = '/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/';
-    if (preg_match($pattern, $url, $matches)) return $matches[1];
+// ===== VK Video — toza (o'z HTML5) player =====
+// VK iframe'da "Смотрите также" (tavsiyalar) va sarlavhani URL parametri bilan yashirib
+// bo'lmaydi — bular VK'ning o'z interfeysi (no_controls kabi parametr VK'da yo'q).
+// Shu sababli VK video'ni to'g'ridan-to'g'ri mp4 fayl sifatida olib, O'Z playerimizda
+// ko'rsatamiz: VK interfeysi umuman chiqmaydi, bandwidth ham ishlatilmaydi (tomoshabin
+// VK CDN'dan to'g'ridan-to'g'ri yuklaydi — VK'ning o'z embed playeri ham shunday ishlaydi).
+
+function vk_parse_url($url) {
+    $q = [];
+    $parsed = parse_url($url);
+    if ($parsed && isset($parsed['query'])) parse_str($parsed['query'], $q);
+
+    if (isset($q['oid']) && isset($q['id'])) {
+        return [
+            'oid' => $q['oid'],
+            'id' => $q['id'],
+            'hash' => $q['hash'] ?? '',
+            't' => $q['t'] ?? '',
+            'access' => $q['access_key'] ?? '',
+        ];
+    }
+    if (preg_match('#(?:vk(?:video)?\.ru|vk\.com)/(?:clip)?video(-?\d+)_(\d+)#i', $url, $m)) {
+        return [
+            'oid' => $m[1],
+            'id' => $m[2],
+            'hash' => $q['hash'] ?? '',
+            't' => $q['t'] ?? '',
+            'access' => $q['access_key'] ?? '',
+        ];
+    }
+    return null;
+}
+
+// Tozalangan VK iframe URL'i (ixtiyoriy: hd, t, loop, js_api, autoplay)
+function vk_embed_src($url, $opts = []) {
+    $info = vk_parse_url($url);
+    if (!$info) return $url;
+
+    $params = ['oid' => $info['oid'], 'id' => $info['id']];
+    if ($info['hash'] !== '') $params['hash'] = $info['hash'];
+    $params['hd'] = isset($opts['hd']) ? (int)$opts['hd'] : 3; // sukut: 720p
+    if (!empty($opts['autoplay'])) $params['autoplay'] = 1; // sukut: avto ijro O'CHIK
+    if (!empty($opts['loop'])) $params['loop'] = 1;
+    if (!empty($opts['js_api'])) $params['js_api'] = 1;
+    if (!empty($opts['t'])) $params['t'] = $opts['t'];
+    elseif ($info['t'] !== '') $params['t'] = $info['t'];
+    if ($info['access'] !== '') $params['access_key'] = $info['access'];
+
+    return 'https://vkvideo.ru/video_ext.php?' . http_build_query($params);
+}
+
+function vk_cache_dir() {
+    $dir = __DIR__ . '/../uploads/.vk_cache';
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    return (is_dir($dir) && is_writable($dir)) ? $dir : null;
+}
+
+// VK video'ning to'g'ridan-to'g'ri mp4 havolalarini server tomondan ajratadi.
+// video_ext.php sahifasi (public video uchun token kerak emas) ichidagi files blokidan
+// mp4_XXX URL'larini oladi va 24 soatga faylga keshlaydi. Qaytadi:
+// ['best' => url, 'sources' => ['360p'=>url, ...], 'ts' => time()] yoki null.
+function vk_resolve_video($url, $ttl_hours = 24) {
+    $info = vk_parse_url($url);
+    if (!$info) return null;
+
+    $key = $info['oid'] . '_' . $info['id'];
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/' . $key . '.json' : null;
+
+    if ($file && is_file($file)) {
+        $cached = @json_decode(@file_get_contents($file), true);
+        if (is_array($cached) && !empty($cached['best']) && isset($cached['ts'])
+            && (time() - (int)$cached['ts']) < $ttl_hours * 3600) {
+            return $cached;
+        }
+    }
+
+    $embed = 'https://vkvideo.ru/video_ext.php?oid=' . rawurlencode($info['oid']) . '&id=' . rawurlencode($info['id']);
+    if ($info['hash'] !== '') $embed .= '&hash=' . rawurlencode($info['hash']);
+
+    // VK ba'zan login.vk.ru autologin redirect'i beradi — cookies jar kerak, aks holda
+    // redirect zanjiri "invalid user"da uzilib qoladi.
+    $jar = $dir ? $dir . '/cookies.txt' : null;
+    if ($jar && is_file($jar)) @unlink($jar);
+
+    $ch = curl_init($embed);
+    $opts = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+    ];
+    if ($jar) {
+        $opts[CURLOPT_COOKIEJAR] = $jar;
+        $opts[CURLOPT_COOKIEFILE] = $jar;
+    }
+    curl_setopt_array($ch, $opts);
+    $html = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($html === false || $status !== 200) return null;
+
+    if (!preg_match('#"files":\s*(\{[^}]*\})#', $html, $m)) return null;
+    $files = json_decode(str_replace('\\/', '/', $m[1]), true);
+    if (!is_array($files)) return null;
+
+    $sources = [];
+    foreach ($files as $k => $v) {
+        if (preg_match('/^mp4_(\d+)$/', (string)$k, $km) && is_string($v) && strpos($v, 'http') === 0) {
+            $sources[((int)$km[1]) . 'p'] = $v; // mp4_720 => "720p"
+        }
+    }
+    if (!$sources) return null;
+    uksort($sources, function ($a, $b) { return (int)$a <=> (int)$b; });
+
+    $result = ['best' => end($sources), 'sources' => $sources, 'ts' => time(), 'key' => $key];
+    if ($file) @file_put_contents($file, json_encode($result));
+    return $result;
+}
+
+// VK video'ni toza HTML5 playerda ko'rsatadi; mp4 olinmasa VK iframe'ga qaytadi.
+function render_vk_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $res = vk_resolve_video($video_url);
+    if ($res) {
+        // Agar to'g'ridan-to'g'ri VK CDN biror tarmoqda ochilmasa — o'z serverimiz
+        // orqali stream.php proxy'ga tushish (bandwidth ishlatadi, lekin ishonchli).
+        $fallback = '/uzdub/stream.php?url=' . urlencode($res['best']);
+        return build_video_player($player_id, $res['best'], $poster, $subs_html, $res['sources'], $intro_start, $intro_end, false, false, $fallback);
+    }
+    return '<div class="player-wrap"><iframe src="' . e(vk_embed_src($video_url)) . '" allowfullscreen></iframe></div>';
+}
+
+// ===== RuTube (HLS) — toza HTML5 player =====
+// RuTube API endi to'g'ridan-to'g'ri mp4 bermaydi — faqat HLS (m3u8). HLS'ni brauzer
+// bevosita o'ynata olmaydi (CORS yo'q), shuning uchun playlist o'z serverimiz orqali
+// stream.php (hls=1) da qayta yozilib, o'z playerimizda hls.js bilan ko'rsatiladi.
+// Bu server bandwidth ishlatadi (VK mp4 dan farqli) — RuTube "zaxira" manba sifatida.
+
+// rutube.ru/video/<id>/ yoki rutube.ru/embed/<id> dan video id'sini ajratadi.
+// RuTube'da ikki turdagi ID bor: video_id (32-simvol hex, masalan embed/play uchun)
+// va track_id (raqamli, ommaviy video sahifasida ishlatiladi). Ikkalasini ham taniymiz.
+function rutube_parse_url($url) {
+    if (!preg_match('#rutube\.ru/(?:(?:live/)?video(?:/private)?|(?:play/)?embed)/([a-z0-9]{32}|[0-9]+)#i', $url, $m)) return null;
+    return $m[1];
+}
+
+// RuTube variant (m3u8) havolasini topadi va keshlaydi. Variant URL CDN'da ~7 kun amal
+// qiladi (max-age=604800), lekin ishonchliligi uchun 24 soatda bir qayta so'raladi —
+// keshlangan URL o'lsa ham keyingi ochilishda avtomatik yangi havola olinadi.
+// Qaytadi: ['url' => ..., 'ts' => ..., 'key' => id].
+function rutube_resolve($url, $ttl_hours = 24) {
+    $id = rutube_parse_url($url);
+    if (!$id) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/rutube_' . $id . '.json' : null;
+    if ($file && is_file($file)) {
+        $c = @json_decode(@file_get_contents($file), true);
+        if (is_array($c) && !empty($c['url']) && isset($c['ts'])
+            && (time() - (int)$c['ts']) < $ttl_hours * 3600) {
+            return $c;
+        }
+    }
+
+    // RuTube CDN (bl.rutube.ru) master playlist uchun spid cookie'ni talab qiladi —
+    // options va master bir xil jar bilan so'raladi. Variant/segmentlar cookie kerak emas.
+    $jar = $dir ? $dir . '/rutube_cookies.txt' : null;
+    if ($jar && is_file($jar)) @unlink($jar);
+
+    $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    $hdrs = ['Referer: https://rutube.ru/', 'Origin: https://rutube.ru', 'Accept: application/json, text/plain, */*'];
+    $base = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_USERAGENT => $ua,
+        CURLOPT_HTTPHEADER => $hdrs,
+        CURLOPT_ENCODING => '',
+    ];
+    if ($jar) {
+        $base[CURLOPT_COOKIEJAR] = $jar;
+        $base[CURLOPT_COOKIEFILE] = $jar;
+    }
+
+    // 1) play/options — master playlist havolasi
+    $ch = curl_init("https://rutube.ru/api/play/options/$id/?format=json");
+    curl_setopt_array($ch, $base);
+    $body = curl_exec($ch);
+    $st = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($body === false || $st !== 200) return null;
+    $opts = json_decode($body, true);
+    if (!is_array($opts)) return null;
+    $vb = $opts['video_balancer'] ?? [];
+    $master = $vb['m3u8'] ?? ($vb['default'] ?? null);
+    if (!is_string($master) || strpos($master, 'http') !== 0) return null;
+
+    // 2) master playlist (shu jar bilan) — variant ro'yxatini olish
+    $ch = curl_init($master);
+    curl_setopt_array($ch, $base);
+    $pl = curl_exec($ch);
+    $plst = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($pl === false || $plst !== 200) return null;
+
+    // 3) eng yuqori sifatli variantni tanlash (max BANDWIDTH)
+    $best = null;
+    $bestBw = -1;
+    if (preg_match_all('/#EXT-X-STREAM-INF:[^\n]*BANDWIDTH\s*=\s*(\d+)[^\n]*\n([^\n]+)/i', $pl, $m, PREG_SET_ORDER)) {
+        foreach ($m as $mm) {
+            $bw = (int)$mm[1];
+            $u = trim($mm[2]);
+            if ($bw > $bestBw) { $bestBw = $bw; $best = $u; }
+        }
+    } elseif (preg_match('#(https?://[^\s"\']+)#', $pl, $m2)) {
+        $best = trim($m2[1]);
+    }
+    if (!$best) return null;
+
+    // Nisbiy variant havolasi bo'lsa mutlaq qilamiz
+    if (strpos($best, 'http') !== 0) {
+        $parts = parse_url($master);
+        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) return null;
+        $baseu = $parts['scheme'] . '://' . $parts['host'];
+        if (isset($parts['port'])) $baseu .= ':' . $parts['port'];
+        $path = $parts['path'] ?? '/';
+        $dirp = substr($path, 0, strrpos($path, '/') + 1);
+        $best = ($best[0] === '/') ? $baseu . $best : $baseu . $dirp . $best;
+    }
+
+    $result = ['url' => $best, 'ts' => time(), 'key' => $id];
+    if ($file) @file_put_contents($file, json_encode($result));
+    return $result;
+}
+
+// RuTube video'ni o'z playerimizda (hls.js) ko'rsatadi. Playlist hali topilmasa
+// (video moderatsiyada/yo'q) ham iframe emas — o'z playerimiz chiqadi va m3u8 paydo
+// bo'lishi bilanoq avtomatik yuklanadi (data-hls-pending rejimi).
+function render_rutube_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $refresh = '/uzdub/api/rutube-refresh.php?url=' . rawurlencode($video_url);
+    $res = rutube_resolve($video_url);
+    if ($res && !empty($res['url'])) {
+        $proxy = '/uzdub/stream.php?url=' . rawurlencode($res['url']) . '&hls=1';
+        // data-hls-refresh: keshlangan URL muddati o'tsa player avtomatik yangi havola oladi
+        return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
+    }
+    return build_video_player($player_id, '', $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
+}
+
+// ===== Rumble (iframe embed) =====
+// Rumble'da watch sahifa ID'si va embed ID'si boshqa-boshqa bo'ladi
+// (masalan /v7dvvd6-...html sahifa, lekin embed /v7bpc7y/). Shuning uchun
+// to'g'ri embed havolasi Rumble oEmbed API orqali yechiladi va keshlanadi.
+// Qabul qiladigan formatlar:
+//   https://rumble.com/v7dvvd6-u-qiz-yolgiz1-qism.html  (watch sahifa)
+//   https://rumble.com/embed/v7bpc7y/                   (embed)
+function rumble_parse_url($url) {
+    if (preg_match('#rumble\.com/(?:embed/)?(v[a-z0-9]+)(?:/|(?:-[^/]*)?\.html)#i', $url, $m)) return $m[1];
+    return null;
+}
+
+// Rumble video'ning haqiqiy embed src manzilini oEmbed API orqali topadi va
+// 24 soatga keshlaydi. Qaytadi: embed URL yoki null.
+function rumble_embed_src($url, $ttl_hours = 24) {
+    $key = rumble_parse_url($url);
+    if (!$key) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/rumble_' . $key . '.json' : null;
+    if ($file && is_file($file)) {
+        $c = @json_decode(@file_get_contents($file), true);
+        if (is_array($c) && !empty($c['embed']) && isset($c['ts'])
+            && (time() - (int)$c['ts']) < $ttl_hours * 3600) {
+            return $c['embed'];
+        }
+    }
+
+    $ch = curl_init('https://wn0.rumble.com/api/Media/oembed.json?url=' . rawurlencode($url));
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ]);
+    $body = curl_exec($ch);
+    $st = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $embed = null;
+    if ($body !== false && $st === 200) {
+        $d = json_decode($body, true);
+        if (is_array($d) && !empty($d['html']) && preg_match('#src\s*=\s*["\']([^"\']+)["\']#i', $d['html'], $m)) {
+            $embed = trim($m[1]);
+        } elseif (is_array($d) && !empty($d['html'])) {
+            $embed = $d['html'];
+        }
+    }
+
+    if ($embed) {
+        if ($file) {
+            $saved = ['embed' => $embed, 'ts' => time()];
+            // rumble_resolve_video tomonidan yozilgan hls maydonini saqlab qolamiz
+            if (is_file($file)) {
+                $old = @json_decode(@file_get_contents($file), true);
+                if (is_array($old) && !empty($old['hls'])) $saved['hls'] = $old['hls'];
+            }
+            @file_put_contents($file, json_encode($saved));
+        }
+        return $embed;
+    }
+
+    // oEmbed ishlamasa — URL'dagi ID bilan qisqa formatni sinash
+    return 'https://rumble.com/embed/' . $key . '/';
+}
+
+// Rumble video'ning to'g'ridan-to'g'ri CDN chunklist (HLS) havolasini topadi va keshlaydi.
+// Rumble CDN (1a-1791.com) ochiq — playlist va segmentlar server tomondan o'qiladi.
+// embedJS endpoint'i (rumble.com/embedJS/...) PHP curl bilan ochiq — ua.ua.tar blokidan
+// eng yuqori sifatli chunklist URL olinadi. Qaytadi: chunklist URL yoki null.
+function rumble_resolve_video($url, $ttl_hours = 24) {
+    $key = rumble_parse_url($url);
+    if (!$key) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/rumble_' . $key . '.json' : null;
+    if ($file && is_file($file)) {
+        $c = @json_decode(@file_get_contents($file), true);
+        if (is_array($c) && !empty($c['hls']) && isset($c['ts'])
+            && (time() - (int)$c['ts']) < $ttl_hours * 3600) {
+            return $c['hls'];
+        }
+    }
+
+    // Embed ID — watch sahifa ID'sidan farq qiladi, oEmbed orqali topamiz
+    $embed = rumble_embed_src($url);
+    $embed_key = null;
+    if ($embed && preg_match('#/embed/(v[a-z0-9]+)/?#i', $embed, $m)) {
+        $embed_key = $m[1];
+    } elseif ($embed && preg_match('#src\s*=\s*["\']([^"\']+)["\']#i', $embed, $m2)
+              && preg_match('#/embed/(v[a-z0-9]+)/?#i', $m2[1], $m3)) {
+        $embed_key = $m3[1];
+    }
+    if (!$embed_key) $embed_key = $key;
+    if (!preg_match('#^v[a-z0-9]+$#i', $embed_key)) return null;
+
+    $ch = curl_init('https://rumble.com/embedJS/u3/?request=video&ver=2&v=' . $embed_key);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ]);
+    $body = curl_exec($ch);
+    $st = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($body === false || $st !== 200) return null;
+    $d = json_decode($body, true);
+    if (!is_array($d)) return null;
+
+    // Eng yuqori sifatni tanlash (720 > 480 > 360 > 240); u blok 480p beradi
+    $tar = $d['ua']['tar'] ?? [];
+    $best = null;
+    foreach (['720', '480', '360', '240'] as $q) {
+        if (!empty($tar[$q]['url'])) { $best = $tar[$q]['url']; break; }
+    }
+    if (!$best && !empty($d['u']['tar']['url'])) $best = $d['u']['tar']['url'];
+    if (!$best || strpos($best, 'http') !== 0) return null;
+
+    if ($file) {
+        $saved = ['hls' => $best, 'ts' => time()];
+        if (is_file($file)) {
+            $old = @json_decode(@file_get_contents($file), true);
+            if (is_array($old)) $saved = array_merge($old, $saved);
+        }
+        @file_put_contents($file, json_encode($saved));
+    }
+    return $best;
+}
+
+// Rumble video'ni o'z playerimizda (hls.js) ko'rsatadi. CDN chunklist (HLS) topilsa —
+// stream.php (hls=1) orqali proksi qilinib o'z playerda ko'rsatiladi. Topilmasa
+// (video hali tayyor emas va h.k.) — eski iframe embed zaxira sifatida ishlatiladi.
+function render_rumble_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $refresh = '/uzdub/api/rumble-refresh.php?url=' . rawurlencode($video_url);
+    $hls = rumble_resolve_video($video_url);
+    if ($hls) {
+        $proxy = '/uzdub/stream.php?url=' . rawurlencode($hls) . '&hls=1';
+        // data-hls-refresh: keshlangan CDN URL muddati o'tsa player avtomatik yangi havola oladi
+        return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, true, true, null, true, $refresh);
+    }
+
+    $src = rumble_embed_src($video_url);
+    if (!$src) return null;
+    // oEmbed html blok bo'lsa to'g'ridan-to'g'ri ishlatamiz, aks holda iframe quramiz
+    if (strpos($src, '<iframe') !== false || strpos($src, '<script') !== false) {
+        return '<div class="player-wrap">' . $src . '</div>';
+    }
+    return '<div class="player-wrap"><iframe src="' . e($src) . '" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>';
+}
+
+// Havola to'g'ridan-to'g'ri video fayl (mp4/webm/...) bo'lsa true
+function is_direct_video_url($url) {
+    if (!preg_match('#^https?://#i', $url)) return false;
+    $path = parse_url($url, PHP_URL_PATH) ?? '';
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    return in_array($ext, ['mp4', 'webm', 'ogv', 'ogg', 'mov', 'm4v'], true);
+}
+
+// To'g'ridan-to'g'ri video faylni toza playerda ko'rsatadi (proksi zaxira bilan)
+function render_direct_video($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $fallback = '/uzdub/stream.php?url=' . urlencode($video_url);
+    return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, $fallback);
+}
+
+// VK, RuTube yoki to'g'ridan-to'g'ri video fayl bo'lsa — toza player qaytaradi, aks holda null
+function render_clean_video_if_possible($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0, array $sources = []) {
+    if (vk_parse_url($video_url)) return render_vk_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (rutube_parse_url($video_url)) return render_rutube_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (rumble_parse_url($video_url)) return render_rumble_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (is_direct_video_url($video_url)) return render_direct_video($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     return null;
 }
 
@@ -555,6 +1020,18 @@ function telegram_normalize_url($url) {
     return $u;
 }
 
+// ===== Poster ko'rsatish =====
+// Poster to'liq URL (https://...) yoki eski fayl nomi (p_xxx.jpg) bo'lishi mumkin.
+// URL bo'lsa to'g'ridan-to'g'ri qaytaradi, fayl nomi bo'lsa SITE_URL/uploads/posters/ prefiks qo'shib qaytaradi.
+function poster_url($poster) {
+    if (!$poster) return null;
+    $p = trim((string)$poster);
+    if ($p === '') return null;
+    if (preg_match('#^https?://#i', $p) || strpos($p, '/') === 0 || strpos($p, 'data:') === 0) return $p;
+    $site = defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub';
+    return $site . '/uploads/posters/' . $p;
+}
+
 // ===== Internetdan poster rasmini yuklab olish =====
 // URL dan rasm yuklab, uploads/posters/ ga saqlaydi; muvaffaqiyatda fayl nomini qaytaradi.
 // SSRF himoyasi: barcha DNS yozuvlari tekshiriladi, redirect'lar har qadamda qayta tekshiriladi.
@@ -577,8 +1054,8 @@ function url_is_private_ip(string $ip): bool {
     if (strpos($ip, '::ffff:') === 0) return url_is_private_ip(substr($ip, 7));
     $bin = @inet_pton($ip);
     if ($bin === false) return true;
-    if (($bin[0] & 0xFE) === 0xFC) return true;                          // fc00::/7 ULA
-    if (($bin[0] & 0xFF) === 0xFE && ($bin[1] & 0xC0) === 0x80) return true; // fe80::/10
+    if ((ord($bin[0]) & 0xFE) === 0xFC) return true;                          // fc00::/7 ULA
+    if ((ord($bin[0]) & 0xFF) === 0xFE && (ord($bin[1]) & 0xC0) === 0x80) return true; // fe80::/10
     return false;
 }
 
@@ -659,7 +1136,9 @@ function download_poster($url, $target_dir) {
 }
 
 // ===== Video player (subtitrlar bilan) =====
-function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo', $poster = null) {
+// $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar (file/telegram uchun)
+// $intro_start / $intro_end: o'tkazib yuboriladigan intro oralig'i (soniyada) — "Skip Intro" tugmasi uchun
+function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo', $poster = null, array $sources = [], $intro_start = 0, $intro_end = 0) {
     $subs_html = '';
     foreach ($subtitles as $sub) {
         $src = '/uzdub/uploads/subtitles/' . e($sub['file_path']);
@@ -668,39 +1147,356 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/', 
         $subs_html .= '<track kind="subtitles" src="' . $src . '" srclang="' . $lang . '" label="' . $label . '">';
     }
 
-    if ($video_type === 'youtube') {
-        $yt_id = get_youtube_id($video_url);
-        if ($yt_id) return '<div class="player-wrap"><iframe src="https://www.youtube.com/embed/' . e($yt_id) . '" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>';
-        return '<p class="player-error">YouTube havolasi noto\'g\'ri.</p>';
-    } elseif ($video_type === 'cloud') {
+    if ($video_type === 'cloud') {
+        $clean = render_clean_video_if_possible($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end, $sources);
+        if ($clean) return $clean;
         return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen></iframe></div>';
+    } elseif ($video_type === 'embed') {
+        if (preg_match('#^https?://#i', $video_url)) {
+            $clean = render_clean_video_if_possible($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end, $sources);
+            if ($clean) return $clean;
+            return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>';
+        }
+        // Embed code (iframe tegi) ichidagi VK/direct video havolasini ham toza playerda ko'rsatamiz
+        if (preg_match('#<iframe[^>]+src=["\']([^"\']+)["\']#i', $video_url, $m)) {
+            $inner = html_entity_decode($m[1]);
+            $clean = render_clean_video_if_possible($inner, $player_id, $poster, $subs_html, $intro_start, $intro_end, $sources);
+            if ($clean) return $clean;
+        }
+        return '<div class="player-wrap">' . $video_url . '</div>';
     } elseif ($video_type === 'file') {
         $stream_url = '/uzdub/stream.php?url=' . urlencode($base_path . $video_url);
-        return build_video_player($player_id, $stream_url, $poster, $subs_html);
+        return build_video_player($player_id, $stream_url, $poster, $subs_html, $sources, $intro_start, $intro_end);
     } elseif ($video_type === 'telegram') {
         $stream_url = telegram_stream_src($video_url);
-        if ($stream_url) return build_video_player($player_id, $stream_url, $poster, $subs_html);
+        if ($stream_url) {
+            $tg_sources = [];
+            foreach ($sources as $label => $src) {
+                $converted = telegram_stream_src($src);
+                if ($converted) $tg_sources[$label] = $converted;
+            }
+            if (count($tg_sources) < 2) $tg_sources = [];
+            return build_video_player($player_id, $stream_url, $poster, $subs_html, $tg_sources, $intro_start, $intro_end);
+        }
         return '<p class="player-error">Telegram havolasi noto\'g\'ri.</p>';
     }
     return '';
 }
 
 // ===== HTML5 video player (yagona, xatolik fallback bilan) =====
-function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '') {
+// $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar
+// $intro_start / $intro_end: o'tkazib yuboriladigan intro oralig'i (soniyada) — "Skip Intro" tugmasi uchun
+function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '', array $sources = [], $intro_start = 0, $intro_end = 0, $crossorigin = true, $autoplay = true, $fallback_url = null, $hls = false, $hls_refresh = null) {
+    $intro_start = max(0, (int)$intro_start);
+    $intro_end = max(0, (int)$intro_end);
     // controlsList="nodownload" — brauzer playeridagi "Yuklab olish" tugmasini o'chiradi
     // oncontextmenu="return false" — o'ng tugma "Video saqlash" ni bloklaydi
-    $attrs = 'controls playsinline preload="metadata" crossorigin="anonymous" controlsList="nodownload" oncontextmenu="return false"';
+    // preload="metadata" — brauzer butun faylni emas, faqat metadatalarni yuklaydi.
+    // Telegram'dan stream qiladigan serverda preload="auto" butun faylni (har video uchun
+    // ~300 ta upload.GetFile RPC) parallel yuklab, Telegram rate-limit'ga uchraydi.
+    // crossorigin tashqi (VK CDN) manbalarda olib tashlanadi — u holda brauzer CORS
+    // talab qilmaydi (VK CDN CORS header'larini qaytarmaydi).
+    // $hls=true bo'lsa src o'rniga data-hls qo'yiladi (m3u8 ni hls.js o'ynatadi).
+    $attrs = 'controls playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false"';
+    if ($crossorigin) $attrs .= ' crossorigin="anonymous"';
     if ($poster) $attrs .= ' poster="' . e($poster) . '"';
-    $html = '<div class="player-wrap"><video id="' . e($player_id) . '" ' . $attrs . ' src="' . e($stream_url) . '">' . $subs_html . '</video></div>';
+    if ($fallback_url) $attrs .= ' data-fallback="' . e($fallback_url) . '"';
+    if ($hls) {
+        // stream_url bo'sh bo'lsa — video hali tayyor emas (moderatsiyada): player
+        // data-hls-pending rejimida m3u8 paydo bo'lishini kutadi va avtomatik boshlaydi.
+        if ($stream_url !== '') {
+            $attrs .= ' data-hls="' . e($stream_url) . '"';
+        } else {
+            $attrs .= ' data-hls-pending="1"';
+        }
+        if ($hls_refresh) $attrs .= ' data-hls-refresh="' . e($hls_refresh) . '"';
+        $src_attr = '';
+    } else {
+        $src_attr = ' src="' . e($stream_url) . '"';
+    }
+
+    $quality_menu = '';
+    $qualities = [];
+    if (!empty($sources)) {
+        foreach ($sources as $label => $url) {
+            $label = trim($label);
+            $url = trim($url);
+            if ($label === '' || $url === '') continue;
+            $qualities[$label] = $url;
+        }
+        if ($qualities) {
+            $qualities['Auto'] = $stream_url;
+            $quality_menu = '<div class="video-quality-menu" style="display:none;">';
+            $first = true;
+            foreach ($qualities as $label => $url) {
+                $q = htmlspecialchars($label, ENT_QUOTES);
+                $active = $first ? ' style="background:var(--blue-primary, #2196f3);color:#fff;"' : '';
+                $quality_menu .= '<button type="button" data-quality="' . $q . '"' . $active . '>' . $q . '</button>';
+                $first = false;
+            }
+            $quality_menu .= '</div>';
+        }
+    }
+
+    $html = '<div class="player-wrap has-video-container"><div class="video-container"><video id="' . e($player_id) . '" ' . $attrs . $src_attr . '>' . $subs_html . '</video>' . $quality_menu . '</div></div>';
 
     $pid = json_encode($player_id);
+    $quality_data = json_encode($qualities, JSON_UNESCAPED_SLASHES);
     $html .= '<script>
 (function(){
     var v = document.getElementById(' . $pid . ');
     if (!v) return;
+
+    var wrap = v.parentNode;
+    if (getComputedStyle(wrap).position === "static") wrap.style.position = "relative";
+    var introStart = ' . (int)$intro_start . ';
+    var introEnd = ' . (int)$intro_end . ';
+
+    // ==== Video olchamiga mos (responsive) konteyner ====
+    // loadedmetadata da videoWidth/videoHeight oqiladi va .video-container ning
+    // boy-en nisbati aynan video nisbatiga ornatiladi (16:9, 4:3, vertikal va h.k.).
+    // Vertikal/kvadrat videolarda konteyner eni cheklanib, markazga tushadi —
+    // balandligi ekran balandligining ~78%idan oshmaydi.
+    var videoContainer = v.closest(".video-container");
+    function fitVideoContainer() {
+        if (!videoContainer) return;
+        var w = v.videoWidth, h = v.videoHeight;
+        if (!w || !h) return;
+        var ratio = w / h;
+        videoContainer.style.aspectRatio = w + " / " + h;
+        if (ratio < 1.25) {
+            var maxW = Math.round(0.78 * window.innerHeight * ratio);
+            var wrapW = videoContainer.parentElement ? videoContainer.parentElement.clientWidth : window.innerWidth;
+            videoContainer.style.maxWidth = Math.min(wrapW, maxW) + "px";
+            videoContainer.style.marginLeft = "auto";
+            videoContainer.style.marginRight = "auto";
+        } else {
+            videoContainer.style.maxWidth = "100%";
+            videoContainer.style.marginLeft = "";
+            videoContainer.style.marginRight = "";
+        }
+    }
+    v.addEventListener("loadedmetadata", fitVideoContainer);
+    v.addEventListener("resize", fitVideoContainer);
+    window.addEventListener("resize", fitVideoContainer);
+
+    // ==== Yuklanayotgan indikator ====
+    var loader = document.createElement("div");
+    loader.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,18,39,0.55);color:#fff;z-index:2;pointer-events:none;";
+    var spinner = document.createElement("div");
+    spinner.style.cssText = "width:46px;height:46px;border:4px solid rgba(255,255,255,.2);border-top-color:#2196f3;border-radius:50%;animation:udbSpin .8s linear infinite;";
+    var loadLbl = document.createElement("div");
+    loadLbl.style.cssText = "font-size:13px;opacity:.85;letter-spacing:.3px;";
+    loadLbl.textContent = "Video yuklanmoqda...";
+    loader.appendChild(spinner);
+    loader.appendChild(loadLbl);
+    wrap.appendChild(loader);
+    var spinStyle = document.createElement("style");
+    spinStyle.textContent = "@keyframes udbSpin { to { transform: rotate(360deg); } }";
+    document.head.appendChild(spinStyle);
+    function setLoading(show) { loader.style.display = show ? "flex" : "none"; }
+    setLoading(v.readyState < 3);
+    // Telefonda autoplay bloklansa ham loader abadiy qolmasligi uchun
+    // metadata yuklanishi bilan indikatorni yashiramiz
+    v.addEventListener("loadedmetadata", function () { setLoading(false); });
+    v.addEventListener("canplay", function () { setLoading(false); });
+    v.addEventListener("playing", function () { setLoading(false); });
+    v.addEventListener("waiting", function () { if (!v.ended) setLoading(true); });
+    v.addEventListener("seeking", function () { if (v.readyState < 3) setLoading(true); });
+    v.addEventListener("seeked", function () { if (v.readyState >= 3) setLoading(false); });
+
+    // ==== HLS (RuTube m3u8) — hls.js orqali ====
+    if (v.dataset.hls || v.dataset.hlsPending) {
+        var hlsSrc = v.dataset.hls;
+        function startHls() {
+            if (window.Hls && Hls.isSupported()) {
+                var hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 120 });
+                hls.loadSource(hlsSrc);
+                hls.attachMedia(v);
+                hls.on(Hls.Events.ERROR, function (evt, data) {
+                    // Keshlangan URL muddati tugasa (olik havola) — avtomatik
+                    // yangisini surashtirib bir marta qayta boshlaymiz (video ochmasligi uchun).
+                    if (data && data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR
+                        && !v.dataset.hlsRetried && v.dataset.hlsRefresh) {
+                        v.dataset.hlsRetried = "1";
+                        setLoading(true);
+                        fetch(v.dataset.hlsRefresh)
+                            .then(function (r) { return r.json(); })
+                            .then(function (d) {
+                                if (d && d.ok && d.url) {
+                                    hlsSrc = d.url;
+                                    try { hls.destroy(); } catch (e) {}
+                                    startHls();
+                                } else {
+                                    setLoading(false);
+                                    v.dispatchEvent(new Event("error"));
+                                }
+                            })
+                            .catch(function () { setLoading(false); v.dispatchEvent(new Event("error")); });
+                        return;
+                    }
+                    if (data && data.fatal) {
+                        setLoading(false);
+                        try { hls.destroy(); } catch (e) {}
+                        v.dispatchEvent(new Event("error"));
+                    }
+                });
+            } else if (v.canPlayType("application/vnd.apple.mpegurl")) {
+                v.src = hlsSrc;
+            } else {
+                v.dispatchEvent(new Event("error"));
+            }
+        }
+        function loadHlsAndStart() {
+            if (window.Hls) {
+                startHls();
+            } else {
+                var hlsScript = document.createElement("script");
+                hlsScript.src = "/uzdub/js/hls.min.js";
+                hlsScript.onload = startHls;
+                hlsScript.onerror = function () { v.dispatchEvent(new Event("error")); };
+                document.head.appendChild(hlsScript);
+            }
+        }
+        if (v.dataset.hlsPending) {
+            // Video hali tayyor emas (moderatsiyada) — m3u8 paydo bolguncha
+            // davriy sorov qilamiz va tayyor bolishi bilan avtomatik boshlaymiz.
+            loadLbl.textContent = "Video tayyorlanmoqda...";
+            var pendingCount = 0;
+            (function pollPending() {
+                if (v.dataset.hls) {
+                    hlsSrc = v.dataset.hls;
+                    loadHlsAndStart();
+                    return;
+                }
+                // Moderatsiya soatlab davom etishi mumkin — sahifa ochiq turar ekan,
+                // polling cheksiz davom etadi (har 15 soniyada bir).
+                pendingCount++;
+                fetch(v.dataset.hlsRefresh)
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        if (d && d.ok && d.url) {
+                            v.dataset.hls = d.url;
+                            hlsSrc = d.url;
+                            loadHlsAndStart();
+                        } else if (d && d.msg === "login_required") {
+                            // Login talab qilinadi — player urnida xabar chiqarishni
+                            // soddalashtiramiz: foydalanuvchi kirishi kerak.
+                            loadLbl.textContent = "Video ko\u2018rish uchun saytga kiring";
+                        } else {
+                            setTimeout(pollPending, 15000);
+                        }
+                    })
+                    .catch(function () { setTimeout(pollPending, 15000); });
+            })();
+        } else {
+            loadHlsAndStart();
+        }
+    }
+
+    // ==== Avtomatik oynatish ====
+    ' . ($autoplay ? '
+    v.addEventListener("loadedmetadata", function onMeta() {
+        v.removeEventListener("loadedmetadata", onMeta);
+        setTimeout(function () {
+            if (!v.paused) return;
+            var p = v.play();
+            if (p && p.catch) p.catch(function () {});
+        }, 300);
+    });
+' : '') . '
+
+    // ==== Skip Intro tugmasi (introStart..introEnd oraligi) ====
+    if (introEnd > 0 && introEnd > introStart) {
+        var skipBtn = document.createElement("button");
+        skipBtn.type = "button";
+        skipBtn.textContent = "\u23ed Intro\u2019ni o\u2019tkazib yuborish";
+        skipBtn.style.cssText = "position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(33,150,243,.75);border-radius:8px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;z-index:3;display:none;";
+        wrap.appendChild(skipBtn);
+        function updateSkip() {
+            var show = !v.ended && v.currentTime >= introStart && v.currentTime < introEnd && v.duration > introEnd;
+            skipBtn.style.display = show ? "block" : "none";
+        }
+        skipBtn.onclick = function () {
+            if (v.duration > introEnd) v.currentTime = introEnd + 0.05;
+            skipBtn.style.display = "none";
+            var p = v.play();
+            if (p && p.catch) p.catch(function () {});
+        };
+        v.addEventListener("timeupdate", updateSkip);
+        v.addEventListener("durationchange", updateSkip);
+        updateSkip();
+    }
+
+    var qualities = ' . $quality_data . ';
+    if (qualities && Object.keys(qualities).length > 1) {
+        var wrap = v.parentNode;
+        var qbtn = document.createElement("button");
+        qbtn.type = "button";
+        qbtn.textContent = "\u2699 Sifat";
+        qbtn.style.cssText = "position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;z-index:3;";
+        var menu = wrap.querySelector(".video-quality-menu");
+        menu.style.position = "absolute";
+        menu.style.bottom = "44px";
+        menu.style.right = "8px";
+        menu.style.background = "rgba(0,0,0,.85)";
+        menu.style.borderRadius = "8px";
+        menu.style.padding = "6px";
+        menu.style.zIndex = "4";
+        menu.style.display = "none";
+        menu.style.flexDirection = "column";
+        menu.style.gap = "4px";
+        qbtn.onclick = function(e){
+            e.stopPropagation();
+            menu.style.display = menu.style.display === "none" ? "flex" : "none";
+        };
+        menu.querySelectorAll("button").forEach(function(b){
+            b.onclick = function(){
+                var label = b.dataset.quality;
+                var url = qualities[label];
+                if (!url) return;
+                var cur = v.currentTime;
+                var wasPaused = v.paused;
+                var wasPlaying = !v.paused && !v.ended;
+                v.src = url;
+                v.load();
+                v.addEventListener("loadedmetadata", function handler(){
+                    if (cur < v.duration) v.currentTime = cur;
+                    v.removeEventListener("loadedmetadata", handler);
+                });
+                if (wasPlaying) v.play();
+                menu.querySelectorAll("button").forEach(function(x){ x.style.background = ""; x.style.color = ""; });
+                b.style.background = "var(--blue-primary, #2196f3)";
+                b.style.color = "#fff";
+                menu.style.display = "none";
+            };
+        });
+        wrap.appendChild(qbtn);
+        wrap.addEventListener("click", function(e){
+            if (e.target !== menu && !menu.contains(e.target)) menu.style.display = "none";
+        });
+    }
+
     v.addEventListener("error", function(){
+        setLoading(false);
         if (v.dataset.errHandled) return;
         v.dataset.errHandled = "1";
+        // Direct manba ochilmasa - data-fallback (proksi) ga tushamiz
+        if (v.dataset.fallback && !v.dataset.fallbackUsed) {
+            v.dataset.fallbackUsed = "1";
+            var cur = v.currentTime;
+            var wasPlaying = !v.paused && !v.ended;
+            v.removeAttribute("crossorigin");
+            v.src = v.dataset.fallback;
+            v.load();
+            v.addEventListener("loadedmetadata", function onFbMeta(){
+                v.removeEventListener("loadedmetadata", onFbMeta);
+                delete v.dataset.errHandled;
+                if (cur > 0 && cur < v.duration) v.currentTime = cur;
+                if (wasPlaying) { var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+            });
+            return;
+        }
         var wrap = v.parentNode;
         var box = document.createElement("div");
         box.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,0.85);color:#fff;z-index:5;text-align:center;padding:20px;";
@@ -715,6 +1511,7 @@ function build_video_player($player_id, $stream_url, $poster = null, $subs_html 
         retry.style.cssText = "background:#2196f3;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:700;cursor:pointer;";
         retry.onclick = function(){
             delete v.dataset.errHandled;
+            if (v.dataset.hls) { location.reload(); return; }
             v.load();
             if (box.parentNode) box.remove();
         };
@@ -760,26 +1557,41 @@ function get_avg_user_rating(PDO $pdo, int $content_id): ?float {
     }
 }
 
-function is_content_watched(PDO $pdo, int $user_id, int $content_id): bool {
+function is_content_watched(PDO $pdo, int $user_id, int $content_id, int $episode_id = 0): bool {
     try {
-        $stmt = $pdo->prepare("SELECT id FROM watch_history WHERE user_id = ? AND content_id = ?");
-        $stmt->execute([$user_id, $content_id]);
+        $stmt = $pdo->prepare("SELECT id FROM watch_history WHERE user_id = ? AND content_id = ? AND episode_id = ?");
+        $stmt->execute([$user_id, $content_id, $episode_id]);
         return (bool)$stmt->fetch();
     } catch (PDOException $e) {
         return false;
     }
 }
 
-function mark_content_watched(PDO $pdo, int $user_id, int $content_id): void {
+function mark_content_watched(PDO $pdo, int $user_id, int $content_id, int $episode_id = 0): void {
     try {
-        $pdo->prepare("INSERT INTO watch_history (user_id, content_id) VALUES (?,?)
+        $pdo->prepare("INSERT INTO watch_history (user_id, content_id, episode_id) VALUES (?,?,?)
             ON DUPLICATE KEY UPDATE watched_at = CURRENT_TIMESTAMP")
-            ->execute([$user_id, $content_id]);
-        $pdo->prepare("UPDATE watch_progress SET position_seconds = duration_seconds WHERE user_id = ? AND content_id = ?")
-            ->execute([$user_id, $content_id]);
+            ->execute([$user_id, $content_id, $episode_id]);
+        $pdo->prepare("UPDATE watch_progress SET position_seconds = duration_seconds WHERE user_id = ? AND content_id = ? AND episode_id = ?")
+            ->execute([$user_id, $content_id, $episode_id]);
+
+        // Ko'rishlar: "Ko'rilgan" bo'limiga birinchi o'tishda 1 ta ko'rish hisoblanadi.
+        // Bir xil foydalanuvchi kontentni qayta ko'rsa ham qo'shilmaydi.
+        $chk = $pdo->prepare("SELECT id FROM user_content_status WHERE user_id = ? AND content_id = ? AND status = 'completed'");
+        $chk->execute([$user_id, $content_id]);
+        $first_watch = !(bool)$chk->fetch();
+
         $pdo->prepare("INSERT INTO user_content_status (user_id, content_id, status) VALUES (?,?,'completed')
             ON DUPLICATE KEY UPDATE status = IF(status = 'favorite', 'favorite', 'completed'), updated_at = CURRENT_TIMESTAMP")
             ->execute([$user_id, $content_id]);
+
+        if ($first_watch) {
+            $pdo->prepare("UPDATE content SET views = views + 1 WHERE id = ?")->execute([$content_id]);
+        }
+
+        $pdo->prepare("INSERT INTO watched_content (user_id, content_id, episode_id) VALUES (?,?,?)
+            ON DUPLICATE KEY UPDATE completed_at = CURRENT_TIMESTAMP")
+            ->execute([$user_id, $content_id, $episode_id]);
     } catch (PDOException $e) {}
 }
 
@@ -1174,4 +1986,128 @@ function email_code_card(string $label, string $code, string $note = ''): string
  */
 function email_paragraph(string $html): string {
     return '<div style="font-size:14.5px;line-height:1.7;color:#c9d6ea;text-align:center;">' . $html . '</div>';
+}
+
+// ===== Video manba URL o'zgarishlarini kuzatish =====
+
+// Havoladan manba turini aniqlaydi: rumble / rutube / vk / direct / unknown
+function video_source_type($url) {
+    if (rumble_parse_url($url)) return 'rumble';
+    if (rutube_parse_url($url)) return 'rutube';
+    if (vk_parse_url($url)) return 'vk';
+    if (is_direct_video_url($url)) return 'direct';
+    return 'unknown';
+}
+
+// Episode (yoki content-level) uchun kuzatilgan oxirgi holatni qaytaradi
+function video_source_get_state($episode_id, $content_id = 0) {
+    global $pdo;
+    if (!$pdo) return null;
+    $st = $pdo->prepare("SELECT * FROM video_source_state WHERE episode_id = ? AND content_id = ?");
+    $st->execute([(int)$episode_id, (int)$content_id]);
+    return $st->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+// Yangi resolve natijasini kuzatadi. O'zgarish aniqlansa
+// (manba URL almashtirilgan, oqim URL yangilangan, video buzilgan yoki tiklanmagan)
+// video_source_log'ga yozadi va Telegram orqali xabar yuboradi.
+function video_source_track($episode_id, $content_id, $source_type, $video_url, $hls, $ok) {
+    global $pdo;
+    if (!$pdo) return;
+    $episode_id = (int)$episode_id;
+    $content_id = (int)$content_id;
+    $status = $ok ? 'ok' : 'broken';
+    $prev = video_source_get_state($episode_id, $content_id);
+
+    if (!$prev) {
+        try {
+            $pdo->prepare("INSERT INTO video_source_state (episode_id, content_id, source_type, video_url, hls, status) VALUES (?,?,?,?,?,?)")
+                ->execute([$episode_id, $content_id, $source_type, $video_url, $hls, $status]);
+        } catch (PDOException $e) {}
+        return;
+    }
+
+    $event = null;
+    $detail = '';
+    if ($prev['video_url'] && $prev['video_url'] !== $video_url) {
+        $event = 'url_changed';
+        $detail = 'Manba URL o\'zgardi: ' . $prev['video_url'] . ' -> ' . $video_url;
+    } elseif ($prev['status'] === 'ok' && $status === 'broken') {
+        $event = 'broken';
+        $detail = 'Video manbasi ochilmayapti (o\'chirilgan yoki mavjud emas)';
+    } elseif ($prev['status'] === 'broken' && $status === 'ok') {
+        $event = 'recovered';
+        $detail = 'Video manbasi qayta tiklandi';
+    }
+
+    try {
+        $pdo->prepare("UPDATE video_source_state SET content_id=?, source_type=?, video_url=?, hls=?, status=? WHERE episode_id=? AND content_id=?")
+            ->execute([$content_id, $source_type, $video_url, $hls, $status, $episode_id, $content_id]);
+    } catch (PDOException $e) {}
+
+    if ($event) {
+        video_source_log_and_notify($episode_id, $content_id, $source_type, $video_url, $event, $detail);
+    }
+}
+
+// O'zgarishni log'ga yozadi va (takroriy spamming oldini olish uchun oxirgi 6 soatda
+// xabar yuborilmagan bo'lsa) Telegram orqali adminlarga xabar yuboradi.
+function video_source_log_and_notify($episode_id, $content_id, $source_type, $video_url, $event, $detail) {
+    global $pdo;
+    if (!$pdo) return;
+    try {
+        $pdo->prepare("INSERT INTO video_source_log (episode_id, content_id, source_type, video_url, event, detail) VALUES (?,?,?,?,?,?)")
+            ->execute([$episode_id, $content_id, $source_type, $video_url, $event, $detail]);
+        $log_id = (int)$pdo->lastInsertId();
+    } catch (PDOException $e) {
+        return;
+    }
+
+    if (!function_exists('tg_send_message')) return;
+
+    // Oxirgi 6 soat ichida shu episode uchun xabar yuborilganmi — spamdan qochamiz
+    try {
+        $recent = $pdo->prepare("SELECT id FROM video_source_log WHERE episode_id = ? AND notified = 1 AND created_at > (NOW() - INTERVAL 6 HOUR) LIMIT 1");
+        $recent->execute([$episode_id]);
+        if ($recent->fetch()) return;
+    } catch (PDOException $e) {}
+
+    $title = '#' . $content_id;
+    $where = '';
+    try {
+        if ($episode_id > 0) {
+            $ct = $pdo->prepare("SELECT c.title, c.title_ru, c.title_en, c.title_jp FROM content c JOIN episodes e ON e.content_id = c.id WHERE e.id = ?");
+            $ct->execute([$episode_id]);
+        } else {
+            $ct = $pdo->prepare("SELECT title, title_ru, title_en, title_jp FROM content WHERE id = ?");
+            $ct->execute([$content_id]);
+        }
+        $row = $ct->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            $title = $row['title'] ?: ($row['title_ru'] ?: ($row['title_en'] ?: ($row['title_jp'] ?: '#' . $content_id)));
+        }
+    } catch (PDOException $e) {}
+
+    $labels = [
+        'url_changed' => 'Manba URL almashtirildi',
+        'broken'      => 'Video buzilgan',
+        'recovered'   => 'Video tiklandi',
+    ];
+    $label = $labels[$event] ?? $event;
+    $icons = ['url_changed' => "\xF0\x9F\x94\x81", 'broken' => "\xF0\x9F\x94\xB4", 'recovered' => "\xE2\x9C\x85"];
+    $icon = $icons[$event] ?? "\xE2\x84\xB9";
+
+    $text = $icon . ' <b>' . $label . '</b>' . "\n"
+        . "\xF0\x9F\x8E\xAC Kontent: <b>" . e($title) . '</b>' . "\n"
+        . ($episode_id > 0 ? "\xF0\x9F\x8E\x9E Qism #" . (int)$episode_id . "\n" : '')
+        . "\xF0\x9F\x93\x8C Manba: <b>" . e($source_type) . "</b>\n"
+        . "\xF0\x9F\x94\x97 " . e($video_url) . "\n"
+        . ($detail ? "\xE2\x84\xB9\xEF\xB8\x8F " . e($detail) . "\n" : '')
+        . "\xF0\x9F\x95\x90 " . date('d.m.Y H:i');
+
+    if (tg_send_message($text)) {
+        try {
+            $pdo->prepare("UPDATE video_source_log SET notified = 1 WHERE id = ?")->execute([$log_id]);
+        } catch (PDOException $e) {}
+    }
 }

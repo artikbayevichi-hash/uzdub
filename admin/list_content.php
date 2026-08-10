@@ -2,12 +2,16 @@
 $page_title = 'Barcha kontent';
 include __DIR__ . '/includes/admin_header.php';
 
-$items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC")->fetchAll();
+$items = $pdo->query("SELECT c.*, cat.name as cat_name, cat.slug as cat_slug FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.created_at DESC")->fetchAll();
 $genre_map = [];
+$episode_counts = [];
 foreach ($items as $it) {
     $grs_stmt = $pdo->prepare("SELECT g.name FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = ? ORDER BY g.name");
     $grs_stmt->execute([$it['id']]);
     $genre_map[$it['id']] = $grs_stmt->fetchAll(PDO::FETCH_COLUMN);
+    $ec = $pdo->prepare("SELECT COUNT(*) FROM episodes WHERE content_id = ?");
+    $ec->execute([$it['id']]);
+    $episode_counts[$it['id']] = (int)$ec->fetchColumn();
 }
 ?>
 
@@ -56,15 +60,17 @@ if ($export) {
     </tr>
     <?php foreach ($items as $item): ?>
     <tr>
-        <td><img src="<?php echo $item['poster'] ? '../uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/50x70/121a2b/2196f3'; ?>"></td>
+        <td><img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/50x70/121a2b/2196f3'; ?>"></td>
         <td><?php echo e(t_title($item)); ?></td>
         <td><?php echo e($item['cat_name']); ?></td>
         <td><?php echo !empty($genre_map[$item['id']]) ? e(implode(', ', $genre_map[$item['id']])) : '-'; ?></td>
         <td><?php echo e($item['release_year']); ?></td>
-        <td><?php echo t('single_video'); ?></td>
+        <td><?php echo $episode_counts[$item['id']] > 0 ? '🎬 ' . $episode_counts[$item['id']] . ' ' . t('admin_episodes') : t('single_video'); ?></td>
         <td><?php echo e($item['views']); ?></td>
         <td class="action-links">
-            <a href="edit_content.php?id=<?php echo $item['id']; ?>"><?php echo t('edit'); ?></a>
+            <?php $edit_page = ($item['cat_slug'] ?? '') === 'anime' ? 'anime_edit.php' : 'edit_content.php'; ?>
+            <a href="<?php echo $edit_page; ?>?id=<?php echo $item['id']; ?>"><?php echo t('edit'); ?></a>
+            <a href="edit_content.php?id=<?php echo $item['id']; ?>#episodes" style="color:#ffca28;">🎬 <?php echo t('admin_episodes'); ?></a>
             <a href="../watch.php?id=<?php echo $item['id']; ?>" target="_blank"><?php echo t('watch'); ?></a>
             <form method="post" action="delete_content.php" style="display:inline;" onsubmit="return confirm('<?php echo t('confirm_delete'); ?>');">
                 <?php echo csrf_input(); ?>

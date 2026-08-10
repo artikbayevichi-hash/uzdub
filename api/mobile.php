@@ -418,6 +418,7 @@ try {
 
             $input = get_input();
             $contentId = (int)($input['content_id'] ?? 0);
+            $episodeId = (int)($input['episode_id'] ?? 0);
             $position = max(0, (int)($input['position_seconds'] ?? 0));
             $duration = max(0, (int)($input['duration_seconds'] ?? 0));
 
@@ -427,17 +428,17 @@ try {
 
             $is_completed = $duration > 0 && $position >= $duration - 600;
 
-            $pdo->prepare("INSERT INTO watch_progress (user_id, content_id, position_seconds, duration_seconds, is_completed)
-                           VALUES (?, ?, ?, ?, ?)
+            $pdo->prepare("INSERT INTO watch_progress (user_id, content_id, episode_id, position_seconds, duration_seconds, is_completed)
+                           VALUES (?, ?, ?, ?, ?, ?)
                            ON DUPLICATE KEY UPDATE position_seconds = VALUES(position_seconds), duration_seconds = VALUES(duration_seconds), is_completed = GREATEST(is_completed, VALUES(is_completed))")
-                ->execute([$userId, $contentId, $position, $duration, $is_completed ? 1 : 0]);
+                ->execute([$userId, $contentId, $episodeId, $position, $duration, $is_completed ? 1 : 0]);
 
-            $pdo->prepare("INSERT INTO watch_history (user_id, content_id, progress_seconds) VALUES (?, ?, ?)
+            $pdo->prepare("INSERT INTO watch_history (user_id, content_id, episode_id, progress_seconds) VALUES (?, ?, ?, ?)
                            ON DUPLICATE KEY UPDATE watched_at = CURRENT_TIMESTAMP, progress_seconds = VALUES(progress_seconds)")
-                ->execute([$userId, $contentId, $position]);
+                ->execute([$userId, $contentId, $episodeId, $position]);
 
             if ($is_completed) {
-                mark_content_watched($pdo, $userId, $contentId);
+                mark_content_watched($pdo, $userId, $contentId, $episodeId);
             }
 
             json_ok();
@@ -447,16 +448,17 @@ try {
 
             $userId = (int)$_SESSION['user_id'];
 
-            $stmt = $pdo->prepare("SELECT DISTINCT c.id, c.title, c.title_ru, c.title_en, c.poster, c.release_year,
+            $stmt = $pdo->prepare("SELECT c.id, c.title, c.title_ru, c.title_en, c.poster, c.release_year,
                                           c.rating, cat.name AS category_name, cat.slug AS category_slug,
                                           c.duration, c.status, c.is_premium,
-                                          wp.position_seconds, wp.duration_seconds, wh.watched_at
+                                          wp.position_seconds, wp.duration_seconds, MAX(wh.watched_at) AS watched_at
                                    FROM watch_history wh
                                    JOIN content c ON c.id = wh.content_id
                                    JOIN categories cat ON c.category_id = cat.id
-                                   LEFT JOIN watch_progress wp ON wp.content_id = wh.content_id AND wp.user_id = wh.user_id
+                                   LEFT JOIN watch_progress wp ON wp.id = (SELECT w2.id FROM watch_progress w2 WHERE w2.user_id = wh.user_id AND w2.content_id = wh.content_id ORDER BY w2.updated_at DESC, w2.id DESC LIMIT 1)
                                    WHERE wh.user_id = ?
-                                   ORDER BY wh.watched_at DESC
+                                   GROUP BY c.id
+                                   ORDER BY watched_at DESC
                                    LIMIT 50");
             $stmt->execute([$userId]);
             $items = $stmt->fetchAll();

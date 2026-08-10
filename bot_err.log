@@ -1,0 +1,41 @@
+2026-08-06 14:22:24,604 [INFO] Connecting...
+2026-08-06 14:22:24,711 [INFO] Connected! Production DC2 - IPv4
+2026-08-06 14:22:24,713 [INFO] NetworkTask started
+2026-08-06 14:22:25,193 [INFO] Session initialized: Layer 158
+2026-08-06 14:22:25,198 [INFO] Device: CPython 3.12.10 - Pyrogram 2.0.106
+2026-08-06 14:22:25,199 [INFO] System: Windows 11 (en)
+2026-08-06 14:22:25,200 [INFO] Session started
+2026-08-06 14:22:25,203 [INFO] PingTask started
+2026-08-06 14:22:25,502 [INFO] Pyrogram (disksiz streaming) ishga tushdi
+INFO:     Started server process [24136]
+INFO:     Waiting for application startup.
+2026-08-06 14:22:25,722 [INFO] Bot API polling boshlandi (xabar qabul qilish)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-08-06 14:22:34,626 [INFO] Telegram'dan jonli stream: msg=52 bytes=130482319-296970972/296970973 (semafor: 6/6)
+2026-08-06 14:22:34,635 [INFO] Connecting...
+2026-08-06 14:22:34,746 [INFO] Connected! Production DC2 (media) - IPv4
+2026-08-06 14:22:34,748 [INFO] NetworkTask started
+2026-08-06 14:22:35,240 [INFO] Session initialized: Layer 158
+2026-08-06 14:22:35,243 [INFO] Device: CPython 3.12.10 - Pyrogram 2.0.106
+2026-08-06 14:22:35,244 [INFO] System: Windows 11 (en)
+2026-08-06 14:22:35,244 [INFO] Session started
+2026-08-06 14:22:35,245 [INFO] PingTask started
+2026-08-06 14:22:56,208 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:23:26,368 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:23:56,527 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:24:26,689 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:24:56,852 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:25:15,167 [INFO] Telegram'dan jonli stream: msg=52 bytes=0-296970972/296970973 (semafor: 5/5)
+2026-08-06 14:25:15,177 [INFO] Connecting...
+2026-08-06 14:25:15,275 [INFO] Connected! Production DC2 (media) - IPv4
+2026-08-06 14:25:15,277 [INFO] NetworkTask started
+2026-08-06 14:25:15,733 [INFO] Session initialized: Layer 158
+2026-08-06 14:25:15,738 [INFO] Device: CPython 3.12.10 - Pyrogram 2.0.106
+2026-08-06 14:25:15,738 [INFO] System: Windows 11 (en)
+2026-08-06 14:25:15,739 [INFO] Session started
+2026-08-06 14:25:15,741 [INFO] PingTask started
+2026-08-06 14:25:27,012 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:25:31,189 [INFO] NetworkTask stopped
+2026-08-06 14:25:57,173 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"
+2026-08-06 14:26:27,330 [INFO] HTTP Request: GET https://api.telegram.org/bot8973674182:AAGLYiC22dbtodDpBhk8UppgIiGD6Np1p5c/getUpdates?offset=0&timeout=30 "HTTP/1.1 200 OK"

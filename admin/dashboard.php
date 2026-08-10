@@ -512,6 +512,7 @@ $daw_json = json_encode($daw_data);
         <div class="quick-actions">
             <a href="add_content.php">➕ Yangi kontent</a>
             <a href="list_content.php">📋 Barcha kontent</a>
+            <a href="episodes.php" style="color:#ffca28;">🎬 Qismlar boshqaruvi</a>
             <a href="users.php">👥 Foydalanuvchilar</a>
             <a href="payments.php">💳 To'lovlar</a>
             <a href="list_content.php?export=csv">📥 CSV eksport</a>

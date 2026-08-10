@@ -205,13 +205,13 @@ PREPARE vt_stmt FROM @vt_sql; EXECUTE vt_stmt; DEALLOCATE PREPARE vt_stmt;
 SELECT COUNT(*) INTO @vt_enum FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'content' AND COLUMN_NAME = 'video_type'
   AND COLUMN_TYPE NOT LIKE '%telegram%';
-SET @vt_enum_sql = IF(@vt_enum > 0, "ALTER TABLE content MODIFY COLUMN video_type ENUM('youtube','cloud','file','telegram') DEFAULT NULL", 'SELECT 1');
+SET @vt_enum_sql = IF(@vt_enum > 0, "ALTER TABLE content MODIFY COLUMN video_type ENUM('cloud','file','telegram','embed') DEFAULT 'cloud'", 'SELECT 1');
 PREPARE vt_enum_stmt FROM @vt_enum_sql; EXECUTE vt_enum_stmt; DEALLOCATE PREPARE vt_enum_stmt;
 
 SELECT COUNT(*) INTO @ep_enum FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'episodes' AND COLUMN_NAME = 'video_type'
   AND COLUMN_TYPE NOT LIKE '%telegram%';
-SET @ep_enum_sql = IF(@ep_enum > 0, "ALTER TABLE episodes MODIFY COLUMN video_type ENUM('youtube','cloud','file','telegram') NOT NULL", 'SELECT 1');
+SET @ep_enum_sql = IF(@ep_enum > 0, "ALTER TABLE episodes MODIFY COLUMN video_type ENUM('cloud','file','telegram','embed') NOT NULL DEFAULT 'cloud'", 'SELECT 1');
 PREPARE ep_enum_stmt FROM @ep_enum_sql; EXECUTE ep_enum_stmt; DEALLOCATE PREPARE ep_enum_stmt;
 
 CREATE TABLE IF NOT EXISTS content_actors (
@@ -223,6 +223,36 @@ CREATE TABLE IF NOT EXISTS content_actors (
     sort_order INT DEFAULT 0,
     FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
     INDEX idx_content (content_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================
+-- Video manba URL o'zgarishlarini kuzatish
+-- =====================================================
+CREATE TABLE IF NOT EXISTS video_source_state (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    episode_id INT NOT NULL DEFAULT 0,
+    content_id INT NOT NULL DEFAULT 0,
+    source_type VARCHAR(20) DEFAULT NULL,
+    video_url VARCHAR(500) DEFAULT NULL,
+    hls TEXT DEFAULT NULL,
+    status VARCHAR(20) DEFAULT 'unknown',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_ep_content (episode_id, content_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS video_source_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    episode_id INT NOT NULL DEFAULT 0,
+    content_id INT NOT NULL DEFAULT 0,
+    source_type VARCHAR(20) DEFAULT NULL,
+    video_url VARCHAR(500) DEFAULT NULL,
+    event VARCHAR(20) NOT NULL,
+    detail TEXT DEFAULT NULL,
+    notified TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY episode_id (episode_id),
+    KEY content_id (content_id),
+    KEY created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SELECT 'Yangilash muvaffaqiyatli yakunlandi!' AS natija;

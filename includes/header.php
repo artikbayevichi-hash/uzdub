@@ -1,3 +1,4 @@
+<?php require_user(); ?>
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -260,7 +261,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                             a.href = '/uzdub/watch.php?id=' + item.id;
                             var lang = '<?php echo current_lang(); ?>';
                             var displayTitle = (lang === 'ru' && item.title_ru) ? item.title_ru : (lang === 'en' && item.title_en) ? item.title_en : item.title;
-                            var poster = item.poster ? '/uzdub/uploads/posters/' + item.poster : 'https://via.placeholder.com/28x40/121a2b/2196f3?text=' + encodeURIComponent(displayTitle.slice(0,1));
+                            var poster = item.poster ? item.poster : 'https://via.placeholder.com/28x40/121a2b/2196f3?text=' + encodeURIComponent(displayTitle.slice(0,1));
                             a.innerHTML = '<img src="' + poster + '" alt="" loading="lazy">' +
                                 '<div class="sug-info">' +
                                     '<div class="sug-title">' + escHtml(displayTitle) + '</div>' +

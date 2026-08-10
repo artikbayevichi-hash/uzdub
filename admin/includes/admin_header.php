@@ -23,6 +23,9 @@ $current = basename($_SERVER['PHP_SELF']);
         <div class="side-group">Kontent</div>
         <a href="list_content.php" class="<?php echo $current=='list_content.php'?'active':''; ?>">&#127916; Barcha kontent</a>
         <a href="add_content.php" class="<?php echo $current=='add_content.php'?'active':''; ?>">&#10133; Kino/Anime/Multfilm qo'shish</a>
+        <a href="episodes.php" class="<?php echo $current=='episodes.php'?'active':''; ?>">&#127909; Qismlar boshqaruvi</a>
+        <a href="video_upload.php" class="<?php echo $current=='video_upload.php'?'active':''; ?>">&#11014; Video URL (VK / Archive.org)</a>
+        <a href="video_sources.php" class="<?php echo $current=='video_sources.php'?'active':''; ?>">&#128260; Video manbalari kuzatuvi</a>
         <div class="side-group">Foydalanuvchilar</div>
         <a href="users.php" class="<?php echo $current=='users.php'?'active':''; ?>">&#128101; Foydalanuvchilar</a>
         <a href="chat.php" class="<?php echo $current=='chat.php'?'active':''; ?>">&#128172; Chat boshqarish</a>

@@ -608,6 +608,25 @@ body {
 .player-wrap:hover { transform: translateZ(var(--z-card)) scale(1.01); box-shadow: 0 0 80px rgba(33,150,243,0.65); }
 .player-wrap iframe, .player-wrap video { width: 100%; height: 100%; border: none; }
 .player-wrap video { background: #0d2447; }
+
+/* ===== Responsive video konteyner (16:9, 4:3, vertikal va h.k.) =====
+   .player-wrap HTML5 player uchun qattiq 16/9 da turmaydi — nisbatni
+   .video-container o'zgartirib turadi (JS loadedmetadata da aniq nisbatni
+   yozadi). iframe (VK/RuTube embed) uchun .player-wrap 16/9 bo'lib qolaveradi. */
+.player-wrap.has-video-container { aspect-ratio: auto; }
+.player-wrap .video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9; /* metadata kelguncha standart nisbat */
+    background: linear-gradient(180deg, #0d2447, #081227);
+}
+.player-wrap .video-container video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain; /* video ramkasini buzmasdan, to'liq sig'diradi */
+    background: #0d2447;
+}
 .player-wrap video::-webkit-media-controls-panel { background: linear-gradient(transparent, rgba(0,0,0,0.85)); }
 .player-wrap video::-webkit-media-controls-play-button { filter: brightness(0) invert(1); }
 .player-wrap video::-webkit-media-controls-timeline { accent-color: #2196f3; }

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
+require_user();
 
 // ===== AJAX tab handler =====
 if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
@@ -510,7 +511,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
     $stmt->execute([$uid]);
     $sec_user = $stmt->fetch();
     ?>
-        <div class="settings-panel">
+        <div class="settings-panel security-panel">
             <div class="security-section">
                 <div class="security-header">
                     <div class="security-icon">🔐</div>
@@ -533,21 +534,32 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 <div class="twofa-phone-info">📱 <?php echo e(t('twofa_linked_phone')); ?> <code><?php echo e(mask_phone($sec_user['telegram_phone'])); ?></code></div>
                 <?php endif; ?>
                 <div id="twofaSetupArea" class="twofa-setup-area" style="display:none;">
-                    <div class="twofa-tg-step" id="tgStep1">
-                        <div class="twofa-step-text">
-                            <strong><?php echo e(t('twofa_step1_title')); ?></strong>
-                            <span><?php echo e(t('twofa_step1_desc')); ?></span>
-                            <a id="tgBotLink" href="#" target="_blank" rel="noopener" class="twofa-bot-btn">✈️ <span id="tgBotName">@UZDUB_2FA_BOT</span></a>
+                    <div class="twofa-steps" id="twofaSteps">
+                        <div class="twofa-step">
+                            <div class="twofa-step-num">1</div>
+                            <div class="twofa-step-text">
+                                <strong><?php echo e(t('twofa_step1_title')); ?></strong>
+                                <span><?php echo e(t('twofa_step1_desc')); ?></span>
+                                <a id="tgBotLink" href="#" target="_blank" rel="noopener" class="twofa-bot-btn">
+                                    <span class="twofa-bot-icon" aria-hidden="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+                                    </span>
+                                    <span class="twofa-bot-main">
+                                        <span class="twofa-bot-text">Telegram botni ochish</span>
+                                        <span id="tgBotName" class="twofa-bot-handle">@UZDUB_2FA_BOT</span>
+                                    </span>
+                                    <svg class="twofa-bot-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                    <div class="twofa-step">
-                        <div class="twofa-step-num">2</div>
-                        <div class="twofa-step-text">
-                            <strong><?php echo e(t('twofa_step2_title')); ?></strong>
-                            <span><?php echo e(t('twofa_step2_desc')); ?></span>
+                        <div class="twofa-step">
+                            <div class="twofa-step-num">2</div>
+                            <div class="twofa-step-text">
+                                <strong><?php echo e(t('twofa_step2_title')); ?></strong>
+                                <span><?php echo e(t('twofa_step2_desc')); ?></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="twofa-secret-block">
+                    <div class="twofa-secret-block" id="twofaSecretBlock">
                         <div class="twofa-secret-label"><?php echo e(t('twofa_link_code')); ?></div>
                         <div class="twofa-secret-row">
                             <code class="twofa-secret-code" id="twofaSecret"></code>
@@ -563,23 +575,45 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                             <span><?php echo e(t('twofa_step3_desc')); ?></span>
                         </div>
                     </div>
+                </div>
                     <div class="twofa-link-status" id="twofaLinkStatus"><span class="dot"></span><span id="twofaLinkText"><?php echo e(t('twofa_waiting')); ?></span></div>
                     <div class="twofa-verify-form" id="twofaVerifyForm" style="display:none;">
-                        <label><?php echo e(t('twofa_enter_code')); ?></label>
-                        <input type="text" id="twofaCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input twofa-code-input" autocomplete="one-time-code">
-                        <label><?php echo e(t('twofa_current_pass')); ?></label>
-                        <input type="password" id="twofaPassInput" class="settings-input" autocomplete="current-password">
-                        <button type="button" class="pf-btn pf-btn-blue" id="twofaConfirmBtn"><?php echo t('twofa_verify_btn'); ?></button>
+                        <div class="twofa-verify-head">
+                            <span class="twofa-verify-head-icon">🔐</span>
+                            <div class="twofa-verify-head-text">
+                                <h4><?php echo t('twofa_verify_title'); ?></h4>
+                                <p><?php echo e(t('twofa_verify_desc')); ?></p>
+                            </div>
+                        </div>
+                        <div class="twofa-verify-field twofa-otp-field">
+                            <label><?php echo e(t('twofa_enter_code')); ?></label>
+                            <input type="text" id="twofaCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input twofa-code-input" autocomplete="one-time-code">
+                        </div>
+                        <div class="twofa-verify-field">
+                            <label><?php echo e(t('twofa_current_pass')); ?></label>
+                            <div class="twofa-pass-wrap">
+                                <input type="password" id="twofaPassInput" class="settings-input twofa-pass-input" autocomplete="current-password">
+                                <button type="button" class="twofa-pass-toggle" data-target="twofaPassInput" tabindex="-1" aria-label="Parolni ko'rsatish">👁</button>
+                            </div>
+                        </div>
+                        <button type="button" class="pf-btn pf-btn-blue twofa-confirm-btn" id="twofaConfirmBtn"><?php echo t('twofa_verify_btn'); ?></button>
                     </div>
                 </div>
                 <div id="twofaDisableArea" class="twofa-setup-area" style="display:none;">
                     <div class="twofa-verify-form">
                         <div class="twofa-link-status">Telegram botingizga <code>/code</code> buyrug'ini yuboring va yangi tasdiqlash kodini oling.</div>
-                        <label><?php echo t('twofa_enter_code'); ?></label>
-                        <input type="text" id="twofaDisableCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input" style="text-align:center;font-size:20px;letter-spacing:6px;max-width:200px;">
-                        <label><?php echo t('twofa_current_pass'); ?></label>
-                        <input type="password" id="twofaDisablePassInput" class="settings-input" autocomplete="current-password">
-                        <button type="button" class="pf-btn pf-btn-danger" id="twofaDisableConfirmBtn"><?php echo t('twofa_disable_btn'); ?></button>
+                        <div class="twofa-verify-field twofa-otp-field">
+                            <label><?php echo t('twofa_enter_code'); ?></label>
+                            <input type="text" id="twofaDisableCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="settings-input twofa-code-input" autocomplete="one-time-code">
+                        </div>
+                        <div class="twofa-verify-field">
+                            <label><?php echo t('twofa_current_pass'); ?></label>
+                            <div class="twofa-pass-wrap">
+                                <input type="password" id="twofaDisablePassInput" class="settings-input twofa-pass-input" autocomplete="current-password">
+                                <button type="button" class="twofa-pass-toggle" data-target="twofaDisablePassInput" tabindex="-1" aria-label="Parolni ko'rsatish">👁</button>
+                            </div>
+                        </div>
+                        <button type="button" class="pf-btn pf-btn-danger twofa-confirm-btn" id="twofaDisableConfirmBtn"><?php echo t('twofa_disable_btn'); ?></button>
                     </div>
                 </div>
             </div>
@@ -684,18 +718,23 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
 
             function renderSecret(code) {
                 var el = document.getElementById('twofaSecret');
-                el.textContent = code;
+                el.textContent = '';
                 el.classList.remove('twofa-secret-boxes');
                 if (code && code.length > 0) {
                     el.classList.add('twofa-secret-boxes');
-                    var frag = document.createDocumentFragment();
                     for (var i = 0; i < code.length; i++) {
                         var b = document.createElement('span');
                         b.textContent = code[i];
-                        frag.appendChild(b);
+                        el.appendChild(b);
                     }
-                    el.appendChild(frag);
                 }
+            }
+
+            function setStepsVisible(show) {
+                var steps = document.getElementById('twofaSteps');
+                var secret = document.getElementById('twofaSecretBlock');
+                if (steps) steps.style.display = show ? '' : 'none';
+                if (secret) secret.style.display = show ? '' : 'none';
             }
 
             function bindDisableBtn(btn) {
@@ -722,10 +761,12 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                         if (tgBotLink) tgBotLink.href = 'https://t.me/' + d.bot_username;
                         setupArea.style.display = 'block';
                         verifyForm.style.display = 'none';
+                        setStepsVisible(true);
                         setLink('<?php echo e(t("twofa_waiting")); ?>', false);
                         if (d.telegram_linked) {
-                            // Telegram allaqachon bog'langan — kod form'ni darhol ochamiz
-                            setLink('<?php echo e(t("twofa_linked")); ?>', true);
+                            // Telegram allaqachon bog'langan — faqat kod form'ni ko'rsatamiz
+                            setStepsVisible(false);
+                            setLink('<?php echo e(t("twofa_linked")); ?>' + (d.masked_phone ? ' 📱 ' + d.masked_phone : ''), true);
                             verifyForm.style.display = 'flex';
                         } else {
                             startLinkPolling();
@@ -747,10 +788,11 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     .then(function(d) {
                         if (!d.ok) return;
                         if (d.telegram_linked) {
-                            // Telegram bog'landi — input form'ni ko'rsatamiz
+                            // Telegram bog'landi — qadamlar yashirilib, kod form'ni ko'rsatamiz
                             clearInterval(linkTimer);
                             linkTimer = null;
                             setupArea.style.display = 'block';
+                            setStepsVisible(false);
                             setLink('<?php echo e(t("twofa_linked")); ?>' + (d.masked_phone ? ' 📱 ' + d.masked_phone : ''), true);
                             verifyForm.style.display = 'flex';
                         } else {
@@ -857,6 +899,17 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     });
                 });
             }
+
+            // ===== Parolni ko'rsatish/yashirish =====
+            document.querySelectorAll('.twofa-pass-toggle').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var inp = document.getElementById(this.dataset.target);
+                    if (!inp) return;
+                    var show = inp.type === 'password';
+                    inp.type = show ? 'text' : 'password';
+                    this.textContent = show ? '🙈' : '👁';
+                });
+            });
         })();
         </script>
     <?php
@@ -872,7 +925,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
     if ($tab === 'history') {
         $sql = "SELECT wh.content_id, c.title, c.poster, c.release_year, c.duration, cat.slug as category, cat.name as category_name, MAX(wh.watched_at) as last_watched, wp.position_seconds, wp.duration_seconds
                 FROM watch_history wh JOIN content c ON c.id = wh.content_id JOIN categories cat ON cat.id = c.category_id
-                LEFT JOIN watch_progress wp ON wp.content_id = wh.content_id AND wp.user_id = wh.user_id
+                LEFT JOIN watch_progress wp ON wp.id = (SELECT w2.id FROM watch_progress w2 WHERE w2.user_id = wh.user_id AND w2.content_id = wh.content_id ORDER BY w2.updated_at DESC, w2.id DESC LIMIT 1)
                 WHERE wh.user_id = ? $cat_filter GROUP BY wh.content_id ORDER BY last_watched DESC LIMIT 50";
         $stmt = $pdo->prepare($sql); $stmt->execute([$uid]); $collection_items = $stmt->fetchAll();
     } elseif ($tab === 'favorites') {
@@ -907,7 +960,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
         <a href="watch.php?id=<?php echo $item['content_id']; ?>" class="collection-card">
             <div class="collection-poster">
                 <?php if ($item['poster']): ?>
-                <img src="/uzdub/uploads/posters/<?php echo e($item['poster']); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
+                <img src="<?php echo e(poster_url($item['poster'])); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
                 <?php else: ?>
                 <div class="no-poster">🎬</div>
                 <?php endif; ?>
@@ -1233,7 +1286,7 @@ include __DIR__ . '/includes/header.php';
     $init_cat_filter = '';
     $init_sql = "SELECT wh.content_id, c.title, c.poster, c.release_year, c.duration, cat.slug as category, cat.name as category_name, MAX(wh.watched_at) as last_watched, wp.position_seconds, wp.duration_seconds
             FROM watch_history wh JOIN content c ON c.id = wh.content_id JOIN categories cat ON cat.id = c.category_id
-            LEFT JOIN watch_progress wp ON wp.content_id = wh.content_id AND wp.user_id = wh.user_id
+            LEFT JOIN watch_progress wp ON wp.id = (SELECT w2.id FROM watch_progress w2 WHERE w2.user_id = wh.user_id AND w2.content_id = wh.content_id ORDER BY w2.updated_at DESC, w2.id DESC LIMIT 1)
             WHERE wh.user_id = ? $init_cat_filter GROUP BY wh.content_id ORDER BY last_watched DESC LIMIT 50";
     $init_stmt = $pdo->prepare($init_sql); $init_stmt->execute([$uid]); $init_items = $init_stmt->fetchAll();
     if (empty($init_items)):
@@ -1248,7 +1301,7 @@ include __DIR__ . '/includes/header.php';
             <a href="watch.php?id=<?php echo $item['content_id']; ?>" class="collection-card">
                 <div class="collection-poster">
                     <?php if ($item['poster']): ?>
-                    <img src="/uzdub/uploads/posters/<?php echo e($item['poster']); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
+                    <img src="<?php echo e(poster_url($item['poster'])); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
                     <?php else: ?>
                     <div class="no-poster">🎬</div>
                     <?php endif; ?>

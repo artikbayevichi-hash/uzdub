@@ -7,19 +7,17 @@ $page_title = t('home');
 // Hero uchun eng ko'p ko'rilgan 10 ta kontent (aylanuvchi banner)
 $hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.views DESC, c.release_year DESC LIMIT 10")->fetchAll();
 
-// Faqat Kino, Anime, Multfilm (Serial olib tashlandi)
-$categories = $pdo->query("SELECT * FROM categories WHERE slug != 'serial' ORDER BY id")->fetchAll();
+// Kino, Anime, Multfilm kategoriyalari
+$categories = $pdo->query("SELECT * FROM categories ORDER BY id")->fetchAll();
 
 // "Davom etish" — faqat ko'rib tugallanmaganlar (10 daqiqadan ko'p qolgan)
 $continue_items = [];
 if (is_user()) {
     $cw = $pdo->prepare(
-        "SELECT c.*, wp.position_seconds, wp.duration_seconds
+        "SELECT c.*, wp.position_seconds, wp.duration_seconds, wp.episode_id
          FROM watch_progress wp
          JOIN content c ON c.id = wp.content_id
-         WHERE wp.user_id = ?
-           AND wp.is_completed = 0
-           AND (wp.duration_seconds <= 0 OR wp.duration_seconds - wp.position_seconds > 600)
+         JOIN (SELECT MAX(id) mid FROM watch_progress WHERE user_id = ? AND is_completed = 0 AND (duration_seconds <= 0 OR duration_seconds - position_seconds > 600) GROUP BY content_id) lastw ON lastw.mid = wp.id
          ORDER BY wp.updated_at DESC
          LIMIT 12"
     );
@@ -33,7 +31,7 @@ include __DIR__ . '/includes/header.php';
 <?php if (!empty($hero_items)): ?>
 <section class="hero-carousel">
     <?php foreach ($hero_items as $i => $hero): ?>
-    <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? 'uploads/posters/' . e($hero['poster']) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=UZDUB+PLATFORM'; ?>');">
+        <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? e(poster_url($hero['poster'])) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=UZDUB+PLATFORM'; ?>');">
         <div class="hero-content">
             <div class="hero-tags">
                 <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>
@@ -93,7 +91,7 @@ if (is_user() && isset($_SESSION['user_id'])):
         <div class="row-scroll">
             <?php foreach ($recommendations as $item): ?>
             <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+                <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
                 <div class="card-info">
                     <h3><?php echo e(t_title($item)); ?></h3>
                     <div class="meta">
@@ -121,7 +119,7 @@ if (is_user() && isset($_SESSION['user_id'])):
         <div class="row-scroll">
             <?php foreach ($items as $item): ?>
             <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+                <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
                 <div class="card-info">
                     <h3><?php echo e(t_title($item)); ?></h3>
                     <div class="meta">
@@ -148,8 +146,8 @@ if (is_user() && isset($_SESSION['user_id'])):
             <?php foreach ($continue_items as $item):
                 $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
             ?>
-            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card card-continue">
-                <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+            <a href="watch.php?id=<?php echo $item['id']; ?><?php echo !empty($item['episode_id']) ? '&ep=' . (int)$item['episode_id'] : ''; ?>" class="card card-continue">
+                <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
                 <div class="continue-progress" style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 10px;overflow:hidden;"><span style="display:block;height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:2px;transition:width 0.5s ease;"></span></div>
                 <div class="card-info">
                     <h3><?php echo e(t_title($item)); ?></h3>

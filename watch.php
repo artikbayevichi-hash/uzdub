@@ -34,8 +34,7 @@ if (!$item) { header('Location: index.php'); exit; }
 
 $page_title = t_title($item);
 $page_desc = t_desc($item);
-$page_image = $item['poster'] ? '/uzdub/uploads/posters/' . $item['poster'] : '';
-$pdo->prepare("UPDATE content SET views = views + 1 WHERE id = ?")->execute([$id]);
+$page_image = $item['poster'] ? poster_url($item['poster']) : '';
 
 // Janrlarni olish
 $genre_rows = $pdo->prepare("SELECT g.name, g.slug, g.color FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = ? ORDER BY g.name");
@@ -67,17 +66,40 @@ $rel = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM related_content rc J
 $rel->execute([$id]);
 $related = $rel->fetchAll();
 
+// ===== Qismlar (episodes) =====
+$episodes = [];
+$ep_stmt = $pdo->prepare("SELECT * FROM episodes WHERE content_id = ? ORDER BY season, episode_number");
+$ep_stmt->execute([$id]);
+$episodes = $ep_stmt->fetchAll();
+
+$active_episode = null;
+$active_episode_id = 0;
+if ($episodes) {
+    $req_ep = (int)($_GET['ep'] ?? 0);
+    foreach ($episodes as $ep) {
+        if ($ep['id'] === $req_ep) { $active_episode = $ep; break; }
+    }
+    if (!$active_episode) $active_episode = $episodes[0];
+    $active_episode_id = (int)$active_episode['id'];
+}
+
 // ===== PREMIUM PAYWALL (server tomonidan majburiy tekshiruv) =====
 $is_locked = (bool)$item['is_premium'] && !has_premium_access($pdo);
 
 // ===== "Davom eting" — saqlangan pozitsiyani olish (file/telegram turidagi videolar uchun) =====
 $resume_position = 0;
-if (is_user() && !$is_locked && in_array($item['video_type'], ['file', 'telegram'], true)) {
-    $rp = $pdo->prepare("SELECT position_seconds FROM watch_progress WHERE user_id = ? AND content_id = ?");
-    $rp->execute([$_SESSION['user_id'], $id]);
+$active_video_type = $active_episode ? $active_episode['video_type'] : $item['video_type'];
+$active_video_url = $active_episode ? $active_episode['video_url'] : $item['video_url'];
+if (is_user() && !$is_locked && in_array($active_video_type, ['file', 'telegram'], true)) {
+    $rp = $pdo->prepare("SELECT position_seconds FROM watch_progress WHERE user_id = ? AND content_id = ? AND episode_id = ?");
+    $rp->execute([$_SESSION['user_id'], $id, $active_episode_id]);
     $row = $rp->fetch();
     if ($row) $resume_position = (int)$row['position_seconds'];
 }
+
+// ===== Skip Intro oralig'i (qism bo'lsa qismniki, aks holda kontentniki) =====
+$intro_start = $active_episode ? (int)($active_episode['intro_start'] ?? 0) : (int)($item['intro_start'] ?? 0);
+$intro_end = $active_episode ? (int)($active_episode['intro_end'] ?? 0) : (int)($item['intro_end'] ?? 0);
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -102,6 +124,16 @@ include __DIR__ . '/includes/header.php';
 .premium-lock h3 { font-size:22px; margin-bottom:10px; color:#fff; }
 .premium-lock p { color:var(--text-muted); margin-bottom:20px; font-size:14px; }
 .premium-lock .btn-unlock { display:inline-block; padding:12px 28px; background:linear-gradient(135deg,#f9a825,#ff6f00); color:#fff; border-radius:8px; text-decoration:none; font-weight:700; }
+.episodes-panel { background:var(--card-bg); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-bottom:22px; }
+.episodes-header h3 { font-size:15px; margin:0 0 12px; color:var(--text-light); }
+.episodes-list { display:flex; flex-wrap:wrap; gap:8px; }
+.episodes-season { width:100%; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin:6px 0 2px; }
+.episode-chip { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:8px; border:1px solid rgba(33,150,243,0.25); background:rgba(33,150,243,0.05); color:var(--text-light); text-decoration:none; font-size:13px; transition:0.2s; max-width:260px; }
+.episode-chip:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.12); }
+.episode-chip.active { background:var(--blue-primary); border-color:var(--blue-primary); }
+.episode-num { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 6px; border-radius:6px; background:rgba(33,150,243,0.15); color:var(--blue-glow); font-weight:700; font-size:12px; }
+.episode-chip.active .episode-num { background:rgba(255,255,255,0.25); color:#fff; }
+.episode-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 </style>
 
 <div class="detail-wrap">
@@ -110,7 +142,7 @@ include __DIR__ . '/includes/header.php';
         <span class="content-id-tag">🆔 <?php echo e($item['content_code'] ?? ('ID' . $item['id'])); ?></span>
         <?php if ($is_locked): ?>
         <div class="premium-lock">
-            <div class="lock-bg" style="background-image:url('<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : ''; ?>');"></div>
+            <div class="lock-bg" style="background-image:url('<?php echo $item['poster'] ? e(poster_url($item['poster'])) : ''; ?>');"></div>
             <div class="lock-content">
                 <div class="lock-icon">🔒</div>
                 <h3><?php echo t('premium_content'); ?></h3>
@@ -130,10 +162,34 @@ include __DIR__ . '/includes/header.php';
             $subs_data->execute([$id]);
             $subtitles = $subs_data->fetchAll();
         } catch (PDOException $e) {}
-        echo render_player($item['video_type'], $item['video_url'], 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? 'uploads/posters/' . e($item['poster']) : null);
+        echo render_player($active_video_type, $active_video_url, 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? poster_url($item['poster']) : null, [], $intro_start, $intro_end);
         ?>
         <?php endif; ?>
     </div>
+
+    <?php if ($episodes): ?>
+    <div class="episodes-panel">
+        <div class="episodes-header">
+            <h3><?php echo t('episodes'); ?> (<?php echo count($episodes); ?>)</h3>
+        </div>
+        <div class="episodes-list">
+            <?php
+            $season = null;
+            foreach ($episodes as $ep):
+                if ($ep['season'] !== $season):
+                    $season = $ep['season'];
+                    echo '<div class="episodes-season">' . ($season > 1 ? 'Fasl ' . (int)$season : 'Fasl ' . (int)$season) . '</div>';
+                endif;
+                $is_active = (int)$ep['id'] === $active_episode_id;
+            ?>
+            <a href="watch.php?id=<?php echo $id; ?>&ep=<?php echo $ep['id']; ?>" class="episode-chip <?php echo $is_active ? 'active' : ''; ?>">
+                <span class="episode-num"><?php echo (int)$ep['episode_number']; ?></span>
+                <span class="episode-title"><?php echo e($ep['title'] ?? ('Qism ' . (int)$ep['episode_number'])); ?></span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <?php if ($trailer_url): ?>
     <div class="trailer-section" style="margin:20px 0;border-radius:12px;overflow:hidden;">
@@ -151,7 +207,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 
     <div class="detail-header">
-        <img src="<?php echo $item['poster'] ? 'uploads/posters/' . e($item['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
+        <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
         <div>
             <h1><?php echo e(t_title($item)); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">👑 <?php echo t('premium_tag'); ?></span><?php endif; ?></h1>
             <div class="meta">
@@ -242,7 +298,7 @@ include __DIR__ . '/includes/header.php';
             <div class="row-scroll">
                 <?php foreach ($similar as $s): ?>
                 <a href="watch.php?id=<?php echo $s['id']; ?>" class="card">
-                    <img src="<?php echo $s['poster'] ? 'uploads/posters/' . e($s['poster']) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($s)); ?>" alt="<?php echo e(t_title($s)); ?>">
+                    <img src="<?php echo $s['poster'] ? e(poster_url($s['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($s)); ?>" alt="<?php echo e(t_title($s)); ?>">
                     <div class="card-info">
                         <h3><?php echo e(t_title($s)); ?></h3>
                         <div class="meta"><span><?php echo e($s['release_year']); ?></span><span class="badge">&#9733; <?php echo e($s['rating']); ?></span></div>
@@ -557,7 +613,7 @@ function toggleFav(contentId) {
     setInterval(pollCommentReactions, 5000);
 })();
 </script>
-<?php if (is_user() && !$is_locked && in_array($item['video_type'], ['file', 'telegram'], true)): ?>
+<?php if (is_user() && !$is_locked && in_array($active_video_type, ['file', 'telegram'], true)): ?>
 <script>
 var WT2 = <?php echo json_encode([
     'resuming_from' => t('resuming_from'),
@@ -567,6 +623,7 @@ var WT2 = <?php echo json_encode([
     var video = document.querySelector('.watch-player-section video');
     if (!video) return;
     var contentId = <?php echo (int)$id; ?>;
+    var episodeId = <?php echo (int)$active_episode_id; ?>;
     var resumeAt = <?php echo (int)$resume_position; ?>;
     var csrfToken = <?php echo json_encode(csrf_token()); ?>;
     var lastSaved = 0;
@@ -591,6 +648,7 @@ var WT2 = <?php echo json_encode([
         lastSaved = pos;
         var payload = JSON.stringify({
             content_id: contentId,
+            episode_id: episodeId,
             position: pos,
             duration: Math.floor(video.duration),
             csrf_token: csrfToken
