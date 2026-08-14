@@ -3,6 +3,7 @@
 // Onlayn vaqtni localStorage + server sinxronizatsiyasi,
 // Heartbeat (30s), Online count (12s), Timer display
 // ================================================================
+window.ROOT_URL = window.ROOT_URL || '/uzdub';
 (function() {
     'use strict';
 
@@ -59,7 +60,7 @@
         saveSessionStart(sessionStart);
 
         // Serverga yuborish
-        fetch('/uzdub/api/heartbeat.php', {
+        fetch(ROOT_URL + '/api/heartbeat.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({ elapsed: elapsed })
@@ -104,7 +105,7 @@
     }
 
     function fetchOnlineCount() {
-        fetch('/uzdub/api/heartbeat.php', {
+        fetch(ROOT_URL + '/api/heartbeat.php', {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })

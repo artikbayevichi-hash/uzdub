@@ -3,7 +3,7 @@
  * Telegram 2FA bot webhook (HTTP).
  *
  * Telegram'da sozlash (public URL kerak, localhost uchun emas):
- *   https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://SITE/uzdub/api/telegram-webhook.php
+ *   https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://SITE/api/telegram-webhook.php
  *
  * Localhost (XAMPP) uchun api/telegram-poll.php dan foydalaning.
  */

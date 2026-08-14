@@ -46,6 +46,31 @@ function adminbot_save_offset($file, $offset): void {
 }
 
 $isDaemon = in_array('--daemon', $argv ?? [], true);
+
+// Yagona daemon kafolati — bir nechta getUpdates iste'molchisi Telegram 409
+// "Conflict" xatosini keltiradi va bot javob bermay qoladi.
+if ($isDaemon) {
+    $lockFile = __DIR__ . '/../cache/adminbot.lock';
+    $lockPid = (int)@file_get_contents($lockFile);
+    $alreadyRunning = false;
+    if ($lockPid > 0) {
+        if (stripos(PHP_OS, 'WIN') === 0) {
+            $out = @shell_exec('tasklist /FI "PID eq ' . $lockPid . '" /NH 2>NUL');
+            $alreadyRunning = is_string($out) && preg_match('/\b' . $lockPid . '\b/', $out);
+        } else {
+            $alreadyRunning = @file_exists('/proc/' . $lockPid);
+        }
+    }
+    if ($alreadyRunning) {
+        echo "Adminbot allaqachon ishlamoqda (PID $lockPid).\n";
+        exit(0);
+    }
+    @file_put_contents($lockFile, getmypid());
+    register_shutdown_function(function () use ($lockFile) {
+        if ((string)@file_get_contents($lockFile) === (string)getmypid()) @unlink($lockFile);
+    });
+}
+
 $processed = 0;
 
 do {

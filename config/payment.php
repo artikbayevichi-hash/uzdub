@@ -13,16 +13,26 @@ define('TG_VK_BOT_USERNAME', env('TG_VK_BOT_USERNAME', 'uzdub_platform_vk_and_si
 define('VK_ACCESS_TOKEN', env('VK_ACCESS_TOKEN', ''));
 define('VK_GROUP_ID', env('VK_GROUP_ID', ''));
 define('VK_API_VERSION', env('VK_API_VERSION', '5.131'));
+define('STREAM_TOKEN_SECRET', env('STREAM_TOKEN_SECRET', 'uzdub_stream_token_secret_2024'));
+// ROOT_URL / SITE_URL config/db.php da aniqlanadi, lekin payment.php ba'zi joylarda
+// mustaqil yuklanishi mumkin — bu yerda ham aniqlanganligiga ishonch hosil qilamiz.
+if (!defined('ROOT_URL')) {
+    $__root = rtrim((string)env('ROOT_URL', '/uzdub'), '/');
+    define('ROOT_URL', $__root === '' ? '' : $__root);
+}
+if (!defined('SITE_URL')) {
+    define('SITE_URL', rtrim((string)env('SITE_URL', 'http://localhost/uzdub'), '/'));
+}
 define('CLICK_MERCHANT_ID', env('CLICK_MERCHANT_ID', ''));
 define('CLICK_SERVICE_ID', env('CLICK_SERVICE_ID', ''));
 define('CLICK_USER_ID', env('CLICK_USER_ID', ''));
 define('CLICK_SECRET_KEY', env('CLICK_SECRET_KEY', ''));
-define('CLICK_RETURN_URL', '/uzdub/premium.php?status=success');
-define('CLICK_CALLBACK_URL', 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/uzdub/api/click-callback.php');
+define('CLICK_RETURN_URL', ROOT_URL . '/premium.php?status=success');
+define('CLICK_CALLBACK_URL', SITE_URL . '/api/click-callback.php');
 define('UZUM_MERCHANT_ID', env('UZUM_MERCHANT_ID', ''));
 define('UZUM_SECRET_KEY', env('UZUM_SECRET_KEY', ''));
-define('UZUM_RETURN_URL', '/uzdub/premium.php?status=success');
-define('UZUM_CALLBACK_URL', 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/uzdub/api/uzum-callback.php');
+define('UZUM_RETURN_URL', ROOT_URL . '/premium.php?status=success');
+define('UZUM_CALLBACK_URL', SITE_URL . '/api/uzum-callback.php');
 
 define('PREMIUM_PLANS', [
     '1month' => ['label' => '1 Oy',  'price' => 10000,  'days' => 30],

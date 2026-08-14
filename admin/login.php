@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (is_ajax_request()) {
     header('Content-Type: application/json; charset=utf-8');
     if ($login_ok) {
-        echo json_encode(['ok' => true, 'redirect' => '/uzdub/admin/' . $redirect_url], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['ok' => true, 'redirect' => ROOT_URL . '/admin/' . $redirect_url], JSON_UNESCAPED_UNICODE);
     } else {
         echo json_encode(['ok' => false, 'error' => $error], JSON_UNESCAPED_UNICODE);
     }
@@ -58,10 +58,10 @@ if (is_ajax_request()) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Admin kirish - UZDUB PLATFORM</title>
-<link rel="stylesheet" href="/uzdub/css/style.css">
-<link rel="stylesheet" href="/uzdub/css/auth.css">
-<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
-<script src="/uzdub/js/emoji-blue.js" defer></script>
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/style.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/auth.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/emoji-blue.css">
+<script src="<?php echo ROOT_URL; ?>/js/emoji-blue.js" defer></script>
 <style>
 .auth-box { width: 400px; }
 .auth-box h2 { margin-bottom: 24px; }
@@ -118,7 +118,7 @@ if (is_ajax_request()) {
             </div>
             <button type="submit" class="btn">Kirish</button>
         </form>
-        <div class="alt-link"><a href="/uzdub/auth/login.php">← Foydalanuvchi sifatida kirish</a></div>
+        <div class="alt-link"><a href="<?php echo ROOT_URL; ?>/auth/login.php">← Foydalanuvchi sifatida kirish</a></div>
     </div>
 </div>
 <script>

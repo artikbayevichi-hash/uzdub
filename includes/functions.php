@@ -28,6 +28,24 @@ function csrf_input() {
     return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
 }
 
+// ===== Yengil fayl-kesh (og'ir so'rovlar natijasini qisqa muddatga keshlash) =====
+function db_cache_get(string $key, int $ttl) {
+    $file = __DIR__ . '/../cache/' . md5($key) . '.cache';
+    if (is_file($file)) {
+        $data = @unserialize(@file_get_contents($file));
+        if (is_array($data) && isset($data['exp'], $data['val']) && time() < $data['exp']) {
+            return $data['val'];
+        }
+    }
+    return null;
+}
+
+function db_cache_set(string $key, $val, int $ttl): void {
+    $dir = __DIR__ . '/../cache';
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    @file_put_contents($dir . '/' . md5($key) . '.cache', serialize(['exp' => time() + $ttl, 'val' => $val]));
+}
+
 // ===== ADMIN =====
 function is_logged_in() { return isset($_SESSION['admin_id']); }
 function require_login() { if (!is_logged_in()) { header('Location: login.php'); exit; } }
@@ -37,7 +55,7 @@ function is_user() { return isset($_SESSION['user_id']); }
 function current_user() { return $_SESSION['user_data'] ?? null; }
 
 function require_user() {
-    if (!is_user()) { header('Location: /uzdub/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI'])); exit; }
+    if (!is_user()) { header('Location: ' . ROOT_URL . '/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI'])); exit; }
 }
 
 function check_premium_expiry($pdo, $user_db_id) {
@@ -185,8 +203,8 @@ function ai_build_system_prompt(string $lang = 'uz'): string {
             . "Do'stona, qisqa (2-3 gap) va tabiiy javob ber. Emotikon ishlat. "
             . "Faqat o'zbek tilida javob ber. Savol noaniq bo'lsa, aniqlashtirish so'ra.\n"
             . "Agar bazadan kontentlar berilsa — eng mosini tavsiya qil, nomi, yili, janri va reytingini aytil. "
-            . "Har bir tavsiyani /uzdub/watch.php?id=<ID> havolasi bilan tugat — foydalanuvchi shu havola orqali to'g'ridan-to'g'ri ko'ra oladi. "
-            . "Havolani qisqa va tushunarli yoz, masalan: 'Ko'rish: /uzdub/watch.php?id=1'. "
+            . "Har bir tavsiyani " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=<ID> havolasi bilan tugat — foydalanuvchi shu havola orqali to'g'ridan-to'g'ri ko'ra oladi. "
+            . "Havolani qisqa va tushunarli yoz, masalan: 'Ko'rish: " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=1'. "
             . "Ro'yxat bo'sh bo'lsa — saytda hali yo'q deb ayting va boshqa janr taklif qil.\n"
             . "Siyosat, din, huquq mavzularida javob bermaydi. Faqat UZDUB kontentini tavsiya qil.",
 
@@ -194,8 +212,8 @@ function ai_build_system_prompt(string $lang = 'uz'): string {
             . "Дружелюбно, кратко (2-3 предложения) и естественно отвечай. Используй эмодзи. "
             . "Только на русском языке. Если вопрос неясен — уточни.\n"
             . "Если из базы есть контент — порекомендуй лучший, укажи название, год, жанр, рейтинг. "
-            . "Каждую рекомендацию завершай ссылкой /uzdub/watch.php?id=<ID> — пользователь сможет сразу посмотреть. "
-            . "Пиши ссылку кратко, например: 'Смотреть: /uzdub/watch.php?id=1'. "
+            . "Каждую рекомендацию завершай ссылкой " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=<ID> — пользователь сможет сразу посмотреть. "
+            . "Пиши ссылку кратко, например: 'Смотреть: " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=1'. "
             . "Если списка нет — скажи что контента пока нет и предложи другой жанр.\n"
             . "Не отвечай на темы политики, религии, права. Только контент UZDUB.",
 
@@ -203,8 +221,8 @@ function ai_build_system_prompt(string $lang = 'uz'): string {
             . "Be friendly, brief (2-3 sentences) and natural. Use emojis. "
             . "Answer only in English. If the question is unclear — ask for clarification.\n"
             . "If there's content from the database — recommend the best, mention name, year, genre, rating. "
-            . "End each recommendation with a link /uzdub/watch.php?id=<ID> — the user can watch directly. "
-            . "Write the link briefly, e.g.: 'Watch: /uzdub/watch.php?id=1'. "
+            . "End each recommendation with a link " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=<ID> — the user can watch directly. "
+            . "Write the link briefly, e.g.: 'Watch: " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=1'. "
             . "If the list is empty — say content isn't available yet and suggest another genre.\n"
             . "Don't answer politics, religion, law topics. Only UZDUB content.",
     ];
@@ -388,7 +406,7 @@ function ai_build_context_text(array $rows): string {
         if ($desc) $lines[] = "  {$desc}";
     }
     return "\n[Bazadan:]\n" . implode("\n", $lines)
-        . "\n\nLink: /uzdub/watch.php?id=<ID>";
+        . "\n\nLink: " . (defined('SITE_URL') ? SITE_URL : 'http://localhost/uzdub') . "/watch.php?id=<ID>";
 }
 
 // ===== Frontendda tavsiya kartochkasi sifatida ko'rsatish uchun tuzilgan ma'lumot =====
@@ -403,7 +421,7 @@ function ai_build_recommendations(array $rows): array {
             'category'   => $r['cat_name'] ?? null,
             'is_premium' => !empty($r['is_premium']),
             'poster'     => $r['poster'] ? poster_url($r['poster']) : null,
-            'url'        => '/uzdub/watch.php?id=' . (int)$r['id'],
+            'url'        => ROOT_URL . '/watch.php?id=' . (int)$r['id'],
             'genres'     => $r['genre_names'] ?? null,
             'studio'     => $r['studio'] ?? null,
             'director'   => $r['director'] ?? null,
@@ -634,7 +652,7 @@ function render_vk_player($video_url, $player_id, $poster = null, $subs_html = '
     if ($res) {
         // Agar to'g'ridan-to'g'ri VK CDN biror tarmoqda ochilmasa — o'z serverimiz
         // orqali stream.php proxy'ga tushish (bandwidth ishlatadi, lekin ishonchli).
-        $fallback = '/uzdub/stream.php?url=' . urlencode($res['best']);
+        $fallback = ROOT_URL . '/stream.php?url=' . urlencode($res['best']);
         return build_video_player($player_id, $res['best'], $poster, $subs_html, $res['sources'], $intro_start, $intro_end, false, false, $fallback);
     }
     return '<div class="player-wrap"><iframe src="' . e(vk_embed_src($video_url)) . '" allowfullscreen></iframe></div>';
@@ -750,10 +768,10 @@ function rutube_resolve($url, $ttl_hours = 24) {
 // (video moderatsiyada/yo'q) ham iframe emas — o'z playerimiz chiqadi va m3u8 paydo
 // bo'lishi bilanoq avtomatik yuklanadi (data-hls-pending rejimi).
 function render_rutube_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
-    $refresh = '/uzdub/api/rutube-refresh.php?url=' . rawurlencode($video_url);
+    $refresh = ROOT_URL . '/api/rutube-refresh.php?url=' . rawurlencode($video_url);
     $res = rutube_resolve($video_url);
     if ($res && !empty($res['url'])) {
-        $proxy = '/uzdub/stream.php?url=' . rawurlencode($res['url']) . '&hls=1';
+        $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($res['url']) . '&hls=1';
         // data-hls-refresh: keshlangan URL muddati o'tsa player avtomatik yangi havola oladi
         return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
     }
@@ -898,10 +916,10 @@ function rumble_resolve_video($url, $ttl_hours = 24) {
 // stream.php (hls=1) orqali proksi qilinib o'z playerda ko'rsatiladi. Topilmasa
 // (video hali tayyor emas va h.k.) — eski iframe embed zaxira sifatida ishlatiladi.
 function render_rumble_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
-    $refresh = '/uzdub/api/rumble-refresh.php?url=' . rawurlencode($video_url);
+    $refresh = ROOT_URL . '/api/rumble-refresh.php?url=' . rawurlencode($video_url);
     $hls = rumble_resolve_video($video_url);
     if ($hls) {
-        $proxy = '/uzdub/stream.php?url=' . rawurlencode($hls) . '&hls=1';
+        $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($hls) . '&hls=1';
         // data-hls-refresh: keshlangan CDN URL muddati o'tsa player avtomatik yangi havola oladi
         return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, true, true, null, true, $refresh);
     }
@@ -925,15 +943,89 @@ function is_direct_video_url($url) {
 
 // To'g'ridan-to'g'ri video faylni toza playerda ko'rsatadi (proksi zaxira bilan)
 function render_direct_video($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
-    $fallback = '/uzdub/stream.php?url=' . urlencode($video_url);
+    $fallback = ROOT_URL . '/stream.php?url=' . urlencode($video_url);
     return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, $fallback);
 }
 
-// VK, RuTube yoki to'g'ridan-to'g'ri video fayl bo'lsa — toza player qaytaradi, aks holda null
+// ===== Odysee (toza HTML5 player) =====
+// Odysee o'z saytini iframe'da ochishga yo'l qo'ymaydi (frame blokirovkasi). Shuning uchun
+// video'ni to'g'ridan-to'g'ri mp4 streaming URL orqali O'Z playerimizda ko'rsatamiz.
+// Streaming URL Odysee JSON-RPC "get" methodidan olinadi (player.odycdn.com) va 48 soatga
+// keshlanadi. Odysee CDN Referer tekshiradi — shuning uchun stream.php proksi ishlatiladi.
+
+// Odysee havolasidan kanal va claim nomini ajratadi.
+// Formatlar: https://odysee.com/@Kanal/Claim  yoki  https://odysee.com/Claim
+function odysee_parse_url($url) {
+    if (preg_match('~https?://(?:www\.)?odysee\.com/(?:@([^/]+)/)?([^/?#]+)~i', $url, $m)) {
+        $channel = ($m[1] !== '') ? '@' . trim($m[1]) : '';
+        $name = trim($m[2]);
+        if ($name === '' || preg_match('#\.(?:html?|php)$#i', $name)) return null;
+        return ['channel' => $channel, 'name' => $name];
+    }
+    return null;
+}
+
+// Odysee video'ning to'g'ridan-to'g'ri mp4 streaming URL'ini oladi va keshlaydi.
+// Qaytadi: streaming URL yoki null.
+function odysee_resolve_video($url, $ttl_hours = 48) {
+    $info = odysee_parse_url($url);
+    if (!$info) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/odysee_' . md5($info['channel'] . '/' . $info['name']) . '.json' : null;
+    if ($file && is_file($file)) {
+        $cached = @json_decode(@file_get_contents($file), true);
+        if (is_array($cached) && !empty($cached['stream_url']) && isset($cached['ts'])
+            && (time() - (int)$cached['ts']) < $ttl_hours * 3600) {
+            return $cached['stream_url'];
+        }
+    }
+
+    $uri = 'lbry://' . (($info['channel'] !== '') ? $info['channel'] . '/' : '') . $info['name'];
+    $payload = [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'get',
+        'params' => ['uri' => $uri],
+    ];
+    $ch = curl_init('https://api.na-backend.odysee.com/api/v1/proxy');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 25,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ]);
+    $body = curl_exec($ch);
+    $st = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($body === false || $st !== 200) return null;
+
+    $d = json_decode($body, true);
+    if (!is_array($d) || empty($d['result']['streaming_url'])) return null;
+    $streamUrl = $d['result']['streaming_url'];
+    if (!preg_match('#^https://#i', $streamUrl)) return null;
+
+    if ($file) @file_put_contents($file, json_encode(['stream_url' => $streamUrl, 'ts' => time()]));
+    return $streamUrl;
+}
+
+// Odysee video'ni o'z playerimizda (stream.php proksi orqali) ko'rsatadi.
+function render_odysee_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $stream = odysee_resolve_video($video_url);
+    if (!$stream) return null;
+    $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($stream);
+    return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false);
+}
+
+// VK, RuTube, Rumble, Odysee yoki to'g'ridan-to'g'ri video fayl bo'lsa — toza player qaytaradi, aks holda null
 function render_clean_video_if_possible($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0, array $sources = []) {
     if (vk_parse_url($video_url)) return render_vk_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (rutube_parse_url($video_url)) return render_rutube_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (rumble_parse_url($video_url)) return render_rumble_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (odysee_parse_url($video_url)) return render_odysee_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (is_direct_video_url($video_url)) return render_direct_video($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     return null;
 }
@@ -996,16 +1088,33 @@ function login_clear_attempts($pdo, $identifier) {
 }
 
 // ===== Telegram video havolasini stream proxy URL ga aylantirish =====
-function telegram_stream_src($video_url) {
+// ===== Video oqim URL — barcha turdagi manbalar uchun yagona yo'l =====
+// Nisbiy fayl (uploads/videos/...), mutlaq http(s) havola yoki Telegram
+// file_path (tg:...) → stream.php proksi havolasiga aylantiradi.
+function resolve_video_stream_url($video_url, $base_path = 'uploads/videos/') {
     $v = trim((string)$video_url);
     if ($v === '') return null;
     if (strpos($v, 'tg:') === 0) {
-        return '/uzdub/stream.php?tg=' . urlencode(substr($v, 3));
+        return ROOT_URL . '/stream.php?tg=' . urlencode(substr($v, 3));
     }
     if (preg_match('#^https?://#i', $v)) {
-        return '/uzdub/stream.php?url=' . urlencode($v);
+        return ROOT_URL . '/stream.php?url=' . urlencode($v);
     }
-    return null;
+    return ROOT_URL . '/stream.php?url=' . urlencode($base_path . $v);
+}
+
+// ===== URL'ga qarab video_type tanlash (bot/admin URL bilan qo'shganda) =====
+// tg: (Telegram fayli) -> telegram; mashhur platformalar va to'g'ridan-to'g'ri mp4 -> cloud
+// (o'z playerida, to'g'ridan-to'g'ri CDN — minglab tomoshabin uchun yaxshi);
+// qolgan https havolalar -> file (stream.php proksi orqali).
+function video_type_for_url($url) {
+    $u = (string)$url;
+    if (strpos($u, 'tg:') === 0) return 'telegram';
+    if (stripos($u, 'ok.ru/') !== false) return 'cloud';
+    if (vk_parse_url($u) || rutube_parse_url($u) || rumble_parse_url($u) || odysee_parse_url($u) || is_direct_video_url($u)) {
+        return 'cloud';
+    }
+    return 'file';
 }
 
 // ===== Telegram havolasini saqlashga tayyorlash =====
@@ -1138,10 +1247,10 @@ function download_poster($url, $target_dir) {
 // ===== Video player (subtitrlar bilan) =====
 // $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar (file/telegram uchun)
 // $intro_start / $intro_end: o'tkazib yuboriladigan intro oralig'i (soniyada) — "Skip Intro" tugmasi uchun
-function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo', $poster = null, array $sources = [], $intro_start = 0, $intro_end = 0) {
+function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo', $poster = null, array $sources = [], $intro_start = 0, $intro_end = 0, $resume_at = 0, $title = '', $next = null) {
     $subs_html = '';
     foreach ($subtitles as $sub) {
-        $src = '/uzdub/uploads/subtitles/' . e($sub['file_path']);
+        $src = ROOT_URL . '/uploads/subtitles/' . e($sub['file_path']);
         $label = e($sub['label'] ?? $sub['language']);
         $lang = e($sub['language'] ?? 'uz');
         $subs_html .= '<track kind="subtitles" src="' . $src . '" srclang="' . $lang . '" label="' . $label . '">';
@@ -1164,21 +1273,12 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/', 
             if ($clean) return $clean;
         }
         return '<div class="player-wrap">' . $video_url . '</div>';
-    } elseif ($video_type === 'file') {
-        $stream_url = '/uzdub/stream.php?url=' . urlencode($base_path . $video_url);
-        return build_video_player($player_id, $stream_url, $poster, $subs_html, $sources, $intro_start, $intro_end);
-    } elseif ($video_type === 'telegram') {
-        $stream_url = telegram_stream_src($video_url);
+    } elseif ($video_type === 'file' || $video_type === 'telegram') {
+        $stream_url = resolve_video_stream_url($video_url, $base_path);
         if ($stream_url) {
-            $tg_sources = [];
-            foreach ($sources as $label => $src) {
-                $converted = telegram_stream_src($src);
-                if ($converted) $tg_sources[$label] = $converted;
-            }
-            if (count($tg_sources) < 2) $tg_sources = [];
-            return build_video_player($player_id, $stream_url, $poster, $subs_html, $tg_sources, $intro_start, $intro_end);
+            return build_video_player($player_id, $stream_url, $poster, $subs_html, $sources, $intro_start, $intro_end, true, true, null, false, null, $resume_at, $title, $next);
         }
-        return '<p class="player-error">Telegram havolasi noto\'g\'ri.</p>';
+        return '<p class="player-error">Video havolasi noto\'g\'ri.</p>';
     }
     return '';
 }
@@ -1186,24 +1286,17 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/', 
 // ===== HTML5 video player (yagona, xatolik fallback bilan) =====
 // $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar
 // $intro_start / $intro_end: o'tkazib yuboriladigan intro oralig'i (soniyada) — "Skip Intro" tugmasi uchun
-function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '', array $sources = [], $intro_start = 0, $intro_end = 0, $crossorigin = true, $autoplay = true, $fallback_url = null, $hls = false, $hls_refresh = null) {
+function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '', array $sources = [], $intro_start = 0, $intro_end = 0, $crossorigin = true, $autoplay = true, $fallback_url = null, $hls = false, $hls_refresh = null, $resume_at = 0, $title = '', $next = null) {
     $intro_start = max(0, (int)$intro_start);
     $intro_end = max(0, (int)$intro_end);
-    // controlsList="nodownload" — brauzer playeridagi "Yuklab olish" tugmasini o'chiradi
-    // oncontextmenu="return false" — o'ng tugma "Video saqlash" ni bloklaydi
-    // preload="metadata" — brauzer butun faylni emas, faqat metadatalarni yuklaydi.
-    // Telegram'dan stream qiladigan serverda preload="auto" butun faylni (har video uchun
-    // ~300 ta upload.GetFile RPC) parallel yuklab, Telegram rate-limit'ga uchraydi.
-    // crossorigin tashqi (VK CDN) manbalarda olib tashlanadi — u holda brauzer CORS
-    // talab qilmaydi (VK CDN CORS header'larini qaytarmaydi).
-    // $hls=true bo'lsa src o'rniga data-hls qo'yiladi (m3u8 ni hls.js o'ynatadi).
-    $attrs = 'controls playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false"';
+    // Custom (anibla-style) player. Barcha UI/JS: js/player.js da.
+    // video elemanti: data-hls / data-hls-pending / data-hls-refresh / data-fallback
+    // attribute'lari orqali konfiguratsiya oladi.
+    $attrs = 'playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false"';
     if ($crossorigin) $attrs .= ' crossorigin="anonymous"';
     if ($poster) $attrs .= ' poster="' . e($poster) . '"';
     if ($fallback_url) $attrs .= ' data-fallback="' . e($fallback_url) . '"';
     if ($hls) {
-        // stream_url bo'sh bo'lsa — video hali tayyor emas (moderatsiyada): player
-        // data-hls-pending rejimida m3u8 paydo bo'lishini kutadi va avtomatik boshlaydi.
         if ($stream_url !== '') {
             $attrs .= ' data-hls="' . e($stream_url) . '"';
         } else {
@@ -1215,7 +1308,6 @@ function build_video_player($player_id, $stream_url, $poster = null, $subs_html 
         $src_attr = ' src="' . e($stream_url) . '"';
     }
 
-    $quality_menu = '';
     $qualities = [];
     if (!empty($sources)) {
         foreach ($sources as $label => $url) {
@@ -1224,304 +1316,51 @@ function build_video_player($player_id, $stream_url, $poster = null, $subs_html 
             if ($label === '' || $url === '') continue;
             $qualities[$label] = $url;
         }
-        if ($qualities) {
-            $qualities['Auto'] = $stream_url;
-            $quality_menu = '<div class="video-quality-menu" style="display:none;">';
-            $first = true;
-            foreach ($qualities as $label => $url) {
-                $q = htmlspecialchars($label, ENT_QUOTES);
-                $active = $first ? ' style="background:var(--blue-primary, #2196f3);color:#fff;"' : '';
-                $quality_menu .= '<button type="button" data-quality="' . $q . '"' . $active . '>' . $q . '</button>';
-                $first = false;
-            }
-            $quality_menu .= '</div>';
-        }
+        if ($qualities) $qualities['Auto'] = $stream_url;
     }
 
-    $html = '<div class="player-wrap has-video-container"><div class="video-container"><video id="' . e($player_id) . '" ' . $attrs . $src_attr . '>' . $subs_html . '</video>' . $quality_menu . '</div></div>';
+    $cfg = [
+        'autoplay' => (bool)$autoplay,
+        'resumeAt' => (int)$resume_at,
+        'introStart' => (int)$intro_start,
+        'introEnd' => (int)$intro_end,
+        'qualities' => (object)$qualities,
+        'title' => (string)$title,
+        'next' => $next,
+        'strings' => [
+            'loading' => t('player_loading'),
+            'pending' => t('player_pending'),
+            'skip_intro' => t('player_skip_intro'),
+            'resume_title' => t('player_resume_title'),
+            'resume_sub' => t('player_resume_sub'),
+            'resume_continue' => t('player_resume_continue'),
+            'resume_restart' => t('player_resume_restart'),
+            'error_title' => t('player_error_title'),
+            'error_sub' => t('player_error_sub'),
+            'retry' => t('player_retry'),
+            'ended_title' => t('player_ended'),
+            'replay' => t('player_replay'),
+            'next_ep' => t('player_next_ep'),
+            'speed' => t('player_speed'),
+            'quality' => t('player_quality'),
+            'subtitles' => t('player_subtitles'),
+            'off' => t('player_off'),
+            'pip' => t('player_pip'),
+            'fullscreen' => t('player_fullscreen'),
+            'cinema' => t('player_cinema'),
+            'cinema_off' => t('player_cinema_off'),
+            'settings' => t('player_settings'),
+        ],
+    ];
+    $cfg_json = json_encode($cfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($cfg_json === false) $cfg_json = '{}';
+    $cfg_attr = htmlspecialchars($cfg_json, ENT_QUOTES, 'UTF-8');
 
-    $pid = json_encode($player_id);
-    $quality_data = json_encode($qualities, JSON_UNESCAPED_SLASHES);
-    $html .= '<script>
-(function(){
-    var v = document.getElementById(' . $pid . ');
-    if (!v) return;
+    $html = '<div class="player-wrap has-video-container">'
+        . '<div class="udp-player" data-udp data-udp-config="' . $cfg_attr . '">'
+        . '<video id="' . e($player_id) . '" ' . $attrs . $src_attr . '>' . $subs_html . '</video>'
+        . '</div></div>';
 
-    var wrap = v.parentNode;
-    if (getComputedStyle(wrap).position === "static") wrap.style.position = "relative";
-    var introStart = ' . (int)$intro_start . ';
-    var introEnd = ' . (int)$intro_end . ';
-
-    // ==== Video olchamiga mos (responsive) konteyner ====
-    // loadedmetadata da videoWidth/videoHeight oqiladi va .video-container ning
-    // boy-en nisbati aynan video nisbatiga ornatiladi (16:9, 4:3, vertikal va h.k.).
-    // Vertikal/kvadrat videolarda konteyner eni cheklanib, markazga tushadi —
-    // balandligi ekran balandligining ~78%idan oshmaydi.
-    var videoContainer = v.closest(".video-container");
-    function fitVideoContainer() {
-        if (!videoContainer) return;
-        var w = v.videoWidth, h = v.videoHeight;
-        if (!w || !h) return;
-        var ratio = w / h;
-        videoContainer.style.aspectRatio = w + " / " + h;
-        if (ratio < 1.25) {
-            var maxW = Math.round(0.78 * window.innerHeight * ratio);
-            var wrapW = videoContainer.parentElement ? videoContainer.parentElement.clientWidth : window.innerWidth;
-            videoContainer.style.maxWidth = Math.min(wrapW, maxW) + "px";
-            videoContainer.style.marginLeft = "auto";
-            videoContainer.style.marginRight = "auto";
-        } else {
-            videoContainer.style.maxWidth = "100%";
-            videoContainer.style.marginLeft = "";
-            videoContainer.style.marginRight = "";
-        }
-    }
-    v.addEventListener("loadedmetadata", fitVideoContainer);
-    v.addEventListener("resize", fitVideoContainer);
-    window.addEventListener("resize", fitVideoContainer);
-
-    // ==== Yuklanayotgan indikator ====
-    var loader = document.createElement("div");
-    loader.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,18,39,0.55);color:#fff;z-index:2;pointer-events:none;";
-    var spinner = document.createElement("div");
-    spinner.style.cssText = "width:46px;height:46px;border:4px solid rgba(255,255,255,.2);border-top-color:#2196f3;border-radius:50%;animation:udbSpin .8s linear infinite;";
-    var loadLbl = document.createElement("div");
-    loadLbl.style.cssText = "font-size:13px;opacity:.85;letter-spacing:.3px;";
-    loadLbl.textContent = "Video yuklanmoqda...";
-    loader.appendChild(spinner);
-    loader.appendChild(loadLbl);
-    wrap.appendChild(loader);
-    var spinStyle = document.createElement("style");
-    spinStyle.textContent = "@keyframes udbSpin { to { transform: rotate(360deg); } }";
-    document.head.appendChild(spinStyle);
-    function setLoading(show) { loader.style.display = show ? "flex" : "none"; }
-    setLoading(v.readyState < 3);
-    // Telefonda autoplay bloklansa ham loader abadiy qolmasligi uchun
-    // metadata yuklanishi bilan indikatorni yashiramiz
-    v.addEventListener("loadedmetadata", function () { setLoading(false); });
-    v.addEventListener("canplay", function () { setLoading(false); });
-    v.addEventListener("playing", function () { setLoading(false); });
-    v.addEventListener("waiting", function () { if (!v.ended) setLoading(true); });
-    v.addEventListener("seeking", function () { if (v.readyState < 3) setLoading(true); });
-    v.addEventListener("seeked", function () { if (v.readyState >= 3) setLoading(false); });
-
-    // ==== HLS (RuTube m3u8) — hls.js orqali ====
-    if (v.dataset.hls || v.dataset.hlsPending) {
-        var hlsSrc = v.dataset.hls;
-        function startHls() {
-            if (window.Hls && Hls.isSupported()) {
-                var hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 120 });
-                hls.loadSource(hlsSrc);
-                hls.attachMedia(v);
-                hls.on(Hls.Events.ERROR, function (evt, data) {
-                    // Keshlangan URL muddati tugasa (olik havola) — avtomatik
-                    // yangisini surashtirib bir marta qayta boshlaymiz (video ochmasligi uchun).
-                    if (data && data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR
-                        && !v.dataset.hlsRetried && v.dataset.hlsRefresh) {
-                        v.dataset.hlsRetried = "1";
-                        setLoading(true);
-                        fetch(v.dataset.hlsRefresh)
-                            .then(function (r) { return r.json(); })
-                            .then(function (d) {
-                                if (d && d.ok && d.url) {
-                                    hlsSrc = d.url;
-                                    try { hls.destroy(); } catch (e) {}
-                                    startHls();
-                                } else {
-                                    setLoading(false);
-                                    v.dispatchEvent(new Event("error"));
-                                }
-                            })
-                            .catch(function () { setLoading(false); v.dispatchEvent(new Event("error")); });
-                        return;
-                    }
-                    if (data && data.fatal) {
-                        setLoading(false);
-                        try { hls.destroy(); } catch (e) {}
-                        v.dispatchEvent(new Event("error"));
-                    }
-                });
-            } else if (v.canPlayType("application/vnd.apple.mpegurl")) {
-                v.src = hlsSrc;
-            } else {
-                v.dispatchEvent(new Event("error"));
-            }
-        }
-        function loadHlsAndStart() {
-            if (window.Hls) {
-                startHls();
-            } else {
-                var hlsScript = document.createElement("script");
-                hlsScript.src = "/uzdub/js/hls.min.js";
-                hlsScript.onload = startHls;
-                hlsScript.onerror = function () { v.dispatchEvent(new Event("error")); };
-                document.head.appendChild(hlsScript);
-            }
-        }
-        if (v.dataset.hlsPending) {
-            // Video hali tayyor emas (moderatsiyada) — m3u8 paydo bolguncha
-            // davriy sorov qilamiz va tayyor bolishi bilan avtomatik boshlaymiz.
-            loadLbl.textContent = "Video tayyorlanmoqda...";
-            var pendingCount = 0;
-            (function pollPending() {
-                if (v.dataset.hls) {
-                    hlsSrc = v.dataset.hls;
-                    loadHlsAndStart();
-                    return;
-                }
-                // Moderatsiya soatlab davom etishi mumkin — sahifa ochiq turar ekan,
-                // polling cheksiz davom etadi (har 15 soniyada bir).
-                pendingCount++;
-                fetch(v.dataset.hlsRefresh)
-                    .then(function (r) { return r.json(); })
-                    .then(function (d) {
-                        if (d && d.ok && d.url) {
-                            v.dataset.hls = d.url;
-                            hlsSrc = d.url;
-                            loadHlsAndStart();
-                        } else if (d && d.msg === "login_required") {
-                            // Login talab qilinadi — player urnida xabar chiqarishni
-                            // soddalashtiramiz: foydalanuvchi kirishi kerak.
-                            loadLbl.textContent = "Video ko\u2018rish uchun saytga kiring";
-                        } else {
-                            setTimeout(pollPending, 15000);
-                        }
-                    })
-                    .catch(function () { setTimeout(pollPending, 15000); });
-            })();
-        } else {
-            loadHlsAndStart();
-        }
-    }
-
-    // ==== Avtomatik oynatish ====
-    ' . ($autoplay ? '
-    v.addEventListener("loadedmetadata", function onMeta() {
-        v.removeEventListener("loadedmetadata", onMeta);
-        setTimeout(function () {
-            if (!v.paused) return;
-            var p = v.play();
-            if (p && p.catch) p.catch(function () {});
-        }, 300);
-    });
-' : '') . '
-
-    // ==== Skip Intro tugmasi (introStart..introEnd oraligi) ====
-    if (introEnd > 0 && introEnd > introStart) {
-        var skipBtn = document.createElement("button");
-        skipBtn.type = "button";
-        skipBtn.textContent = "\u23ed Intro\u2019ni o\u2019tkazib yuborish";
-        skipBtn.style.cssText = "position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(33,150,243,.75);border-radius:8px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;z-index:3;display:none;";
-        wrap.appendChild(skipBtn);
-        function updateSkip() {
-            var show = !v.ended && v.currentTime >= introStart && v.currentTime < introEnd && v.duration > introEnd;
-            skipBtn.style.display = show ? "block" : "none";
-        }
-        skipBtn.onclick = function () {
-            if (v.duration > introEnd) v.currentTime = introEnd + 0.05;
-            skipBtn.style.display = "none";
-            var p = v.play();
-            if (p && p.catch) p.catch(function () {});
-        };
-        v.addEventListener("timeupdate", updateSkip);
-        v.addEventListener("durationchange", updateSkip);
-        updateSkip();
-    }
-
-    var qualities = ' . $quality_data . ';
-    if (qualities && Object.keys(qualities).length > 1) {
-        var wrap = v.parentNode;
-        var qbtn = document.createElement("button");
-        qbtn.type = "button";
-        qbtn.textContent = "\u2699 Sifat";
-        qbtn.style.cssText = "position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;z-index:3;";
-        var menu = wrap.querySelector(".video-quality-menu");
-        menu.style.position = "absolute";
-        menu.style.bottom = "44px";
-        menu.style.right = "8px";
-        menu.style.background = "rgba(0,0,0,.85)";
-        menu.style.borderRadius = "8px";
-        menu.style.padding = "6px";
-        menu.style.zIndex = "4";
-        menu.style.display = "none";
-        menu.style.flexDirection = "column";
-        menu.style.gap = "4px";
-        qbtn.onclick = function(e){
-            e.stopPropagation();
-            menu.style.display = menu.style.display === "none" ? "flex" : "none";
-        };
-        menu.querySelectorAll("button").forEach(function(b){
-            b.onclick = function(){
-                var label = b.dataset.quality;
-                var url = qualities[label];
-                if (!url) return;
-                var cur = v.currentTime;
-                var wasPaused = v.paused;
-                var wasPlaying = !v.paused && !v.ended;
-                v.src = url;
-                v.load();
-                v.addEventListener("loadedmetadata", function handler(){
-                    if (cur < v.duration) v.currentTime = cur;
-                    v.removeEventListener("loadedmetadata", handler);
-                });
-                if (wasPlaying) v.play();
-                menu.querySelectorAll("button").forEach(function(x){ x.style.background = ""; x.style.color = ""; });
-                b.style.background = "var(--blue-primary, #2196f3)";
-                b.style.color = "#fff";
-                menu.style.display = "none";
-            };
-        });
-        wrap.appendChild(qbtn);
-        wrap.addEventListener("click", function(e){
-            if (e.target !== menu && !menu.contains(e.target)) menu.style.display = "none";
-        });
-    }
-
-    v.addEventListener("error", function(){
-        setLoading(false);
-        if (v.dataset.errHandled) return;
-        v.dataset.errHandled = "1";
-        // Direct manba ochilmasa - data-fallback (proksi) ga tushamiz
-        if (v.dataset.fallback && !v.dataset.fallbackUsed) {
-            v.dataset.fallbackUsed = "1";
-            var cur = v.currentTime;
-            var wasPlaying = !v.paused && !v.ended;
-            v.removeAttribute("crossorigin");
-            v.src = v.dataset.fallback;
-            v.load();
-            v.addEventListener("loadedmetadata", function onFbMeta(){
-                v.removeEventListener("loadedmetadata", onFbMeta);
-                delete v.dataset.errHandled;
-                if (cur > 0 && cur < v.duration) v.currentTime = cur;
-                if (wasPlaying) { var p = v.play(); if (p && p.catch) p.catch(function(){}); }
-            });
-            return;
-        }
-        var wrap = v.parentNode;
-        var box = document.createElement("div");
-        box.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,0.85);color:#fff;z-index:5;text-align:center;padding:20px;";
-        var txt = document.createElement("div");
-        txt.style.fontWeight = "700";
-        txt.textContent = "\u26a0 Video yuklanmadi";
-        var sub = document.createElement("div");
-        sub.style.cssText = "font-size:12px;opacity:.75";
-        sub.textContent = "Internet yoki server holatini tekshiring";
-        var retry = document.createElement("button");
-        retry.textContent = "\u{1f504} Qayta urinish";
-        retry.style.cssText = "background:#2196f3;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:700;cursor:pointer;";
-        retry.onclick = function(){
-            delete v.dataset.errHandled;
-            if (v.dataset.hls) { location.reload(); return; }
-            v.load();
-            if (box.parentNode) box.remove();
-        };
-        box.appendChild(txt);
-        box.appendChild(sub);
-        box.appendChild(retry);
-        wrap.appendChild(box);
-    });
-})();
-</script>';
     return $html;
 }
 
@@ -1636,7 +1475,7 @@ function og_meta_tags(string $title, string $description = '', ?string $image = 
 
 
 // ===== Avatar URL =====
-function avatar_url($avatar, $base = '/uzdub/') {
+function avatar_url($avatar, $base = ROOT_URL . '/') {
     if ($avatar) return $base . 'uploads/avatars/' . e($avatar);
     return $base . 'assets/default-avatar.svg';
 }

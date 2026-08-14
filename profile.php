@@ -176,7 +176,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
         (function() {
             var csrf = '<?php echo csrf_token(); ?>';
             var profileUid = <?php echo json_encode($profile_user['user_id'], JSON_UNESCAPED_UNICODE); ?>;
-            var saveSettingsUrl = '/uzdub/profile.php?uid=' + encodeURIComponent(profileUid);
+            var saveSettingsUrl = ROOT_URL + '/profile.php?uid=' + encodeURIComponent(profileUid);
             var origEmail = <?php echo json_encode($profile_user['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>;
             var origUsername = <?php echo json_encode($profile_user['username'], JSON_UNESCAPED_UNICODE); ?>;
             var otpModal = document.getElementById('otpModal');
@@ -241,7 +241,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 var code=getOTP();
                 if(code.length!==6){if(window.showToast)showToast('6 xonali kod kiriting','error');return;}
                 otpVerifyBtn.disabled=true;
-                fetch('/uzdub/api/otp-verify.php',{
+                fetch(ROOT_URL + '/api/otp-verify.php',{
                     method:'POST',
                     headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
                     body:JSON.stringify({code:code,type:pendingType,csrf_token:csrf})
@@ -282,7 +282,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
             /* ===== OTP Resend handler ===== */
             otpResendBtn.addEventListener('click',function(){
                 var data={type:pendingType,csrf_token:csrf};
-                fetch('/uzdub/api/otp-send.php',{
+                fetch(ROOT_URL + '/api/otp-send.php',{
                     method:'POST',
                     headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
                     body:JSON.stringify(data)
@@ -326,7 +326,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
             if(uEditBtn){
                 uEditBtn.addEventListener('click',function(){
                     uEditBtn.disabled=true;
-                    fetch('/uzdub/api/otp-send.php',{
+                    fetch(ROOT_URL + '/api/otp-send.php',{
                         method:'POST',
                         headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
                         body:JSON.stringify({type:'pre-verify-username',csrf_token:csrf})
@@ -386,7 +386,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
             if(eEditBtn){
                 eEditBtn.addEventListener('click',function(){
                     eEditBtn.disabled=true;
-                    fetch('/uzdub/api/otp-send.php',{
+                    fetch(ROOT_URL + '/api/otp-send.php',{
                         method:'POST',
                         headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
                         body:JSON.stringify({type:'email-bot',csrf_token:csrf})
@@ -448,7 +448,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
 
             if(pToggle){
                 pToggle.addEventListener('click',function(){
-                    fetch('/uzdub/api/otp-send.php',{
+                    fetch(ROOT_URL + '/api/otp-send.php',{
                         method:'POST',
                         headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
                         body:JSON.stringify({type:'pre-verify-password',csrf_token:csrf})
@@ -642,7 +642,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
 
             // ===== Load sessions =====
             function loadSessions() {
-                fetch('/uzdub/api/sessions.php', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                fetch(ROOT_URL + '/api/sessions.php', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
                     if (!d.ok) return;
@@ -675,7 +675,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                             fd.append('action', 'logout_one');
                             fd.append('session_id', this.dataset.id);
                             fd.append('csrf_token', csrfVal);
-                            fetch('/uzdub/api/sessions.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            fetch(ROOT_URL + '/api/sessions.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                             .then(function(r) { return r.json(); })
                             .then(function(d) { if (d.ok) { if (window.showToast) showToast(d.message, 'success'); loadSessions(); } else { if (window.showToast) showToast(d.error, 'error'); } });
                         });
@@ -691,7 +691,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 var fd = new FormData();
                 fd.append('action', 'logout_all');
                 fd.append('csrf_token', csrfVal);
-                fetch('/uzdub/api/sessions.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                fetch(ROOT_URL + '/api/sessions.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); })
                 .then(function(d) { if (d.ok) { if (window.showToast) showToast(d.message, 'success'); loadSessions(); } else { if (window.showToast) showToast(d.error, 'error'); } });
             });
@@ -751,7 +751,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     var fd = new FormData();
                     fd.append('action', 'generate');
                     fd.append('csrf_token', csrfVal);
-                    fetch('/uzdub/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    fetch(ROOT_URL + '/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
                         if (!d.ok) { if (window.showToast) showToast(d.error, 'error'); return; }
@@ -783,7 +783,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     var fd = new FormData();
                     fd.append('action', 'check_link');
                     fd.append('csrf_token', csrfVal);
-                    fetch('/uzdub/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    fetch(ROOT_URL + '/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
                         if (!d.ok) return;
@@ -843,7 +843,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     fd.append('code', code);
                     fd.append('current_password', pass);
                     fd.append('csrf_token', csrfVal);
-                    fetch('/uzdub/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    fetch(ROOT_URL + '/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
                         confirmBtn.disabled = false;
@@ -878,7 +878,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                     fd.append('code', code);
                     fd.append('current_password', pass);
                     fd.append('csrf_token', csrfVal);
-                    fetch('/uzdub/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    fetch(ROOT_URL + '/api/2fa-setup.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
                         disableConfirmBtn.disabled = false;
@@ -1016,7 +1016,7 @@ if ($is_own && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($av) {
             $pdo->prepare("UPDATE users SET avatar=? WHERE id=?")->execute([$av, $profile_user['id']]);
             $profile_user['avatar'] = $av;
-            $resp['avatar_url'] = '/uzdub/uploads/avatars/' . $av;
+            $resp['avatar_url'] = ROOT_URL . '/uploads/avatars/' . $av;
             $resp['msg'] .= t('avatar_updated') . ' ';
         }
     }
@@ -1166,7 +1166,7 @@ if ($streak_dates) {
 include __DIR__ . '/includes/header.php';
 ?>
 
-<link rel="stylesheet" href="/uzdub/css/profile.css?v=<?php echo @filemtime(__DIR__ . '/css/profile.css') ?: 1; ?>">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/profile.css?v=<?php echo @filemtime(__DIR__ . '/css/profile.css') ?: 1; ?>">
 
 <div class="profile-page">
 
@@ -1390,7 +1390,7 @@ var PF_CURRENT_CAT = 'all';
             return;
         }
         content.innerHTML = '<div class="tab-loading"><div class="tab-spinner"></div></div>';
-        var url = '/uzdub/profile.php?ajax_tab=' + encodeURIComponent(tab) + '&uid=' + encodeURIComponent(PF_UID) + '&cat=' + encodeURIComponent(PF_CURRENT_CAT);
+        var url = ROOT_URL + '/profile.php?ajax_tab=' + encodeURIComponent(tab) + '&uid=' + encodeURIComponent(PF_UID) + '&cat=' + encodeURIComponent(PF_CURRENT_CAT);
         fetch(url)
             .then(function(r) { return r.text(); })
             .then(function(html) {
@@ -1444,7 +1444,7 @@ var PF_CURRENT_CAT = 'all';
         return h > 0 ? h + H + m + M : (m > 0 ? m + M : '0' + M);
     }
     setInterval(function() {
-        fetch('/uzdub/api/heartbeat.php', {
+        fetch(ROOT_URL + '/api/heartbeat.php', {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })

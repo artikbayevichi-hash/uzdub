@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/payment.php';
 
 $new_account = isset($_GET['new']);
-if (is_user() && !$new_account) { header('Location: /uzdub/index.php'); exit; }
+if (is_user() && !$new_account) { header('Location: ' . ROOT_URL . '/index.php'); exit; }
 
 // "Boshqa hisob bilan kirish" — tozalanib qolgan 2FA holatini bekor qilish
 if (isset($_GET['reset'])) {
@@ -19,20 +19,20 @@ if (isset($_GET['google'])) {
         $error = 'Google orqali kirish amalga oshmadi. Iltimos, qayta urinib ko\'ring.';
     }
 }
-$redirect = $_GET['redirect'] ?? '/uzdub/index.php';
+$redirect = $_GET['redirect'] ?? ROOT_URL . '/index.php';
 $allowed = [
-    '/uzdub/index.php',
-    '/uzdub/watch.php',
-    '/uzdub/category.php',
-    '/uzdub/random.php',
-    '/uzdub/global_chat.php',
-    '/uzdub/profile.php',
-    '/uzdub/premium.php',
-    '/uzdub/inbox.php',
-    '/uzdub/search.php',
+    ROOT_URL . '/index.php',
+    ROOT_URL . '/watch.php',
+    ROOT_URL . '/category.php',
+    ROOT_URL . '/random.php',
+    ROOT_URL . '/global_chat.php',
+    ROOT_URL . '/profile.php',
+    ROOT_URL . '/premium.php',
+    ROOT_URL . '/inbox.php',
+    ROOT_URL . '/search.php',
 ];
-if (!in_array($redirect, $allowed, true) && !preg_match('#^/uzdub/(watch|category|profile|premium|inbox|search)\.php#', $redirect)) {
-    $redirect = '/uzdub/index.php';
+if (!in_array($redirect, $allowed, true) && !preg_match('#^' . preg_quote(ROOT_URL, '#') . '/(watch|category|profile|premium|inbox|search)\.php#', $redirect)) {
+    $redirect = ROOT_URL . '/index.php';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_regenerate_id(true);
             record_user_session($pdo, $user['id']);
             $_SESSION['login_redirect'] = $redirect;
-            header('Location: /uzdub/auth/save-account.php');
+            header('Location: ' . ROOT_URL . '/auth/save-account.php');
             exit;
         } else {
             $error = 'Noto\'g\'ri tasdiqlash kodi.';
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         session_regenerate_id(true);
                         record_user_session($pdo, $user['id']);
                         $_SESSION['login_redirect'] = $redirect;
-                        header('Location: /uzdub/auth/save-account.php');
+                        header('Location: ' . ROOT_URL . '/auth/save-account.php');
                         exit;
                     }
                 } else {
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         login_clear_attempts($pdo, $attempt_id);
                         $_SESSION['admin_id'] = $admin['id'];
                         $_SESSION['admin_username'] = $admin['username'];
-                        header('Location: /uzdub/admin/dashboard.php');
+                        header('Location: ' . ROOT_URL . '/admin/dashboard.php');
                         exit;
                     }
 
@@ -180,10 +180,11 @@ if (empty($show_2fa) && !empty($_SESSION['2fa_show_totp']) && !empty($_SESSION['
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kirish - UZDUB PLATFORM</title>
-<link rel="stylesheet" href="/uzdub/css/style.css">
-<link rel="stylesheet" href="/uzdub/css/auth.css">
-<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
-<script src="/uzdub/js/emoji-blue.js" defer></script>
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/style.css?v=<?php echo @filemtime(__DIR__ . '/../css/style.css') ?: 1; ?>">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/auth.css?v=<?php echo @filemtime(__DIR__ . '/../css/auth.css') ?: 1; ?>">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/emoji-blue.css?v=<?php echo @filemtime(__DIR__ . '/../css/emoji-blue.css') ?: 1; ?>">
+<script>window.ROOT_URL = <?php echo json_encode(ROOT_URL); ?>;</script>
+<script src="<?php echo ROOT_URL; ?>/js/emoji-blue.js" defer></script>
 </head>
 <body>
 <div class="auth-grid"></div>
@@ -240,14 +241,14 @@ if (empty($show_2fa) && !empty($_SESSION['2fa_show_totp']) && !empty($_SESSION['
         <script>
         (function() {
             var timer = setInterval(function() {
-                fetch('/uzdub/api/login-approval.php?action=status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                fetch(ROOT_URL + '/api/login-approval.php?action=status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
                     if (!d.ok) { fail('appr-err', 'So\'rov mavjud emas. Qayta kirishga urinib ko\'ring.'); return; }
                     if (d.status === 'approved') {
                         clearInterval(timer);
                         document.getElementById('apprStatusText').textContent = 'Tasdiqlandi! Kirish yakunlanmoqda...';
-                        window.location.href = '/uzdub/api/login-approval.php?action=finalize';
+                        window.location.href = ROOT_URL + '/api/login-approval.php?action=finalize';
                     } else if (d.status === 'denied') {
                         fail('appr-no', 'Kirish rad etildi. Barcha faol sessiyalar yakunlandi.');
                     } else if (d.status === 'expired') {
@@ -304,7 +305,7 @@ if (empty($show_2fa) && !empty($_SESSION['2fa_show_totp']) && !empty($_SESSION['
             <?php if (!$google_client_id): ?>
             <div class="alert alert-warning">⚠ Google kirish hali sozlanmagan. Admin panel'dan .env faylini to'ldiring.</div>
             <?php endif; ?>
-            <a class="google-btn <?php if (!$google_client_id) echo 'disabled'; ?>" href="<?php echo $google_client_id ? '/uzdub/auth/google-login.php' : '#'; ?>" <?php if (!$google_client_id): ?>onclick="alert('Google OAuth sozlanmagan. Admin bilan bog\'laning.'); return false;"<?php endif; ?>>
+            <a class="google-btn <?php if (!$google_client_id) echo 'disabled'; ?>" href="<?php echo $google_client_id ? ROOT_URL . '/auth/google-login.php' : '#'; ?>" <?php if (!$google_client_id): ?>onclick="alert('Google OAuth sozlanmagan. Admin bilan bog\'laning.'); return false;"<?php endif; ?>>
                 <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                 Google orqali kirish
             </a>
@@ -358,7 +359,7 @@ if (empty($show_2fa) && !empty($_SESSION['2fa_show_totp']) && !empty($_SESSION['
             </div>
             <button type="submit" class="btn" id="adminModalSubmit">Kirish</button>
         </form>
-        <div class="alt-link"><a href="/uzdub/admin/login.php">To'liq sahifada ochish</a></div>
+        <div class="alt-link"><a href="<?php echo ROOT_URL; ?>/admin/login.php">To'liq sahifada ochish</a></div>
     </div>
 </div>
 
@@ -483,7 +484,7 @@ if (empty($show_2fa) && !empty($_SESSION['2fa_show_totp']) && !empty($_SESSION['
         submitBtn.disabled = true;
         var orig = submitBtn.textContent;
         submitBtn.textContent = 'Tekshirilmoqda...';
-        fetch('/uzdub/admin/login.php', {
+        fetch(ROOT_URL + '/admin/login.php', {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: new FormData(form)
@@ -491,7 +492,7 @@ if (empty($show_2fa) && !empty($_SESSION['2fa_show_totp']) && !empty($_SESSION['
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d && d.ok) {
-                window.location.href = d.redirect || '/uzdub/admin/dashboard.php';
+                window.location.href = d.redirect || ROOT_URL + '/admin/dashboard.php';
             } else {
                 errorBox.textContent = (d && d.error) ? d.error : 'Kirish amalga oshmadi.';
                 errorBox.style.display = 'block';

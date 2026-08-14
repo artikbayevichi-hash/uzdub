@@ -147,14 +147,14 @@ function renderMsg(msg) {
     var isOwn = msg.sender_id == currentUserId;
     var body = '';
     if (msg.message) body += '<div class="msg-text">' + escHtml(msg.message) + '</div>';
-    if (msg.attachment) body += '<img class="msg-image" src="/uzdub/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
+    if (msg.attachment) body += '<img class="msg-image" src="' + ROOT_URL + '/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
     body += '<span class="msg-time-small">' + escHtml(msg.created_at.substring(11,16)) + '</span>';
     return '<div class="msg-item ' + (isOwn ? 'own' : 'other') + '" data-id="' + msg.id + '">' + body + '</div>';
 }
 var fetchRetries = 0;
 var maxRetries = 3;
 function fetchMessages() {
-    fetch('/uzdub/chat.php?with=<?php echo e($other['user_id']); ?>&fetch_msgs=1&last_id=' + lastId)
+    fetch(ROOT_URL + '/chat.php?with=<?php echo e($other['user_id']); ?>&fetch_msgs=1&last_id=' + lastId)
         .then(function(r) { return r.json(); })
         .then(function(msgs) {
             fetchRetries = 0;
@@ -212,7 +212,7 @@ function sendMsg() {
     fd.append('message', txt);
     fd.append('csrf_token', '<?php echo e(csrf_token()); ?>');
     if (selectedFile) fd.append('attachment', selectedFile);
-    fetch('/uzdub/chat.php?with=<?php echo e($other['user_id']); ?>', {method:'POST', body:fd})
+    fetch(ROOT_URL + '/chat.php?with=<?php echo e($other['user_id']); ?>', {method:'POST', body:fd})
         .then(function(r) { return r.json(); })
         .then(function(r) {
             if (r.ok) { input.value = ''; clearAttachment(); fetchMessages(); }

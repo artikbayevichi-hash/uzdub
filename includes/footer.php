@@ -20,17 +20,17 @@
             </div>
             <div class="footer-links">
                 <h4><?php echo t('useful_links'); ?></h4>
-                <a href="/uzdub/index.php"><?php echo t('home'); ?></a>
-                <a href="/uzdub/category.php?slug=kino"><?php echo t('movies'); ?></a>
-                <a href="/uzdub/category.php?slug=anime"><?php echo t('anime'); ?></a>
-                <a href="/uzdub/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/index.php"><?php echo t('home'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/category.php?slug=kino"><?php echo t('movies'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/category.php?slug=anime"><?php echo t('anime'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a>
             </div>
             <div class="footer-links">
                 <h4><?php echo t('legal'); ?></h4>
-                <a href="/uzdub/dmca.php">DMCA</a>
-                <a href="/uzdub/terms.php"><?php echo t('terms'); ?></a>
-                <a href="/uzdub/privacy.php"><?php echo t('privacy'); ?></a>
-                <a href="/uzdub/contacts.php"><?php echo t('contacts'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/dmca.php">DMCA</a>
+                <a href="<?php echo ROOT_URL; ?>/terms.php"><?php echo t('terms'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/privacy.php"><?php echo t('privacy'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/contacts.php"><?php echo t('contacts'); ?></a>
             </div>
         </div>
         <div class="footer-divider"></div>
@@ -45,6 +45,77 @@
 </footer>
 
 <?php include __DIR__ . '/ai-widget.php'; ?>
-<script src="/uzdub/js/main.js"></script>
+<style>
+#resumeToast{position:fixed;right:16px;bottom:84px;z-index:999998;width:340px;max-width:calc(100vw - 32px);background:rgba(18,26,43,0.96);border:1px solid rgba(33,150,243,0.25);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,0.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow:hidden;transform:translateX(120%);opacity:0;transition:transform .38s cubic-bezier(.18,.89,.32,1.2),opacity .3s ease;pointer-events:auto}
+#resumeToast.show{transform:translateX(0);opacity:1}
+#resumeToast.hide{transform:translateX(120%);opacity:0;transition:transform .28s ease,opacity .25s ease}
+#resumeToast .rt-inner{display:flex;gap:12px;padding:12px}
+#resumeToast .rt-poster{width:56px;height:80px;flex:0 0 56px;border-radius:8px;object-fit:cover;background:#0d1424}
+#resumeToast .rt-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
+#resumeToast .rt-title{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#resumeToast .rt-msg{font-size:13px;color:#9aa8bd}
+#resumeToast .rt-btn{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:7px 16px;border-radius:20px;background:var(--blue-primary,#2196f3);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;text-decoration:none;transition:background .2s}
+#resumeToast .rt-btn:hover{background:#1976d2}
+#resumeToast .rt-close{position:absolute;top:6px;right:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:rgba(255,255,255,0.08);border-radius:50%;color:#9aa8bd;font-size:15px;cursor:pointer;transition:background .2s,color .2s}
+#resumeToast .rt-close:hover{background:rgba(239,83,80,0.25);color:#ef5350}
+@media(min-width:769px){#resumeToast{bottom:20px}}
+</style>
+<script>
+(function(){
+    var data = window.__UZDUB_RESUME__;
+    if (!data || !data.content_id) return;
+    try {
+        var u = new URL(location.href);
+        if (u.pathname.indexOf('watch.php') !== -1 && parseInt(u.searchParams.get('id'), 10) === data.content_id) return;
+    } catch (e) {}
+    var SK = 'uzdub_resume_toast';
+    try { if (sessionStorage.getItem(SK)) return; } catch (e) {}
+    var COOL = 2 * 60 * 60 * 1000;
+    var CK = 'uzdub_resume_skip_' + data.content_id;
+    try {
+        var skipTs = parseInt(localStorage.getItem(CK), 10) || 0;
+        if (skipTs && (Date.now() - skipTs) < COOL) return;
+    } catch (e) {}
+
+    function esc(s){ var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    var t = <?php echo json_encode(t('continue_watching_question'), JSON_UNESCAPED_UNICODE); ?>;
+    var btnTxt = <?php echo json_encode(t('continue_watching_btn'), JSON_UNESCAPED_UNICODE); ?>;
+    var closeTxt = <?php echo json_encode(t('continue_watching_close'), JSON_UNESCAPED_UNICODE); ?>;
+    var href = ROOT_URL + '/watch.php?id=' + data.content_id + (data.episode_id ? '&ep=' + data.episode_id : '');
+
+    var el = document.createElement('div');
+    el.id = 'resumeToast';
+    el.innerHTML =
+        '<button type="button" class="rt-close" aria-label="' + esc(closeTxt) + '" title="' + esc(closeTxt) + '">&times;</button>' +
+        '<div class="rt-inner">' +
+            (data.poster ? '<img class="rt-poster" src="' + esc(data.poster) + '" alt="">' : '<div class="rt-poster" style="display:flex;align-items:center;justify-content:center;font-size:22px">&#127916;</div>') +
+            '<div class="rt-body">' +
+                '<div class="rt-title">' + esc(data.title || '') + '</div>' +
+                '<div class="rt-msg">' + esc(t) + '</div>' +
+                '<a class="rt-btn" href="' + href + '">&#9654; ' + esc(btnTxt) + '</a>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(el);
+
+    var timer = null;
+    function dismiss() {
+        if (timer) clearTimeout(timer);
+        el.classList.add('hide');
+        try { sessionStorage.setItem(SK, '1'); } catch (e) {}
+        try { localStorage.setItem(CK, String(Date.now())); } catch (e) {}
+        setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }
+    el.querySelector('.rt-close').addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
+    el.querySelector('.rt-btn').addEventListener('click', dismiss);
+    setTimeout(function() {
+        el.classList.add('show');
+        // Bir tab sessiyasida navigatsiyada takror chiqmasligi uchun darhol belgilaymiz
+        try { sessionStorage.setItem(SK, '1'); } catch (e) {}
+    }, 900);
+    timer = setTimeout(dismiss, 120000);
+})();
+</script>
+<script src="<?php echo ROOT_URL; ?>/js/main.js"></script>
 </body>
 </html>

@@ -41,7 +41,7 @@ if (!rate_limit_check($pdo, 'voice_command', 10, 60)) {
 $norm = mb_strtolower(trim($text));
 $norm = preg_replace('/[.,!?;:]/u', '', $norm);
 
-$BASE = '/uzdub/';
+$BASE = ROOT_URL . '/';
 
 function contains($haystack, array $needles) {
     foreach ($needles as $n) {

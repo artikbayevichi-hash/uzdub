@@ -5,10 +5,10 @@
    va to'lov muvaffaqiyatli bo'lsa Premiumni avtomatik yoqadi.
    
    Click ushbu URLga POST so'rov yuboradi:
-   https://sizning.saytingiz/uzdub/api/click-callback.php
-   
+   https://SIZNING-DOMEN.uz/api/click-callback.php
+
    Click sozlamalarida (https://my.click.uz/services)-> URL ni kiriting:
-   https://sizning.saytingiz/uzdub/api/click-callback.php
+   https://SIZNING-DOMEN.uz/api/click-callback.php
    ============================================================ */
 
 require_once __DIR__ . '/../config/db.php';

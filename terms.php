@@ -5,10 +5,10 @@ require_once __DIR__ . '/includes/functions.php';
 $page_title = t('terms_page_title');
 include __DIR__ . '/includes/header.php';
 ?>
-<link rel="stylesheet" href="/uzdub/css/legal.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/legal.css?v=<?php echo @filemtime(__DIR__ . '/css/legal.css') ?: 1; ?>">
 <div class="legal-wrap">
 <div class="legal-content-card">
-    <h1>📜 <?php echo t('terms_heading'); ?></h1>
+    <h1>рџ“њ <?php echo t('terms_heading'); ?></h1>
     <p><?php echo t('terms_intro'); ?></p>
 
     <h2>1. <?php echo t('service_desc'); ?></h2>

@@ -3,7 +3,7 @@
  * UZDUB admin bоt — webhook (HTTP) varianti.
  *
  * Public URL bo'lsa ishlatiladi:
- *   https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://SITE/uzdub/api/adminbot-webhook.php
+ *   https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://SITE/api/adminbot-webhook.php
  *
  * Localhost (XAMPP) uchun api/adminbot-poll.php dan foydalaning.
  */

@@ -8,7 +8,7 @@ $client_secret = env('GOOGLE_CLIENT_SECRET', '');
 $redirect_uri  = env('SITE_URL', 'http://localhost/uzdub') . '/auth/google-callback.php';
 
 if (!$client_id || !$client_secret) {
-    header('Location: /uzdub/auth/login.php');
+    header('Location: ' . ROOT_URL . '/auth/login.php');
     exit;
 }
 
@@ -16,7 +16,7 @@ $code  = $_GET['code']  ?? '';
 $state = $_GET['state'] ?? '';
 
 if (!$code || !$state || !isset($_SESSION['google_state']) || $state !== $_SESSION['google_state']) {
-    header('Location: /uzdub/auth/login.php');
+    header('Location: ' . ROOT_URL . '/auth/login.php');
     exit;
 }
 unset($_SESSION['google_state']);
@@ -59,7 +59,7 @@ $token_response = json_decode((string)(google_http(
 ) ?? ''));
 
 if (empty($token_response->id_token)) {
-    header('Location: /uzdub/auth/login.php?google=invalid');
+    header('Location: ' . ROOT_URL . '/auth/login.php?google=invalid');
     exit;
 }
 
@@ -68,19 +68,19 @@ $tokeninfo = google_http('https://oauth2.googleapis.com/tokeninfo?id_token=' . u
 $payload = $tokeninfo ? json_decode($tokeninfo) : null;
 
 if (!$payload || empty($payload->sub) || empty($payload->email)) {
-    header('Location: /uzdub/auth/login.php?google=invalid');
+    header('Location: ' . ROOT_URL . '/auth/login.php?google=invalid');
     exit;
 }
 
 // Faqat Google tomonidan tasdiqlangan email akkauntlariga kirishga ruxsat beriladi
 if (!isset($payload->email_verified) || $payload->email_verified !== 'true') {
-    header('Location: /uzdub/auth/login.php?google=unverified');
+    header('Location: ' . ROOT_URL . '/auth/login.php?google=unverified');
     exit;
 }
 
 // Token bizning OAuth appimizga berilgan bo'lishi kerak
 if (!empty($payload->aud) && $payload->aud !== $client_id) {
-    header('Location: /uzdub/auth/login.php?google=invalid');
+    header('Location: ' . ROOT_URL . '/auth/login.php?google=invalid');
     exit;
 }
 
@@ -112,10 +112,10 @@ if ($user && !empty($user['two_factor_enabled'])) {
         $ins = $pdo->prepare("INSERT INTO login_approvals (user_id, token, ip_address, user_agent, expires_at) VALUES (?, ?, ?, ?, ?)");
         $ins->execute([$user['id'], $token, $ip, $_SERVER['HTTP_USER_AGENT'] ?? '', $expires]);
         $_SESSION['login_approval_token'] = $token;
-        $_SESSION['2fa_redirect'] = '/uzdub/index.php';
+        $_SESSION['2fa_redirect'] = ROOT_URL . '/index.php';
         tg_2fa_send_approval($tg_chat, $token, $ip, date('H:i d.m.Y'));
 
-        header('Location: /uzdub/auth/login.php');
+        header('Location: ' . ROOT_URL . '/auth/login.php');
         exit;
     }
 
@@ -123,14 +123,14 @@ if ($user && !empty($user['two_factor_enabled'])) {
     require_once __DIR__ . '/../includes/totp.php';
     if (!empty($user['two_factor_secret'])) {
         $_SESSION['2fa_totp_secret'] = $user['two_factor_secret'];
-        $_SESSION['2fa_redirect'] = '/uzdub/index.php';
+        $_SESSION['2fa_redirect'] = ROOT_URL . '/index.php';
         $_SESSION['2fa_show_totp'] = true;
-        header('Location: /uzdub/auth/login.php');
+        header('Location: ' . ROOT_URL . '/auth/login.php');
         exit;
     }
 
     // 2FA yoqilgan, lekin na Telegram, na TOTP sekreti bor — bloklash
-    header('Location: /uzdub/auth/login.php?google=invalid');
+    header('Location: ' . ROOT_URL . '/auth/login.php?google=invalid');
     exit;
 }
 
@@ -139,5 +139,5 @@ check_premium_expiry($pdo, $user_db_id);
 refresh_user_session($pdo, $user_db_id);
 session_regenerate_id(true);
 
-header('Location: /uzdub/auth/save-account.php');
+header('Location: ' . ROOT_URL . '/auth/save-account.php');
 exit;

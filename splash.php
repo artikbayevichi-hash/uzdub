@@ -20,9 +20,10 @@ $splash_user = is_user() ? current_user() : null;
     <meta name="theme-color" content="#0b0f19">
     <title>UZDUB PLATFORM — <?php echo t('splash_line1'); ?></title>
     <meta name="description" content="Kino, Anime, Multfilmlar — O'zbek tilida. Barcha sevimli kontentlaringiz bir joyda.">
-    <link rel="stylesheet" href="/uzdub/css/landing-splash.css">
-    <link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
-    <script src="/uzdub/js/emoji-blue.js" defer></script>
+    <script>window.ROOT_URL = <?php echo json_encode(ROOT_URL); ?>;</script>
+    <link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/landing-splash.css?v=<?php echo @filemtime(__DIR__ . '/css/landing-splash.css') ?: 1; ?>">
+    <link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/emoji-blue.css?v=<?php echo @filemtime(__DIR__ . '/css/emoji-blue.css') ?: 1; ?>">
+    <script src="<?php echo ROOT_URL; ?>/js/emoji-blue.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -34,7 +35,7 @@ $splash_user = is_user() ? current_user() : null;
     <!-- ===== HEADER ===== -->
     <header class="ls-header">
         <div class="ls-header-inner">
-            <a href="/uzdub/splash.php" class="ls-header-logo">🎬 UZDUB</a>
+            <a href="<?php echo ROOT_URL; ?>/splash.php" class="ls-header-logo">🎬 UZDUB</a>
             <div class="ls-header-actions">
                 <?php if ($splash_user): ?>
                 <button id="lsEnterBtn" class="ls-btn ls-btn-primary ls-btn-sm">
@@ -42,11 +43,11 @@ $splash_user = is_user() ? current_user() : null;
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
                 <?php else: ?>
-                <a href="/uzdub/auth/login.php" class="ls-btn ls-btn-primary ls-btn-sm">
+                <a href="<?php echo ROOT_URL; ?>/auth/login.php" class="ls-btn ls-btn-primary ls-btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
                     <?php echo t('login'); ?>
                 </a>
-                <a href="/uzdub/auth/register.php" class="ls-btn ls-btn-outline ls-btn-sm">
+                <a href="<?php echo ROOT_URL; ?>/auth/register.php" class="ls-btn ls-btn-outline ls-btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                     <?php echo t('register'); ?>
                 </a>
@@ -286,7 +287,7 @@ $splash_user = is_user() ? current_user() : null;
                 <p>Hozir ro'yxatdan o'ting va birinchi qadamni bosing. Barchasi bepul!</p>
                 <div class="ls-btn-group" style="margin-top:24px;">
                     <?php if (!$splash_user): ?>
-                    <a href="/uzdub/auth/register.php" class="ls-btn ls-btn-primary">
+                    <a href="<?php echo ROOT_URL; ?>/auth/register.php" class="ls-btn ls-btn-primary">
                         🚀 Boshlash
                     </a>
                     <?php else: ?>
@@ -305,8 +306,8 @@ $splash_user = is_user() ? current_user() : null;
             <div class="ls-footer-brand">🎬 UZDUB PLATFORM</div>
             <p class="ls-footer-copy">&copy; <?php echo date('Y'); ?> UZDUB PLATFORM.UZ — <?php echo t('splash_footer_copy'); ?></p>
             <div class="ls-footer-links">
-                <a href="/uzdub/auth/login.php"><?php echo t('login'); ?></a>
-                <a href="/uzdub/auth/register.php"><?php echo t('register'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/auth/login.php"><?php echo t('login'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/auth/register.php"><?php echo t('register'); ?></a>
             </div>
         </div>
     </footer>
@@ -314,14 +315,14 @@ $splash_user = is_user() ? current_user() : null;
     <script>
     document.getElementById('lsEnterBtnBottom')?.addEventListener('click',function(){
         localStorage.setItem('uzdub_splash_seen','1');
-        window.location.href='/uzdub/index.php';
+        window.location.href=ROOT_URL + '/index.php';
     });
     var finalBtn=document.getElementById('lsEnterBtnFinal');
     if(finalBtn) finalBtn.addEventListener('click',function(){
         localStorage.setItem('uzdub_splash_seen','1');
-        window.location.href='/uzdub/index.php';
+        window.location.href=ROOT_URL + '/index.php';
     });
     </script>
-    <script src="/uzdub/js/landing-splash.js"></script>
+    <script src="<?php echo ROOT_URL; ?>/js/landing-splash.js"></script>
 </body>
 </html>

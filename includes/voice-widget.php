@@ -4,7 +4,7 @@
    "UZDUB AI" — nomi bilan chaqiriladigan ovozli yordamchi widget
    ============================================================ */
 ?>
-<link rel="stylesheet" href="/uzdub/css/voice-assistant.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/voice-assistant.css?v=<?php echo @filemtime(__DIR__ . '/../css/voice-assistant.css') ?: 1; ?>">
 
 <div class="va-widget" id="va-widget">
     <button class="va-toggle" id="va-toggle" type="button" title="UZDUB AI ovozli yordamchi">
@@ -24,4 +24,4 @@
     window.vaCsrfToken = <?php echo json_encode(csrf_token()); ?>;
     window.vaWakeWord = <?php echo json_encode('uzdub ai'); ?>;
 </script>
-<script src="/uzdub/js/voice-assistant.js" defer></script>
+<script src="<?php echo ROOT_URL; ?>/js/voice-assistant.js" defer></script>

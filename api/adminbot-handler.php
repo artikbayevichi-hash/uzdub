@@ -117,6 +117,8 @@ function ab_send_help(int $chat_id, ?int $message_id = null): void {
         . "<b>/episodes</b> — qismlar boshqaruvi\n"
         . "  Kontent <b>ID raqami</b> yoki <b>aniq nomi</b> bilan qidiriladi.\n"
         . "  Qism qo'shish uchun videoni yuborasiz (forward ham bo'ladi).\n\n"
+        . "<b>URL bilan qo'shish:</b> video o'rniga to'g'ridan-to'g'ri <b>https://</b> havola yuborilsa avtomatik aniqlanadi —\n"
+        . "  VK, RuTube, Rumble, Odysee, OK, archive.org mp4, to'g'ridan-to'g'ri mp4 (CDN)\n\n"
         . "<b>/cancel</b> — joriy amalni bekor qilish\n"
         . "<b>/menu</b> — asosiy menyu";
     $kb = [[['text' => '🔙 Orqaga', 'callback_data' => 'menu']]];
@@ -314,8 +316,14 @@ function ab_do_save(PDO $pdo, int $chat_id, array $data): string {
     $content_code = generate_content_code($pdo, $cat_slug);
 
     $video_url = null;
-    if (!empty($data['tg_path'])) $video_url = 'tg:' . $data['tg_path'];
-    elseif (!empty($data['video_src'])) $video_url = $data['video_src'];
+    $video_type = 'telegram';
+    if (!empty($data['tg_path'])) {
+        $video_url = 'tg:' . $data['tg_path'];
+        $video_type = 'telegram';
+    } elseif (!empty($data['video_src'])) {
+        $video_url = $data['video_src'];
+        $video_type = video_type_for_url($video_url);
+    }
     $status = $data['status'] ?? 'completed';
     if (!in_array($status, ['completed', 'ongoing', 'upcoming'], true)) $status = 'completed';
 
@@ -330,7 +338,7 @@ function ab_do_save(PDO $pdo, int $chat_id, array $data): string {
         $data['rating'] !== '' ? (float)$data['rating'] : null,
         !empty($data['is_premium']) ? 1 : 0,
         $is_anime ? 1 : 0,
-        'telegram',
+        $video_type,
         $video_url,
         $data['studio'] !== '' ? $data['studio'] : null,
         $data['director'] !== '' ? $data['director'] : null,
@@ -441,8 +449,9 @@ function ab_ep_save(PDO $pdo, int $chat_id, array $data, ?int $message_id = null
     }
 
     $video_url = $path !== '' ? ('tg:' . $path) : $src;
-    $pdo->prepare("INSERT INTO episodes (content_id, season, episode_number, title, video_type, video_url) VALUES (?,?,?,?, 'telegram', ?)")
-        ->execute([$cid, 1, $num, $title !== '' ? $title : null, $video_url]);
+    $video_type = $path !== '' ? 'telegram' : video_type_for_url($src);
+    $pdo->prepare("INSERT INTO episodes (content_id, season, episode_number, title, video_type, video_url) VALUES (?,?,?,?,?,?)")
+        ->execute([$cid, 1, $num, $title !== '' ? $title : null, $video_type, $video_url]);
     $pdo->prepare("UPDATE content SET is_series = 1 WHERE id = ?")->execute([$cid]);
 
     $c = ab_fetch_content($pdo, $cid);

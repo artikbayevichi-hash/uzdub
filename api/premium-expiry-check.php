@@ -5,10 +5,10 @@
    
    CRON sozlamasi (cPanel yoki server crontab):
    Har kuni soat 9:00 da ishlash uchun:
-   0 9 * * * php /path/to/uzdub/api/premium-expiry-check.php
+   0 9 * * * php /path/to/site/api/premium-expiry-check.php
    
    Yoki web cron xizmati orqali:
-   wget -q -O /dev/null https://sizning.saytingiz/uzdub/api/premium-expiry-check.php?key=YOUR_SECRET_KEY
+   wget -q -O /dev/null https://SIZNING-DOMEN.uz/api/premium-expiry-check.php?key=YOUR_SECRET_KEY
    ============================================================ */
 
 // Xavfsizlik: faqat to'g'ri kalit bilan yoki CLI orqali ishlaydi
@@ -64,8 +64,8 @@ foreach ($expiring_soon as $user) {
     tg_send_message("⚠️ <b>Premium tugashiga {$days_left} kun qoldi!</b>\n"
         . "👤 Foydalanuvchi: <b>" . e($user['username']) . "</b> (ID: " . $user['user_id'] . ")\n"
         . "📅 Tugash sanasi: <b>{$expire_date}</b>\n\n"
-        . "Uzatish uchun: /uzdub/premium.php\n"
-        . "Admin panel: /uzdub/admin/users.php");
+        . "Uzatish uchun: " . (defined('SITE_URL') ? SITE_URL : '') . "/premium.php\n"
+        . "Admin panel: " . (defined('SITE_URL') ? SITE_URL : '') . "/admin/users.php");
 
     $notified_count++;
     echo "  [ESLATMA] {$user['username']} (ID: {$user['user_id']}) — {$days_left} kun qoldi\n";

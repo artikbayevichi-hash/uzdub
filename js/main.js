@@ -4,6 +4,8 @@
    qator navigatsiyasi, qidiruv, mobil skroll indikatori va boshqalar
    ============================================================ */
 
+window.ROOT_URL = window.ROOT_URL || '/uzdub';
+
 /* ---- Global Toast bildirishnomalar tizimi ---- */
 (function() {
     if (window.showToast) return;
@@ -163,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (val.length < 2) { suggestions.classList.remove('active'); suggestions.innerHTML = ''; return; }
         timer = setTimeout(function() {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/uzdub/search.php?ajax_autocomplete=1&q=' + encodeURIComponent(val), true);
+            xhr.open('GET', ROOT_URL + '/search.php?ajax_autocomplete=1&q=' + encodeURIComponent(val), true);
             xhr.onload = function() {
                 if (xhr.status !== 200) return;
                 try {
@@ -175,11 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     var item = data[i];
                     var contentId = parseInt(item.id, 10);
                     if (!contentId) continue;
-                    var poster = item.poster ? escHtml('/uzdub/uploads/posters/' + item.poster) : 'https://via.placeholder.com/40x56/121a2b/2196f3?text=';
+                    var poster = item.poster ? escHtml(ROOT_URL + '/uploads/posters/' + item.poster) : 'https://via.placeholder.com/40x56/121a2b/2196f3?text=';
                     var title = escHtml(item.display_title || item.title_uz || item.title_ru || item.title_en || item.title);
                     var year = escHtml(item.release_year);
                     var rating = escHtml(item.rating);
-                    html += '<a href="/uzdub/watch.php?id=' + contentId + '" class="search-suggestion-item">';
+                    html += '<a href="' + ROOT_URL + '/watch.php?id=' + contentId + '" class="search-suggestion-item">';
                     html += '<img src="' + poster + '" alt="" style="width:28px;height:40px;object-fit:cover;border-radius:4px;">';
                     html += '<span style="flex:1;font-size:13px;">' + title + '</span>';
                     html += '<span style="font-size:11px;color:var(--text-muted);">' + year + ' ★' + rating + '</span>';

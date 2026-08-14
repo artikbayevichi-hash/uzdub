@@ -1,4 +1,32 @@
 <?php require_user(); ?>
+<?php
+// "Davom etasizmi?" bildirishnomasi uchun foydalanuvchining tugatilmagan oxirgi ko'rish progressi
+$resume_toast = null;
+if (is_user() && !empty($pdo)) {
+    try {
+        $rt = $pdo->prepare("SELECT wp.content_id, wp.episode_id, wp.position_seconds, wp.duration_seconds,
+                c.title, c.title_ru, c.title_en, c.poster
+            FROM watch_progress wp
+            JOIN content c ON c.id = wp.content_id
+            WHERE wp.user_id = ? AND wp.is_completed = 0
+              AND wp.position_seconds > 5
+              AND (wp.duration_seconds <= 0 OR wp.position_seconds <= wp.duration_seconds - 30)
+            ORDER BY wp.updated_at DESC
+            LIMIT 1");
+        $rt->execute([$_SESSION['user_id']]);
+        $row = $rt->fetch();
+        if ($row) {
+            $resume_toast = [
+                'content_id' => (int)$row['content_id'],
+                'episode_id' => (int)$row['episode_id'],
+                'position' => (int)$row['position_seconds'],
+                'title' => t_title($row),
+                'poster' => ($row['poster'] ? poster_url($row['poster']) : ''),
+            ];
+        }
+    } catch (Throwable $e) { $resume_toast = null; }
+}
+?>
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -8,23 +36,25 @@
 <meta name="keywords" content="uzdub, kino, anime, multfilm, uzbek tilida, online kinoteatr">
 <meta property="og:title" content="<?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?>">
 <meta property="og:description" content="<?php echo isset($page_desc) ? e($page_desc) : t('footer_desc'); ?>">
-<meta property="og:image" content="<?php echo isset($page_image) ? e($page_image) : '/uzdub/og-image.png'; ?>">
+<meta property="og:image" content="<?php echo isset($page_image) ? e($page_image) : ROOT_URL . '/og-image.png'; ?>">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <title><?php echo isset($page_title) ? e($page_title) . ' - UZDUB PLATFORM' : t('site_title'); ?></title>
-<script>if(localStorage.getItem('uzdub_splash_seen')!=='1'){window.location.replace('/uzdub/splash.php');}</script>
-<link rel="icon" type="image/svg+xml" href="/uzdub/favicon.svg">
-<link rel="shortcut icon" href="/uzdub/favicon.svg">
-<link rel="manifest" href="/uzdub/manifest.json">
+<script>window.ROOT_URL = <?php echo json_encode(ROOT_URL); ?>;</script>
+<script>if(localStorage.getItem('uzdub_splash_seen')!=='1'){window.location.replace(ROOT_URL + '/splash.php');}</script>
+<link rel="icon" type="image/svg+xml" href="<?php echo ROOT_URL; ?>/favicon.svg">
+<link rel="shortcut icon" href="<?php echo ROOT_URL; ?>/favicon.svg">
+<link rel="manifest" href="<?php echo ROOT_URL; ?>/manifest.php">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="/uzdub/css/style.css">
-<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
-<script src="/uzdub/js/online-tracker.js" defer></script>
-<script src="/uzdub/js/emoji-blue.js" defer></script>
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/style.css?v=<?php echo @filemtime(__DIR__ . '/../css/style.css') ?: 1; ?>">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/emoji-blue.css?v=<?php echo @filemtime(__DIR__ . '/../css/emoji-blue.css') ?: 1; ?>">
+<script src="<?php echo ROOT_URL; ?>/js/online-tracker.js" defer></script>
+<script src="<?php echo ROOT_URL; ?>/js/emoji-blue.js" defer></script>
 </head>
 <body>
 <script>window.UZDUB_IS_LOGGED_IN = <?php echo is_user() ? 'true' : 'false'; ?>;</script>
+<script>window.__UZDUB_RESUME__ = <?php echo json_encode($resume_toast, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;</script>
 <div class="ambient-dust">
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>
@@ -42,7 +72,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
 ?>
 
 <header class="site-header">
-    <a href="/uzdub/index.php" class="logo">UZDUB<span class="logo-sub"><span class="ls-char" style="transition-delay:0.5s">P</span><span class="ls-char" style="transition-delay:0.58s">L</span><span class="ls-char" style="transition-delay:0.66s">A</span><span class="ls-char" style="transition-delay:0.74s">T</span><span class="ls-char" style="transition-delay:0.82s">F</span><span class="ls-char" style="transition-delay:0.9s">O</span><span class="ls-char" style="transition-delay:0.98s">R</span><span class="ls-char" style="transition-delay:1.06s">M</span></span></a>
+    <a href="<?php echo ROOT_URL; ?>/index.php" class="logo">UZDUB<span class="logo-sub"><span class="ls-char" style="transition-delay:0.5s">P</span><span class="ls-char" style="transition-delay:0.58s">L</span><span class="ls-char" style="transition-delay:0.66s">A</span><span class="ls-char" style="transition-delay:0.74s">T</span><span class="ls-char" style="transition-delay:0.82s">F</span><span class="ls-char" style="transition-delay:0.9s">O</span><span class="ls-char" style="transition-delay:0.98s">R</span><span class="ls-char" style="transition-delay:1.06s">M</span></span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Menyu">&#9776;</button>
     <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
     <ul class="nav-links" id="navLinks">
@@ -50,35 +80,40 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             <span class="drawer-title">☰ Menyu</span>
             <button class="drawer-close" onclick="closeDrawer()">&times;</button>
         </li>
-        <li class="mobile-hide"><a href="/uzdub/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">🏠 <?php echo t('home'); ?></a></li>
-        <li class="mobile-hide"><a href="/uzdub/category.php?slug=kino">🎬 <?php echo t('movies'); ?></a></li>
-        <li class="mobile-hide"><a href="/uzdub/category.php?slug=anime">🎌 <?php echo t('anime'); ?></a></li>
-        <li class="mobile-hide"><a href="/uzdub/category.php?slug=multfilm">🧸 <?php echo t('cartoons'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">🏠 <?php echo t('home'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=kino">🎬 <?php echo t('movies'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=anime">🎌 <?php echo t('anime'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm">🧸 <?php echo t('cartoons'); ?></a></li>
         <li class="random-dropdown">
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
             <div class="random-menu">
-                <a href="/uzdub/random.php?slug=kino">🎬 <?php echo t('random_kino'); ?></a>
-                <a href="/uzdub/random.php?slug=anime">🎭 <?php echo t('random_anime'); ?></a>
-                <a href="/uzdub/random.php?slug=multfilm">🎪 <?php echo t('random_multfilm'); ?></a>
-                <a href="/uzdub/random.php">🎲 <?php echo t('random_all'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/random.php?slug=kino">🎬 <?php echo t('random_kino'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/random.php?slug=anime">🎭 <?php echo t('random_anime'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/random.php?slug=multfilm">🎪 <?php echo t('random_multfilm'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/random.php">🎲 <?php echo t('random_all'); ?></a>
             </div>
         </li>
         <?php
-        $genre_nav_stmt = $pdo->query("
-            SELECT cat.id as cat_id, cat.name as cat_name, cat.slug as cat_slug,
-                   g.name as genre_name, g.slug as genre_slug, g.color,
-                   COUNT(cg.content_id) as cnt
-            FROM categories cat
-            JOIN content c ON c.category_id = cat.id
-            JOIN content_genres cg ON c.id = cg.content_id
-            JOIN genres g ON cg.genre_id = g.id
-            WHERE cat.slug IN ('kino','anime','multfilm')
-            GROUP BY cat.id, g.id
-            ORDER BY cat.name, g.name
-        ");
-        $genre_nav_data = [];
-        while ($gnr = $genre_nav_stmt->fetch()) {
-            $genre_nav_data[$gnr['cat_slug']][] = $gnr;
+        // Genre menyusi — og'ir GROUP BY so'rov, 10 daqiqaga faylga keshlanadi
+        $genre_nav_data = db_cache_get('genre_nav', 600);
+        if ($genre_nav_data === null) {
+            $genre_nav_stmt = $pdo->query("
+                SELECT cat.id as cat_id, cat.name as cat_name, cat.slug as cat_slug,
+                       g.name as genre_name, g.slug as genre_slug, g.color,
+                       COUNT(cg.content_id) as cnt
+                FROM categories cat
+                JOIN content c ON c.category_id = cat.id
+                JOIN content_genres cg ON c.id = cg.content_id
+                JOIN genres g ON cg.genre_id = g.id
+                WHERE cat.slug IN ('kino','anime','multfilm')
+                GROUP BY cat.id, g.id
+                ORDER BY cat.name, g.name
+            ");
+            $genre_nav_data = [];
+            while ($gnr = $genre_nav_stmt->fetch()) {
+                $genre_nav_data[$gnr['cat_slug']][] = $gnr;
+            }
+            db_cache_set('genre_nav', $genre_nav_data, 600);
         }
         $cat_icons_nav = ['kino' => '🎬', 'anime' => '🎌', 'multfilm' => '🎞️'];
         ?>
@@ -86,7 +121,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎵 <?php echo t('genres'); ?> ▾</button>
             <div class="genre-menu">
                 <div class="genre-menu-head">
-                    <a href="/uzdub/genres.php" class="genre-menu-all">📋 <?php echo t('all_genres'); ?></a>
+                    <a href="<?php echo ROOT_URL; ?>/genres.php" class="genre-menu-all">📋 <?php echo t('all_genres'); ?></a>
                 </div>
                 <?php foreach (['kino', 'anime', 'multfilm'] as $gs): ?>
                 <div class="genre-menu-cat">
@@ -96,7 +131,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                     <div class="genre-submenu">
                         <?php if (!empty($genre_nav_data[$gs])): ?>
                         <?php foreach ($genre_nav_data[$gs] as $gn): ?>
-                        <a href="/uzdub/genres.php?genre=<?php echo e($gn['genre_slug']); ?>" class="genre-sub-link">
+                        <a href="<?php echo ROOT_URL; ?>/genres.php?genre=<?php echo e($gn['genre_slug']); ?>" class="genre-sub-link">
                             <span class="gs-dot" style="background:<?php echo e($gn['color'] ?: '#2196f3'); ?>;"></span>
                             <?php echo e($gn['genre_name']); ?>
                             <span class="gs-count"><?php echo $gn['cnt']; ?></span>
@@ -113,14 +148,14 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
         <li class="random-dropdown">
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">💬 <?php echo t('chat'); ?> <span id="onlineCountHeader" class="online-badge-header">🟢 0</span> ▾</button>
             <div class="random-menu">
-                <a href="/uzdub/global_chat.php?cat=kino">🎬 <?php echo t('chat_kino'); ?></a>
-                <a href="/uzdub/global_chat.php?cat=anime">🎌 <?php echo t('chat_anime'); ?></a>
-                <a href="/uzdub/global_chat.php?cat=multfilm">🎞️ <?php echo t('chat_multfilm'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=kino">🎬 <?php echo t('chat_kino'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=anime">🎌 <?php echo t('chat_anime'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=multfilm">🎞️ <?php echo t('chat_multfilm'); ?></a>
             </div>
         </li>
         <?php if (is_user()): ?>
-        <li><a href="/uzdub/inbox.php">📨 <?php echo t('messages'); ?></a></li>
-        <li><a href="/uzdub/premium.php" style="color:#f9a825;">👑 <?php echo t('premium'); ?></a></li>
+        <li><a href="<?php echo ROOT_URL; ?>/inbox.php">📨 <?php echo t('messages'); ?></a></li>
+        <li><a href="<?php echo ROOT_URL; ?>/premium.php" style="color:#f9a825;">👑 <?php echo t('premium'); ?></a></li>
         <?php endif; ?>
         <li class="mobile-only-items">
             <div>
@@ -163,7 +198,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                 <a href="?lang=en<?php echo $lang_qs; ?>" class="<?php echo current_lang()=='en'?'active':''; ?>">🇬🇧 English</a>
             </div>
         </div>
-        <form action="/uzdub/search.php" method="get" class="search-box" id="searchForm" autocomplete="off" style="position:relative;">
+        <form action="<?php echo ROOT_URL; ?>/search.php" method="get" class="search-box" id="searchForm" autocomplete="off" style="position:relative;">
             <input type="text" name="q" id="searchInput" placeholder="<?php echo t('search_placeholder'); ?>" value="<?php echo e($_GET['q'] ?? ''); ?>" data-autocomplete="1">
             <button type="submit">&#128269;</button>
             <div class="search-suggestions" id="searchSuggestions"></div>
@@ -248,7 +283,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
 
         if (timer) clearTimeout(timer);
         timer = setTimeout(function() {
-            fetch('/uzdub/search.php?ajax_autocomplete=1&q=' + encodeURIComponent(val))
+            fetch(ROOT_URL + '/search.php?ajax_autocomplete=1&q=' + encodeURIComponent(val))
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     suggestions.innerHTML = '';
@@ -258,7 +293,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                         data.forEach(function(item) {
                             var a = document.createElement('a');
                             a.className = 'search-suggestion-item';
-                            a.href = '/uzdub/watch.php?id=' + item.id;
+                            a.href = ROOT_URL + '/watch.php?id=' + item.id;
                             var lang = '<?php echo current_lang(); ?>';
                             var displayTitle = (lang === 'ru' && item.title_ru) ? item.title_ru : (lang === 'en' && item.title_en) ? item.title_en : item.title;
                             var poster = item.poster ? item.poster : 'https://via.placeholder.com/28x40/121a2b/2196f3?text=' + encodeURIComponent(displayTitle.slice(0,1));
@@ -315,36 +350,36 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
 })();
 </script>
         <?php if (is_user()): $u = current_user(); ?>
-        <a href="/uzdub/profile.php?uid=<?php echo e($u['user_id']); ?>" class="header-avatar-link">
+        <a href="<?php echo ROOT_URL; ?>/profile.php?uid=<?php echo e($u['user_id']); ?>" class="header-avatar-link">
             <img src="<?php echo avatar_url($u['avatar']); ?>" class="header-avatar-img" alt="">
             <?php if ($u['is_premium']): ?><span class="header-premium-badge">👑</span><?php endif; ?>
         </a>
         <?php else: ?>
-        <a href="/uzdub/auth/login.php" class="header-login-btn"><?php echo t('login'); ?></a>
+        <a href="<?php echo ROOT_URL; ?>/auth/login.php" class="header-login-btn"><?php echo t('login'); ?></a>
         <?php endif; ?>
     </div>
 </header>
 
 <?php $__cur_page = basename($_SERVER['PHP_SELF']); ?>
 <nav class="bottom-nav" aria-label="<?php echo t('main_nav'); ?>">
-    <a href="/uzdub/index.php" class="<?php echo $__cur_page=='index.php' ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/index.php" class="<?php echo $__cur_page=='index.php' ? 'active' : ''; ?>">
         <span class="bn-icon">🏠</span><span class="bn-label"><?php echo t('home'); ?></span>
     </a>
-    <a href="/uzdub/category.php?slug=kino" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='kino') ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/category.php?slug=kino" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='kino') ? 'active' : ''; ?>">
         <span class="bn-icon">🎬</span><span class="bn-label"><?php echo t('movies'); ?></span>
     </a>
-    <a href="/uzdub/category.php?slug=anime" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='anime') ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/category.php?slug=anime" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='anime') ? 'active' : ''; ?>">
         <span class="bn-icon">🎌</span><span class="bn-label"><?php echo t('anime'); ?></span>
     </a>
-    <a href="/uzdub/category.php?slug=multfilm" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='multfilm') ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='multfilm') ? 'active' : ''; ?>">
         <span class="bn-icon">🧸</span><span class="bn-label"><?php echo t('cartoons'); ?></span>
     </a>
     <?php if (is_user()): $__u = current_user(); ?>
-    <a href="/uzdub/profile.php?uid=<?php echo e($__u['user_id']); ?>" class="<?php echo $__cur_page=='profile.php' ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/profile.php?uid=<?php echo e($__u['user_id']); ?>" class="<?php echo $__cur_page=='profile.php' ? 'active' : ''; ?>">
         <span class="bn-icon">👤</span><span class="bn-label"><?php echo t('profile'); ?></span>
     </a>
     <?php else: ?>
-    <a href="/uzdub/auth/login.php" class="<?php echo $__cur_page=='login.php' ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/auth/login.php" class="<?php echo $__cur_page=='login.php' ? 'active' : ''; ?>">
         <span class="bn-icon">👤</span><span class="bn-label"><?php echo t('login'); ?></span>
     </a>
     <?php endif; ?>
@@ -420,7 +455,7 @@ document.getElementById('navLinks').addEventListener('click', function(e) {
     }
 
     function fetchUnreadCount() {
-        fetch('/uzdub/api/notifications.php?action=unread_count')
+        fetch(ROOT_URL + '/api/notifications.php?action=unread_count')
             .then(function(r) { return r.json(); })
             .then(function(d) { updateBadge(d.count || 0); })
             .catch(function() {});
@@ -454,7 +489,7 @@ document.getElementById('navLinks').addEventListener('click', function(e) {
                 window.location.href = n.target_url || '#';
                 return;
             }
-            fetch('/uzdub/api/notifications.php', {
+            fetch(ROOT_URL + '/api/notifications.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({action: 'mark_read', notification_id: n.id, csrf_token: csrf})
@@ -471,7 +506,7 @@ document.getElementById('navLinks').addEventListener('click', function(e) {
 
     function loadNotifications(reset) {
         if (reset) { notifPage = 1; list.innerHTML = ''; }
-        fetch('/uzdub/api/notifications.php?action=list&page=' + notifPage)
+        fetch(ROOT_URL + '/api/notifications.php?action=list&page=' + notifPage)
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (notifPage === 1 && (!data.notifications || data.notifications.length === 0)) {
@@ -510,7 +545,7 @@ document.getElementById('navLinks').addEventListener('click', function(e) {
 
     if (markAll) {
         markAll.addEventListener('click', function() {
-            fetch('/uzdub/api/notifications.php', {
+            fetch(ROOT_URL + '/api/notifications.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({action: 'mark_all_read', csrf_token: csrf})

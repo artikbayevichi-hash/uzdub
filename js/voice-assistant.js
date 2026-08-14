@@ -5,6 +5,8 @@
    asosida — Yandex Alisa uslubiga o'xshab)
    ============================================================ */
 
+window.ROOT_URL = window.ROOT_URL || '/uzdub';
+
 (function () {
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
     const widget = document.getElementById('va-widget');
@@ -99,7 +101,7 @@
     }
 
     function sendCommand(text) {
-        fetch('/uzdub/api/voice-command.php', {
+        fetch(ROOT_URL + '/api/voice-command.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text, csrf_token: csrfToken })

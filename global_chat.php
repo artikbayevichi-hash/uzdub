@@ -413,7 +413,7 @@ var currentCat = '<?php echo $cat; ?>';
 var currentUserId = <?php echo is_user() ? (int)$_SESSION['user_id'] : 'null'; ?>;
 var isAdmin = <?php echo $is_admin ? 'true' : 'false'; ?>;
 var isPremium = <?php echo $is_premium_user ? 'true' : 'false'; ?>;
-var defaultAvatar = '/uzdub/assets/default-avatar.svg';
+var defaultAvatar = ROOT_URL + '/assets/default-avatar.svg';
 var selectedFile = null;
 var replyToId = null;
 var ctxMsgId = null;
@@ -443,7 +443,7 @@ function escHtml(str) {
 }
 
 function postAjax(data, cb) {
-    fetch('/uzdub/global_chat.php', {method:'POST', body:data})
+    fetch(ROOT_URL + '/global_chat.php', {method:'POST', body:data})
         .then(function(r) { return r.json(); })
         .then(function(r) { if (cb) cb(r); })
         .catch(function(err) { console.error('AJAX error:', err); alert(T.error_occurred); });
@@ -468,7 +468,7 @@ function renderMsg(msg) {
         return '<div class="msg-item" data-id="' + msg.id + '" style="opacity:0.5;"><div class="msg-body"><div class="msg-text" style="font-style:italic;color:var(--text-muted);">🚫 ' + escHtml(T.deleted_message) + '</div></div></div>';
     }
     var isOwn = currentUserId && msg.user_id == currentUserId;
-    var avatar = msg.avatar ? '/uzdub/uploads/avatars/' + msg.avatar : defaultAvatar;
+    var avatar = msg.avatar ? ROOT_URL + '/uploads/avatars/' + msg.avatar : defaultAvatar;
     var prem = msg.is_premium == 1 ? '<span class="msg-prem">👑</span>' : '';
     var body = '';
 
@@ -481,7 +481,7 @@ function renderMsg(msg) {
     }
 
     if (msg.message) body += '<div class="msg-text">' + escHtml(msg.message) + '</div>';
-    if (msg.attachment) body += '<img class="msg-image" src="/uzdub/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
+    if (msg.attachment) body += '<img class="msg-image" src="' + ROOT_URL + '/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
 
     var edited = msg.is_edited == 1 ? ' <span class="msg-edited">' + escHtml(T.edited) + '</span>' : '';
 
@@ -491,7 +491,7 @@ function renderMsg(msg) {
         '<img class="msg-avatar" src="' + avatar + '" onerror="this.src=\'' + defaultAvatar + '\'">' +
         '<div class="msg-body">' + hoverBar +
             '<div class="msg-header">' +
-                '<a href="/uzdub/profile.php?uid=' + escHtml(msg.uid) + '" class="msg-username">' + escHtml(msg.username) + '</a>' + prem +
+                '<a href="' + ROOT_URL + '/profile.php?uid=' + escHtml(msg.uid) + '" class="msg-username">' + escHtml(msg.username) + '</a>' + prem +
                 '<span class="msg-time">' + escHtml(msg.created_at.substring(11,16)) + '</span>' + edited +
             '</div>' + body +
             renderReactions(msg.id, msg.reactions) +
@@ -541,7 +541,7 @@ function editMsgDOM(msgId, newText) {
 var fetchRetries = 0;
 var maxRetries = 3;
 function fetchMessages() {
-    fetch('/uzdub/global_chat.php?fetch_msgs=1&last_id=' + lastId + '&cat=' + currentCat)
+    fetch(ROOT_URL + '/global_chat.php?fetch_msgs=1&last_id=' + lastId + '&cat=' + currentCat)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             fetchRetries = 0;
@@ -933,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (msgEls.length === 0) return;
         var ids = [];
         msgEls.forEach(function(el) { ids.push(el.dataset.id); });
-        fetch('/uzdub/global_chat.php?fetch_reactions=1&cat=' + currentCat + '&ids=' + ids.join(','))
+        fetch(ROOT_URL + '/global_chat.php?fetch_reactions=1&cat=' + currentCat + '&ids=' + ids.join(','))
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (!data.updates) return;

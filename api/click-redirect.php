@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/payment.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 if (!is_user()) {
-    header('Location: /uzdub/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    header('Location: ' . ROOT_URL . '/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
     exit;
 }
 
@@ -20,7 +20,7 @@ $plan_key = $_GET['plan'] ?? '';
 $plans = PREMIUM_PLANS;
 
 if (!isset($plans[$plan_key])) {
-    header('Location: /uzdub/premium.php?error=invalid_plan');
+    header('Location: ' . ROOT_URL . '/premium.php?error=invalid_plan');
     exit;
 }
 
@@ -31,7 +31,7 @@ $transaction_id = $userId . '_' . $plan_key . '_' . generate_transaction_id();
 $pay_url = click_generate_url($plan_key, $userId, $transaction_id);
 
 if (!$pay_url) {
-    header('Location: /uzdub/premium.php?error=click_not_configured');
+    header('Location: ' . ROOT_URL . '/premium.php?error=click_not_configured');
     exit;
 }
 

@@ -51,7 +51,7 @@ try {
             notify_send($pdo, $parentComment['user_id'], 'comment_reply',
                 "$senderName sizning izohingizga javob yozdi",
                 mb_substr($comment, 0, 100),
-                "/uzdub/watch.php?id=$content_id#comment-$parent_id",
+                ROOT_URL . "/watch.php?id=$content_id#comment-$parent_id",
                 $_SESSION['user_id']
             );
         }

@@ -32,7 +32,7 @@ if (php_sapi_name() === 'cli' && isset($argv[1])) {
                 . "🏷️ Kategoriya: " . e($content['cat_name']) . "\n"
                 . "📅 Yil: " . ($content['release_year'] ?: 'Noma\'lum') . "\n"
                 . "⭐ Reyting: " . ($content['rating'] ?: 'Noma\'lum') . "\n\n"
-                . "👉 /uzdub/watch.php?id=" . $content_id;
+                . "👉 " . (defined('SITE_URL') ? SITE_URL : '') . "/watch.php?id=" . $content_id;
 
             // Poster: URL bo'lsa to'g'ridan-to'g'ri yuboriladi, eski fayl bo'lsa lokaldan olinadi
             $poster = $content['poster'] ? poster_url($content['poster']) : null;

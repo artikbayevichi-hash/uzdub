@@ -22,8 +22,7 @@ try {
         FROM comments cc
         JOIN users u ON cc.user_id = u.id
         WHERE cc.content_id = ?
-        ORDER BY cc.created_at DESC
-        LIMIT 100
+        ORDER BY cc.id ASC
     ");
     $stmt->execute([$content_id]);
     $rows = $stmt->fetchAll();
@@ -40,21 +39,26 @@ try {
         }
     }
 
-    $replies = [];
+    $byId = [];
     $topLevel = [];
-    foreach ($rows as &$r) {
-        $r['avatar_url'] = avatar_url($r['avatar']);
-        $r['time_ago'] = time_ago($r['created_at']);
-        $r['user_like'] = $userLikes[$r['id']] ?? null;
-        if ($r['parent_id']) {
-            $replies[$r['parent_id']][] = $r;
+    foreach ($rows as $row) {
+        $row['avatar_url'] = avatar_url($row['avatar']);
+        $row['time_ago'] = time_ago($row['created_at']);
+        $row['user_like'] = $userLikes[$row['id']] ?? null;
+        $row['replies'] = [];
+        $byId[$row['id']] = $row;
+        $pid = (int)$row['parent_id'];
+        if ($pid > 0 && isset($byId[$pid])) {
+            $byId[$pid]['replies'][] = &$byId[$row['id']];
         } else {
-            $topLevel[] = $r;
+            $topLevel[] = &$byId[$row['id']];
         }
     }
-    foreach ($topLevel as &$c) {
-        $c['replies'] = $replies[$c['id']] ?? [];
-    }
+    unset($row);
+
+    usort($topLevel, function ($a, $b) { return strcmp($b['created_at'], $a['created_at']); });
+    foreach ($byId as &$n) { usort($n['replies'], function ($a, $b) { return strcmp($a['created_at'], $b['created_at']); }); }
+    unset($n);
 
     echo json_encode(['comments' => $topLevel, 'total' => $total], JSON_UNESCAPED_UNICODE);
 } catch (PDOException $e) {

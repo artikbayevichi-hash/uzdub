@@ -81,4 +81,8 @@ define('AI_PROVIDERS', [
     ],
 ]);
 
-define('SITE_URL', rtrim(env('SITE_URL', 'http://localhost/uzdub'), '/'));
+// To'liq sayt URL (Open Graph, PWA, webhook va h.k. uchun).
+// Asosan config/db.php da aniqlanadi; bu yerga mustaqil yuklanish xolatlari uchun himoya qo'shilgan.
+if (!defined('SITE_URL')) {
+    define('SITE_URL', rtrim(env('SITE_URL', 'http://localhost/uzdub'), '/'));
+}

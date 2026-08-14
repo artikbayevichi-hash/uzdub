@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/lang.php';
 
-if (is_user()) { header('Location: /uzdub/index.php'); exit; }
+if (is_user()) { header('Location: ' . ROOT_URL . '/index.php'); exit; }
 
 $error = '';
 $success = '';
@@ -94,10 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Parolni tiklash - UZDUB PLATFORM</title>
-<link rel="stylesheet" href="/uzdub/css/style.css">
-<link rel="stylesheet" href="/uzdub/css/auth.css">
-<link rel="stylesheet" href="/uzdub/css/emoji-blue.css">
-<script src="/uzdub/js/emoji-blue.js" defer></script>
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/style.css?v=<?php echo @filemtime(__DIR__ . '/../css/style.css') ?: 1; ?>">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/auth.css?v=<?php echo @filemtime(__DIR__ . '/../css/auth.css') ?: 1; ?>">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/emoji-blue.css?v=<?php echo @filemtime(__DIR__ . '/../css/emoji-blue.css') ?: 1; ?>">
+<script src="<?php echo ROOT_URL; ?>/js/emoji-blue.js" defer></script>
 </head>
 <body>
 <div class="auth-grid"></div>

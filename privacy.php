@@ -5,10 +5,10 @@ require_once __DIR__ . '/includes/functions.php';
 $page_title = t('privacy_page_title');
 include __DIR__ . '/includes/header.php';
 ?>
-<link rel="stylesheet" href="/uzdub/css/legal.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/legal.css?v=<?php echo @filemtime(__DIR__ . '/css/legal.css') ?: 1; ?>">
 <div class="legal-wrap">
 <div class="legal-content-card">
-    <h1>🔒 <?php echo t('privacy_heading'); ?></h1>
+    <h1>рџ”’ <?php echo t('privacy_heading'); ?></h1>
     <p><?php echo t('privacy_intro'); ?></p>
 
     <h2>1. <?php echo t('data_collected'); ?></h2>
@@ -37,7 +37,7 @@ include __DIR__ . '/includes/header.php';
 
     <h2>5. <?php echo t('contact_us'); ?></h2>
     <p><?php echo t('privacy_contact_text'); ?></p>
-    <p>📧 Email: <a href="mailto:privacy@uzdub.uz" style="color:var(--blue-glow);">privacy@uzdub.uz</a></p>
+    <p>рџ“§ Email: <a href="mailto:privacy@uzdub.uz" style="color:var(--blue-glow);">privacy@uzdub.uz</a></p>
 </div>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -5,10 +5,10 @@ require_once __DIR__ . '/includes/functions.php';
 $page_title = t('dmca_page_title');
 include __DIR__ . '/includes/header.php';
 ?>
-<link rel="stylesheet" href="/uzdub/css/legal.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/legal.css?v=<?php echo @filemtime(__DIR__ . '/css/legal.css') ?: 1; ?>">
 <div class="legal-wrap">
 <div class="legal-content-card">
-    <h1>📋 <?php echo t('dmca_heading'); ?></h1>
+    <h1>рџ“‹ <?php echo t('dmca_heading'); ?></h1>
     <p><?php echo t('dmca_intro'); ?></p>
 
     <h2><?php echo t('complaint_process'); ?></h2>
@@ -22,7 +22,7 @@ include __DIR__ . '/includes/header.php';
 
     <h2><?php echo t('dmca_contact'); ?></h2>
     <p><?php echo t('dmca_contact_text'); ?></p>
-    <p>📧 Email: <a href="mailto:dmca@uzdub.uz" style="color:var(--blue-glow);">dmca@uzdub.uz</a></p>
+    <p>рџ“§ Email: <a href="mailto:dmca@uzdub.uz" style="color:var(--blue-glow);">dmca@uzdub.uz</a></p>
     <p><?php echo t('dmca_response'); ?></p>
 </div>
 </div>

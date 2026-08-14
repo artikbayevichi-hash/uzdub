@@ -1,0 +1,17 @@
+/* ===== UZDUB — Emojilarni yaxlit ko'k siluetga aylantirish =====
+   SVG feColorMatrix (JS inyeksiya qiladi) har bir pikselni alfa shaklini
+   saqlab, sof ko'k (0,0,255) rangga o'tkazadi — sariq/oq/qora hammasi. */
+:root {
+    --emoji-blue-filter: url(#emoji-blue-fm);
+}
+
+/* JS tomonidan o'ralgan emojilar — yaxlit ko'k siluet */
+.emoji-blue {
+    display: inline-block;
+    filter: var(--emoji-blue-filter);
+}
+
+/* Google orqali kirish tugmasi logosi ham ko'k rangda */
+.google-btn svg {
+    filter: var(--emoji-blue-filter);
+}

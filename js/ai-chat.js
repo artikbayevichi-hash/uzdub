@@ -4,6 +4,8 @@
    tezkor takliflar va kontent tavsiya kartochkalari bilan
    ============================================================ */
 
+window.ROOT_URL = window.ROOT_URL || '/uzdub';
+
 document.addEventListener('DOMContentLoaded', function () {
   const fab = document.getElementById('aic-fab');
   const panel = document.getElementById('aic-panel');
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function addGuestBanner() {
     const div = document.createElement('div');
     div.className = 'aic-guest-banner';
-    div.innerHTML = 'Suhbat tarixini saqlash uchun <a href="/uzdub/auth/register.php">ro\u2018yxatdan o\u2018ting</a>';
+    div.innerHTML = 'Suhbat tarixini saqlash uchun <a href="' + ROOT_URL + '/auth/register.php">ro\u2018yxatdan o\u2018ting</a>';
     log.appendChild(div);
   }
 
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function loadChatList() {
     listItems.innerHTML = '<div class="aic-loading">Yuklanmoqda...</div>';
 
-    fetch('/uzdub/api/chat/list.php')
+    fetch(ROOT_URL + '/api/chat/list.php')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.error) {
@@ -218,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
     showChatView();
     log.innerHTML = '';
     
-    fetch('/uzdub/api/chat/history.php?session_id=' + sessionId)
+    fetch(ROOT_URL + '/api/chat/history.php?session_id=' + sessionId)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.error) {
@@ -241,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function createNewChat() {
-    fetch('/uzdub/api/chat/create.php', {
+    fetch(ROOT_URL + '/api/chat/create.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'title=&csrf_token=' + encodeURIComponent(csrfToken),
@@ -266,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function deleteChat(sessionId) {
     if (!confirm('Chatni o\'chirishni tasdiqlaysizmi?')) return;
     
-    fetch('/uzdub/api/chat/delete.php', {
+    fetch(ROOT_URL + '/api/chat/delete.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'session_id=' + sessionId + '&csrf_token=' + encodeURIComponent(csrfToken),
@@ -337,8 +339,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // Bot xabaridagi URL'larni formatlash — "Ko'rish" tugmasi qo'shish
   function formatBotMessage(text) {
     let html = escapeHtml(text);
-    // /uzdub/watch.php?id=1 kabi havolalarni topish
-    html = html.replace(/(\/uzdub\/watch\.php\?id=\d+)/g, function(match) {
+    // O'z saytimiz watch.php havolalarini topish (to'liq URL yoki /uzdub/ old qo'shimchali)
+    html = html.replace(/((?:https?:\/\/[^\s"']+\/(?:uzdub\/)?|\/uzdub\/|\/)watch\.php\?id=\d+)/g, function(match) {
       return '<a class="aic-watch-link" href="' + match + '" target="_blank">'
            + '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:middle;margin-right:4px;"><path d="M8 5v14l11-7z"/></svg>'
            + "Ko'rish"
@@ -572,7 +574,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    fetch('/uzdub/api/stream.php', {
+    fetch(ROOT_URL + '/api/stream.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, session_id: currentSessionId, csrf_token: csrfToken, lang: lang }),
@@ -639,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function updateSessionTitle(sessionId, firstMessage) {
     const title = firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : '');
-    fetch('/uzdub/api/chat/update_title.php', {
+    fetch(ROOT_URL + '/api/chat/update_title.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'session_id=' + encodeURIComponent(sessionId) + '&title=' + encodeURIComponent(title) + '&csrf_token=' + encodeURIComponent(csrfToken),
@@ -659,11 +661,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var NAV_COMMANDS = {
     uz: [
-      { patterns: ['bosh sahifa', 'asosiy sahifa', 'bosh sahifaga', 'bosh sahifaga o\'t', 'bosh sahifaga ot'], url: '/uzdub/index.php', speak: 'Bosh sahifaga o\'tyapman.' },
-      { patterns: ['profilim', 'mening profilim', 'profilimni och', 'profilimga o\'t'], url: '/uzdub/profile.php', speak: 'Profilingizni ochyapman.' },
-      { patterns: ['kino', 'kino bo\'lim', 'kino bolim', 'kinolarga', 'kino bo\'limini och'], url: '/uzdub/category.php?slug=kino', speak: 'Kino bo\'limini ochyapman.' },
-      { patterns: ['anime', 'anime bo\'lim', 'anime bolim', 'animega', 'anime bo\'limini och'], url: '/uzdub/category.php?slug=anime', speak: 'Anime bo\'limini ochyapman.' },
-      { patterns: ['multfilm', 'multfilm bo\'lim', 'multfilm bolim', 'multfilmlarga', 'multfilm bo\'limini och'], url: '/uzdub/category.php?slug=multfilm', speak: 'Multfilm bo\'limini ochyapman.' },
+      { patterns: ['bosh sahifa', 'asosiy sahifa', 'bosh sahifaga', 'bosh sahifaga o\'t', 'bosh sahifaga ot'], url: ROOT_URL + '/index.php', speak: 'Bosh sahifaga o\'tyapman.' },
+      { patterns: ['profilim', 'mening profilim', 'profilimni och', 'profilimga o\'t'], url: ROOT_URL + '/profile.php', speak: 'Profilingizni ochyapman.' },
+      { patterns: ['kino', 'kino bo\'lim', 'kino bolim', 'kinolarga', 'kino bo\'limini och'], url: ROOT_URL + '/category.php?slug=kino', speak: 'Kino bo\'limini ochyapman.' },
+      { patterns: ['anime', 'anime bo\'lim', 'anime bolim', 'animega', 'anime bo\'limini och'], url: ROOT_URL + '/category.php?slug=anime', speak: 'Anime bo\'limini ochyapman.' },
+      { patterns: ['multfilm', 'multfilm bo\'lim', 'multfilm bolim', 'multfilmlarga', 'multfilm bo\'limini och'], url: ROOT_URL + '/category.php?slug=multfilm', speak: 'Multfilm bo\'limini ochyapman.' },
       { patterns: ['qidiruv', 'qidir', 'izla'], url: null, speak: null },
     ]
   };
@@ -682,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (cmd.url) return cmd;
           // qidiruv buyrug'i — keyingi qismni ajratish
           var searchTerms = norm.replace(cmd.patterns[j], '').trim();
-          if (searchTerms) return { url: '/uzdub/search.php?q=' + encodeURIComponent(searchTerms), speak: '"' + searchTerms + '" bo\'ychida qidiryapman.' };
+          if (searchTerms) return { url: ROOT_URL + '/search.php?q=' + encodeURIComponent(searchTerms), speak: '"' + searchTerms + '" bo\'ychida qidiryapman.' };
         }
       }
     }

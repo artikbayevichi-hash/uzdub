@@ -5,7 +5,7 @@
    ============================================================ */
 $is_premium_user = is_user() && !empty(current_user()['is_premium']);
 ?>
-<link rel="stylesheet" href="/uzdub/css/ai-chat.css">
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/ai-chat.css?v=<?php echo @filemtime(__DIR__ . '/../css/ai-chat.css') ?: 1; ?>">
 
 <?php if ($is_premium_user): ?>
 <button class="aic-fab" id="aic-fab" aria-label="AI yordamchi" title="AI yordamchi">
@@ -60,7 +60,7 @@ $is_premium_user = is_user() && !empty(current_user()['is_premium']);
   </div>
 </div>
 <?php else: ?>
-<button class="aic-fab aic-fab-premium-only" id="aic-fab" aria-label="AI yordamchi (Premium)" title="AI yordamchi — faqat Premium uchun" onclick="window.location.href='/uzdub/premium.php'">
+<button class="aic-fab aic-fab-premium-only" id="aic-fab" aria-label="AI yordamchi (Premium)" title="AI yordamchi — faqat Premium uchun" onclick="window.location.href=ROOT_URL + '/premium.php'">
   <svg viewBox="0 0 24 24">
     <path d="M12 2a10 10 0 1 0 3.6 19.33L22 22l-1.03-4.24A10 10 0 0 0 12 2zm0 2a8 8 0 1 1-4.24 14.79l-.4-.25-2.85.68.7-2.76-.27-.42A8 8 0 0 1 12 4z"/>
   </svg>
@@ -76,5 +76,5 @@ $is_premium_user = is_user() && !empty(current_user()['is_premium']);
   window.aicUsername = <?php echo json_encode(is_user() ? current_user()['username'] : ''); ?>;
 </script>
 <?php if ($is_premium_user): ?>
-<script src="/uzdub/js/ai-chat.js" defer></script>
+<script src="<?php echo ROOT_URL; ?>/js/ai-chat.js" defer></script>
 <?php endif; ?>

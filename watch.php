@@ -83,8 +83,24 @@ if ($episodes) {
     $active_episode_id = (int)$active_episode['id'];
 }
 
+// ===== Keyingi qism (next episode) =====
+$next_ep = null;
+if ($episodes) {
+    foreach ($episodes as $i => $ep) {
+        if ((int)$ep['id'] === $active_episode_id && isset($episodes[$i + 1])) {
+            $nep = $episodes[$i + 1];
+            $next_ep = [
+                'href' => 'watch.php?id=' . $id . '&ep=' . (int)$nep['id'],
+                'label' => t('player_next_ep') . ': ' . ($nep['title'] ?? ('Qism ' . (int)$nep['episode_number'])),
+            ];
+            break;
+        }
+    }
+}
+
 // ===== PREMIUM PAYWALL (server tomonidan majburiy tekshiruv) =====
-$is_locked = (bool)$item['is_premium'] && !has_premium_access($pdo);
+$ep_locked = (bool)$active_episode && !empty($active_episode['is_premium']) && !has_premium_access($pdo);
+$is_locked = ((bool)$item['is_premium'] && !has_premium_access($pdo)) || $ep_locked;
 
 // ===== "Davom eting" — saqlangan pozitsiyani olish (file/telegram turidagi videolar uchun) =====
 $resume_position = 0;
@@ -128,13 +144,17 @@ include __DIR__ . '/includes/header.php';
 .episodes-header h3 { font-size:15px; margin:0 0 12px; color:var(--text-light); }
 .episodes-list { display:flex; flex-wrap:wrap; gap:8px; }
 .episodes-season { width:100%; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin:6px 0 2px; }
-.episode-chip { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:8px; border:1px solid rgba(33,150,243,0.25); background:rgba(33,150,243,0.05); color:var(--text-light); text-decoration:none; font-size:13px; transition:0.2s; max-width:260px; }
+.episode-chip { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; border:1px solid rgba(33,150,243,0.25); background:rgba(33,150,243,0.05); color:var(--text-light); text-decoration:none; font-size:13px; transition:0.2s; box-sizing:border-box; flex:0 0 calc((100% - 16px) / 3); }
+@media screen and (min-width: 993px) {
+    .episode-chip { flex:0 0 calc((100% - 88px) / 12); }
+}
 .episode-chip:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.12); }
 .episode-chip.active { background:var(--blue-primary); border-color:var(--blue-primary); }
 .episode-num { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 6px; border-radius:6px; background:rgba(33,150,243,0.15); color:var(--blue-glow); font-weight:700; font-size:12px; }
 .episode-chip.active .episode-num { background:rgba(255,255,255,0.25); color:#fff; }
 .episode-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 </style>
+<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/player.css?v=<?php echo @filemtime(__DIR__ . '/css/player.css') ?: 1; ?>">
 
 <div class="detail-wrap">
 
@@ -145,12 +165,14 @@ include __DIR__ . '/includes/header.php';
             <div class="lock-bg" style="background-image:url('<?php echo $item['poster'] ? e(poster_url($item['poster'])) : ''; ?>');"></div>
             <div class="lock-content">
                 <div class="lock-icon">🔒</div>
-                <h3><?php echo t('premium_content'); ?></h3>
-                <p>"<?php echo e(t_title($item)); ?>" <?php echo t('premium_needed'); ?></p>
+                <h3><?php echo $ep_locked ? t('premium_episode') : t('premium_content'); ?></h3>
+                <p><?php echo $ep_locked
+                    ? e(($active_episode['title'] ?? ('Qism ' . (int)$active_episode['episode_number']))) . ' — ' . t('premium_episode_needed')
+                    : '"' . e(t_title($item)) . '" ' . t('premium_needed'); ?></p>
                 <?php if (is_user()): ?>
                 <a href="premium.php" class="btn-unlock">👑 <?php echo t('get_premium'); ?></a>
                 <?php else: ?>
-                <a href="auth/login.php?redirect=<?php echo urlencode('/uzdub/watch.php?id=' . $id); ?>" class="btn-unlock"><?php echo t('login_and_premium'); ?></a>
+                <a href="auth/login.php?redirect=<?php echo urlencode(ROOT_URL . '/watch.php?id=' . $id); ?>" class="btn-unlock"><?php echo t('login_and_premium'); ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -162,7 +184,7 @@ include __DIR__ . '/includes/header.php';
             $subs_data->execute([$id]);
             $subtitles = $subs_data->fetchAll();
         } catch (PDOException $e) {}
-        echo render_player($active_video_type, $active_video_url, 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? poster_url($item['poster']) : null, [], $intro_start, $intro_end);
+        echo render_player($active_video_type, $active_video_url, 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? poster_url($item['poster']) : null, [], $intro_start, $intro_end, $resume_position, t_title($item) . ($active_episode ? ' — ' . ($active_episode['title'] ?? ('Qism ' . (int)$active_episode['episode_number'])) : ''), $next_ep);
         ?>
         <?php endif; ?>
     </div>
@@ -253,7 +275,7 @@ include __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <link rel="stylesheet" href="/uzdub/css/comments.css">
+    <link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/comments.css?v=<?php echo @filemtime(__DIR__ . '/css/comments.css') ?: 1; ?>">
     <section class="cmt-section emoji-keep" id="commentSection">
         <div class="cmt-header">
             <h3><?php echo t('comments'); ?></h3>
@@ -358,6 +380,7 @@ function toggleFav(contentId) {
         'delete_confirm' => t('delete_confirm'),
         'no_comments' => t('no_comments'),
         'reply' => t('reply'),
+        'reply_to' => t('reply_to'),
         'like' => t('like'),
         'dislike' => t('dislike'),
     ], JSON_UNESCAPED_UNICODE); ?>;
@@ -433,7 +456,7 @@ function toggleFav(contentId) {
         html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>';
         html += '<span class="cmt-action-count">' + (c.dislike_count || '') + '</span></button>';
 
-        if (IS_USER && !isReply) {
+        if (IS_USER) {
             html += '<button class="cmt-action-btn reply-btn" data-id="' + c.id + '" data-user="' + esc(c.username) + '">';
             html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
             html += translations.reply + '</button>';
@@ -441,17 +464,17 @@ function toggleFav(contentId) {
 
         html += '</div>';
 
-        if (!isReply && c.replies && c.replies.length) {
+        if (c.replies && c.replies.length) {
             html += '<div class="cmt-replies">';
             c.replies.forEach(function(r) { html += buildComment(r, true); });
             html += '</div>';
         }
 
-        if (IS_USER && !isReply) {
+        if (IS_USER) {
             html += '<div class="cmt-reply-input" id="replyBox-' + c.id + '" style="display:none">';
             html += '<img src="<?php echo is_user() ? e(avatar_url(current_user()['avatar'])) : ''; ?>" class="cmt-avatar" alt="">';
             html += '<div class="cmt-input-wrap">';
-            html += '<textarea class="cmt-textarea" placeholder="' + esc(translations.write_comment) + '" rows="1"></textarea>';
+            html += '<textarea class="cmt-textarea" placeholder="' + esc(c.username) + ' ' + translations.reply_to + '" rows="1"></textarea>';
             html += '<div class="cmt-toolbar">';
             html += '<button type="button" class="cmt-tool-btn" data-cmd="bold"><b>B</b></button>';
             html += '<button type="button" class="cmt-tool-btn" data-cmd="italic"><i>I</i></button>';
@@ -483,7 +506,7 @@ function toggleFav(contentId) {
 
     function loadComments() {
         list.innerHTML = '<div class="cmt-loading"><div class="cmt-spinner"></div></div>';
-        fetch('/uzdub/api/comments.php?content_id=' + CONTENT_ID)
+        fetch(ROOT_URL + '/api/comments.php?content_id=' + CONTENT_ID)
             .then(function(r) { return r.json(); })
             .then(renderComments)
             .catch(function() { list.innerHTML = '<div class="cmt-empty">' + esc(translations.no_comments) + '</div>'; });
@@ -496,7 +519,7 @@ function toggleFav(contentId) {
             csrf_token: CSRF
         };
         if (parentId) body.parent_id = parentId;
-        return fetch('/uzdub/api/comment-post.php', {
+        return fetch(ROOT_URL + '/api/comment-post.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(body)
@@ -504,7 +527,7 @@ function toggleFav(contentId) {
     }
 
     function toggleLike(commentId, type) {
-        return fetch('/uzdub/api/like-toggle.php', {
+        return fetch(ROOT_URL + '/api/like-toggle.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({comment_id: commentId, type: type, csrf_token: CSRF})
@@ -560,7 +583,7 @@ function toggleFav(contentId) {
 
         list.querySelectorAll('.like-btn, .dislike-btn').forEach(function(btn) {
             btn.onclick = function() {
-                if (!IS_USER) { window.location.href = '/uzdub/auth/login.php?redirect=' + encodeURIComponent(window.location.pathname); return; }
+                if (!IS_USER) { window.location.href = ROOT_URL + '/auth/login.php?redirect=' + encodeURIComponent(window.location.pathname); return; }
                 var id = parseInt(btn.dataset.id);
                 var type = btn.dataset.type;
                 toggleLike(id, type).then(function(r) {
@@ -575,7 +598,7 @@ function toggleFav(contentId) {
         if (cards.length === 0) return;
         var ids = [];
         cards.forEach(function(c) { ids.push(c.dataset.id); });
-        fetch('/uzdub/api/comment-reactions.php?ids=' + ids.join(','))
+        fetch(ROOT_URL + '/api/comment-reactions.php?ids=' + ids.join(','))
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (!data.updates) return;
@@ -615,31 +638,13 @@ function toggleFav(contentId) {
 </script>
 <?php if (is_user() && !$is_locked && in_array($active_video_type, ['file', 'telegram'], true)): ?>
 <script>
-var WT2 = <?php echo json_encode([
-    'resuming_from' => t('resuming_from'),
-    'minutes_abbrev' => t('minutes_abbrev'),
-], JSON_UNESCAPED_UNICODE); ?>;
 (function () {
     var video = document.querySelector('.watch-player-section video');
     if (!video) return;
     var contentId = <?php echo (int)$id; ?>;
     var episodeId = <?php echo (int)$active_episode_id; ?>;
-    var resumeAt = <?php echo (int)$resume_position; ?>;
     var csrfToken = <?php echo json_encode(csrf_token()); ?>;
     var lastSaved = 0;
-
-    if (resumeAt > 5) {
-        video.addEventListener('loadedmetadata', function onMeta() {
-            if (resumeAt < video.duration - 5) {
-                video.currentTime = resumeAt;
-                if (window.showToast) {
-                    var mins = Math.floor(resumeAt / 60);
-                    showToast(WT2.resuming_from + " (" + mins + " " + WT2.minutes_abbrev + ")", 'info');
-                }
-            }
-            video.removeEventListener('loadedmetadata', onMeta);
-        });
-    }
 
     function saveProgress(useBeacon) {
         if (!video.duration || isNaN(video.duration)) return;
@@ -654,9 +659,9 @@ var WT2 = <?php echo json_encode([
             csrf_token: csrfToken
         });
         if (useBeacon && navigator.sendBeacon) {
-            navigator.sendBeacon('/uzdub/api/save-progress.php', new Blob([payload], { type: 'application/json' }));
+            navigator.sendBeacon(ROOT_URL + '/api/save-progress.php', new Blob([payload], { type: 'application/json' }));
         } else {
-            fetch('/uzdub/api/save-progress.php', { method: 'POST', body: payload }).catch(function () {});
+            fetch(ROOT_URL + '/api/save-progress.php', { method: 'POST', body: payload }).catch(function () {});
         }
     }
 
@@ -689,5 +694,7 @@ var WT2 = <?php echo json_encode([
     setTimeout(tryScroll, 800);
 })();
 </script>
+
+<script src="<?php echo ROOT_URL; ?>/js/player.js?v=<?php echo @filemtime(__DIR__ . '/js/player.js') ?: 1; ?>"></script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -23,8 +23,26 @@ if (session_status() === PHP_SESSION_NONE) {
     ]);
     session_start();
 }
-if (empty($_SESSION['user_id'])) {
-    header('Location: /uzdub/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+$stream_user = (int)($_SESSION['user_id'] ?? 0);
+$stream_token = '';
+if ($stream_user === 0) {
+    // Mobil ilova (ExoPlayer/AVPlayer) cookie yubora olmaydi — video_stream API
+    // orqali berilgan qisqa muddatli imzolangan token bilan ruxsat olinadi.
+    $tok = trim($_GET['st'] ?? '');
+    $tokParts = explode('.', $tok);
+    if (count($tokParts) === 3) {
+        $tokUid = (int)$tokParts[0];
+        $tokExp = (int)$tokParts[1];
+        $tokSig = (string)$tokParts[2];
+        if ($tokUid > 0 && $tokExp > time() && $tokExp <= time() + 21600
+            && hash_equals(hash_hmac('sha256', $tokUid . '|' . $tokExp, STREAM_TOKEN_SECRET), $tokSig)) {
+            $stream_user = $tokUid;
+            $stream_token = $tok;
+        }
+    }
+}
+if ($stream_user === 0) {
+    header('Location: ' . ROOT_URL . '/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
     exit;
 }
 // Streaming uzoq davom etishi mumkin — sessiya lock'ini bo'shatamiz, aks holda
@@ -161,7 +179,12 @@ function stream_request(string $url, array $opts, bool $allow_loopback, int $max
     for ($i = 0; $i <= $max_redirects; $i++) {
         if (!stream_validate_host($current, $allow_loopback)) return ['error' => 'blocked'];
         $ch = curl_init($current);
-        curl_setopt_array($ch, $opts + [
+        $req_opts = $opts;
+        // Odysee CDN Referer talab qiladi (aks holda 401 qaytaradi)
+        if (stripos($current, 'player.odycdn.com') !== false) {
+            $req_opts[CURLOPT_REFERER] = 'https://odysee.com/';
+        }
+        curl_setopt_array($ch, $req_opts + [
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => true,
@@ -258,8 +281,11 @@ if ($hls) {
         }
         // Faqat m3u8 (playlist) havolalari qayta yozish orqali o'tadi; segmentlar (.ts)
         // oddiy range-proxy yo'li bilan oqimlanadi (hls=1 segmentni playlist deb adashmaslik uchun).
+        // Playlist havolalari .m3u8 oxiri bilan beriladi (PATH_INFO) — mobil pleyerlar
+        // (ExoPlayer/AVPlayer) HLS'ni URL kengaytmasi orqali aniqlaydi.
         $is_m3u8 = (bool)preg_match('~\.m3u8(?:[?#].*)?$~i', $abs);
-        $rewritten[] = '/uzdub/stream.php?url=' . rawurlencode($abs) . ($is_m3u8 ? '&hls=1' : '');
+        $tokSuffix = $stream_token !== '' ? '&st=' . rawurlencode($stream_token) : '';
+        $rewritten[] = ROOT_URL . '/stream.php' . ($is_m3u8 ? '/playlist.m3u8' : '') . '?url=' . rawurlencode($abs) . ($is_m3u8 ? '&hls=1' : '') . $tokSuffix;
     }
 
     header('Content-Type: application/vnd.apple.mpegurl');
@@ -280,7 +306,10 @@ if ($hls) {
 $candidates = $tgCandidates ?: [$url];
 $probe = null;
 $lastProbe = [0, '', 0, 'none', ''];
-for ($attempt = 0; $attempt < 8 && !$probe; $attempt++) {
+// Probe qayta urinishi: ilgari 12s*8 = ~96s osilib qolardi ("Video yuklanmoqda...").
+// Endi qattiq xatolarda (500/403/404...) darhol chiqamiz; faqat vaqtinchalik
+// holatlarda (502/503/ulanish xatosi) 3s tanaffus bilan qayta urinamiz (maks ~9s).
+for ($attempt = 0; $attempt < 4 && !$probe; $attempt++) {
     foreach ($candidates as $cand) {
         if (!stream_validate_host($cand, $allow_loopback)) continue;
         [$h, $ct, $fs, $ar, $ec] = http_probe($cand, $allow_loopback);
@@ -296,8 +325,13 @@ for ($attempt = 0; $attempt < 8 && !$probe; $attempt++) {
             $attempt = 99;
             break 2;
         }
+        // Qattiq xato (500/403/404/408...): pleyer darhol xato ko'rishi kerak.
+        if ($h >= 400 && !in_array($h, [502, 503], true)) {
+            $attempt = 99;
+            break 2;
+        }
     }
-    if (!$probe && $attempt < 7) sleep(12);
+    if (!$probe && $attempt < 3) sleep(3);
 }
 if (!$probe) {
     [$httpCode, $contentType, $fileSize, $acceptRanges, $errCode] = $lastProbe;
@@ -404,6 +438,10 @@ for ($i = 0; $i <= 5; $i++) {
         CURLOPT_BUFFERSIZE => 65536,
     ];
     if ($rangeSpec !== null) $opts[CURLOPT_RANGE] = $rangeSpec;
+    // Odysee CDN Referer talab qiladi (aks holda 401 qaytaradi)
+    if (stripos($current, 'player.odycdn.com') !== false) {
+        $opts[CURLOPT_REFERER] = 'https://odysee.com/';
+    }
     curl_setopt_array($ch, $opts);
     curl_exec($ch);
     $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);

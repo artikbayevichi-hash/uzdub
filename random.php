@@ -13,7 +13,7 @@ if ($slug) {
             $item->execute([$slug]);
             $row = $item->fetch();
             if ($row) {
-                header('Location: /uzdub/watch.php?id=' . $row['id']);
+                header('Location: ' . ROOT_URL . '/watch.php?id=' . $row['id']);
                 exit;
             }
         } catch (Exception $e) {}
@@ -110,7 +110,7 @@ require_once __DIR__ . '/includes/header.php';
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM content c JOIN categories cat ON c.category_id = cat.id WHERE cat.slug = ?");
             $stmt->execute([$cat['slug']]);
             $count = $stmt->fetchColumn();
-            echo '<a href="/uzdub/random.php?slug=' . $cat['slug'] . '" class="random-card" style="--card-accent:' . $cat['color'] . ';">';
+            echo '<a href="' . ROOT_URL . '/random.php?slug=' . $cat['slug'] . '" class="random-card" style="--card-accent:' . $cat['color'] . ';">';
             echo '<div class="random-card-icon">' . $cat['icon'] . '</div>';
             echo '<div class="random-card-label">' . $cat['label'] . '</div>';
             echo '<div class="random-card-count">' . $count . ' ' . t('content_count') . '</div>';

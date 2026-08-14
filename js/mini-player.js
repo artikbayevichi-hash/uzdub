@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const video = document.querySelector('video');
     if (!video) return;
 
+    // Yangi custom player (js/player.js) o'z PiP tugmasiga ega — dublikat qo'shilmang
+    if (video.closest('.udp-player')) return;
+
     // Picture-in-Picture tugmasini qo'shish
     if (document.pictureInPictureEnabled) {
         const pipBtn = document.createElement('button');

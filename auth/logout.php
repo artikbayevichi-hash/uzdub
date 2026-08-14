@@ -23,5 +23,5 @@ if (ini_get("session.use_cookies")) {
     );
 }
 session_destroy();
-header('Location: /uzdub/auth/login.php');
+header('Location: ' . ROOT_URL . '/auth/login.php');
 exit;

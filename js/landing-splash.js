@@ -1,9 +1,11 @@
+window.ROOT_URL = window.ROOT_URL || '/uzdub';
+
 (function(){
     var SEEN_KEY='uzdub_splash_seen';
 
     // Agar allaqachon ko'rilgan bo'lsa — avtomatik redirect
     if(localStorage.getItem(SEEN_KEY)==='1'){
-        window.location.href='/uzdub/index.php';
+        window.location.href=ROOT_URL + '/index.php';
         return;
     }
 
@@ -12,7 +14,7 @@
     if(enterBtn){
         enterBtn.addEventListener('click',function(){
             localStorage.setItem(SEEN_KEY,'1');
-            window.location.href='/uzdub/index.php';
+            window.location.href=ROOT_URL + '/index.php';
         });
     }
 

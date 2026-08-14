@@ -49,7 +49,7 @@ function build_genre_url($extras = []) {
     if (!empty($extras['cat'])) $params['cat'] = $extras['cat'];
     elseif ($cat_filter) $params['cat'] = $cat_filter;
     if (!empty($extras['page'])) $params['page'] = $extras['page'];
-    return '/uzdub/genres.php?' . http_build_query($params);
+    return ROOT_URL . '/genres.php?' . http_build_query($params);
 }
 
 if ($selected_count > 0) {
@@ -192,7 +192,7 @@ include __DIR__ . '/includes/header.php';
                         🔍 <?php echo t('browse_by_genre'); ?>
                     </button>
                     <?php if ($selected_count > 0): ?>
-                    <button type="button" class="genre-clear-btn" onclick="window.location.href='/uzdub/genres.php'">✕ <?php echo t('all_genres'); ?></button>
+                    <button type="button" class="genre-clear-btn" onclick="window.location.href=ROOT_URL + '/genres.php'">✕ <?php echo t('all_genres'); ?></button>
                     <?php endif; ?>
                 </div>
                 <input type="hidden" name="sort" value="<?php echo e($sort); ?>">
@@ -206,7 +206,7 @@ include __DIR__ . '/includes/header.php';
             <?php foreach ($selected_slugs as $s):
                 $sg = $all_genres_by_slug[$s] ?? null;
                 if (!$sg) continue;
-                $remove_url = '/uzdub/genres.php?';
+                $remove_url = ROOT_URL . '/genres.php?';
                 $remaining = array_values(array_diff($selected_slugs, [$s]));
                 $params = ['genres' => $remaining, 'sort' => $sort];
                 if ($cat_filter) $params['cat'] = $cat_filter;
@@ -232,14 +232,14 @@ include __DIR__ . '/includes/header.php';
             <div class="genre-controls">
                 <div class="genre-cat-tabs">
                     <?php
-                    $base_all = '/uzdub/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'sort' => $sort]));
+                    $base_all = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'sort' => $sort]));
                     ?>
                     <a href="<?php echo $base_all; ?>" class="genre-cat-tab <?php echo !$cat_filter ? 'active' : ''; ?>">
                         📋 <?php echo t('all_genres'); ?><span class="tab-count"><?php echo $total; ?></span>
                     </a>
                     <?php foreach (['kino' => '🎬', 'anime' => '🎌', 'multfilm' => '🎞️'] as $cs => $ci): ?>
                     <?php if (!empty($cat_counts[$cs])): ?>
-                    <?php $tab_url = '/uzdub/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'cat' => $cs, 'sort' => $sort])); ?>
+                    <?php $tab_url = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'cat' => $cs, 'sort' => $sort])); ?>
                     <a href="<?php echo $tab_url; ?>" class="genre-cat-tab <?php echo $cat_filter === $cs ? 'active' : ''; ?>">
                         <?php echo $ci; ?> <?php echo t($cs === 'kino' ? 'movies' : ($cs === 'anime' ? 'anime' : 'cartoons')); ?><span class="tab-count"><?php echo $cat_counts[$cs]; ?></span>
                     </a>
@@ -247,7 +247,7 @@ include __DIR__ . '/includes/header.php';
                     <?php endforeach; ?>
                 </div>
                 <div class="genre-sort">
-                    <?php $sort_base = '/uzdub/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'cat' => $cat_filter])); ?>
+                    <?php $sort_base = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'cat' => $cat_filter])); ?>
                     <select onchange="window.location.href='<?php echo e($sort_base); ?>&sort='+this.value">
                         <?php
                         $sorts = ['newest' => t('newest'), 'popular' => t('most_viewed'), 'rating' => t('top_rated'), 'year_desc' => '↓ ' . t('release_year'), 'year_asc' => '↑ ' . t('release_year'), 'title' => 'A-Z'];
@@ -264,7 +264,7 @@ include __DIR__ . '/includes/header.php';
         <div class="genre-result-info"><?php echo $total; ?> <?php echo t('content_count'); ?></div>
         <div class="genre-grid">
             <?php foreach ($content_items as $item): ?>
-            <a href="/uzdub/watch.php?id=<?php echo $item['id']; ?>" class="card" style="position:relative;">
+            <a href="<?php echo ROOT_URL; ?>/watch.php?id=<?php echo $item['id']; ?>" class="card" style="position:relative;">
                 <?php if ($item['is_premium']): ?><span class="genre-premium">👑</span><?php endif; ?>
                 <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>" loading="lazy">
                 <div class="card-info">
@@ -282,7 +282,7 @@ include __DIR__ . '/includes/header.php';
         <?php if ($total_pages > 1): ?>
         <div class="genre-pagination">
             <?php
-            $pp = '/uzdub/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'sort' => $sort, 'cat' => $cat_filter]));
+            $pp = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'sort' => $sort, 'cat' => $cat_filter]));
             ?>
             <a href="<?php echo $pp . '&page=' . ($page - 1); ?>" class="<?php echo $page <= 1 ? 'disabled' : ''; ?>">‹</a>
             <?php
@@ -315,7 +315,7 @@ include __DIR__ . '/includes/header.php';
         <p style="color:var(--text-muted);margin:0 0 20px;font-size:14px;"><?php echo t('browse_by_genre'); ?></p>
         <div class="genre-all-grid">
             <?php foreach ($all_genres as $g): ?>
-            <a href="/uzdub/genres.php?genres[]=<?php echo e($g['slug']); ?>" class="genre-all-card">
+            <a href="<?php echo ROOT_URL; ?>/genres.php?genres[]=<?php echo e($g['slug']); ?>" class="genre-all-card">
                 <span class="genre-all-icon" style="background:<?php echo e($g['color'] ?: '#2196f3'); ?>22;color:<?php echo e($g['color'] ?: '#2196f3'); ?>;"><?php echo mb_substr($g['name'], 0, 2); ?></span>
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:14px;font-weight:600;"><?php echo e($g['name']); ?></div>
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         var sortVal = form.querySelector('input[name="sort"]');
         if (sortVal && sortVal.value !== 'newest') params.set('sort', sortVal.value);
-        window.location.href = '/uzdub/genres.php?' + params.toString();
+        window.location.href = ROOT_URL + '/genres.php?' + params.toString();
     });
 });
 </script>

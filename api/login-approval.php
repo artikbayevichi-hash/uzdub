@@ -53,7 +53,7 @@ if ($action === 'status') {
 
 if ($action === 'finalize') {
     if ($appr['status'] !== 'approved') {
-        header('Location: /uzdub/auth/login.php');
+        header('Location: ' . ROOT_URL . '/auth/login.php');
         exit;
     }
 
@@ -62,11 +62,11 @@ if ($action === 'finalize') {
     $user = $stmt->fetch();
 
     if (!$user || !$user['two_factor_enabled']) {
-        header('Location: /uzdub/auth/login.php');
+        header('Location: ' . ROOT_URL . '/auth/login.php');
         exit;
     }
 
-    $redirect = $_SESSION['2fa_redirect'] ?? '/uzdub/index.php';
+    $redirect = $_SESSION['2fa_redirect'] ?? ROOT_URL . '/index.php';
     unset($_SESSION['2fa_pending_id'], $_SESSION['login_approval_token'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_redirect'], $_SESSION['2fa_show_totp']);
 
     login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
@@ -77,7 +77,7 @@ if ($action === 'finalize') {
     record_user_session($pdo, $user['id']);
     $_SESSION['login_redirect'] = $redirect;
 
-    header('Location: /uzdub/auth/save-account.php');
+    header('Location: ' . ROOT_URL . '/auth/save-account.php');
     exit;
 }
 

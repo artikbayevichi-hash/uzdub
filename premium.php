@@ -239,10 +239,10 @@ function updatePaymentUrls(planKey, price) {
         var clickBtn = document.getElementById('clickPayBtn');
         var uzumBtn = document.getElementById('uzumPayBtn');
         <?php if (defined('CLICK_MERCHANT_ID') && CLICK_MERCHANT_ID): ?>
-        clickBtn.href = '/uzdub/api/click-redirect.php?plan=' + planKey;
+        clickBtn.href = ROOT_URL + '/api/click-redirect.php?plan=' + planKey;
         <?php endif; ?>
         <?php if (defined('UZUM_MERCHANT_ID') && UZUM_MERCHANT_ID): ?>
-        uzumBtn.href = '/uzdub/api/uzum-redirect.php?plan=' + planKey;
+        uzumBtn.href = ROOT_URL + '/api/uzum-redirect.php?plan=' + planKey;
         <?php endif; ?>
     }
 }

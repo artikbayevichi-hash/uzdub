@@ -1,4 +1,4 @@
--- YANGILASH SKRIPTI: eski bazaga yangi jadvallarni qo'shadi
+﻿-- YANGILASH SKRIPTI: eski bazaga yangi jadvallarni qo'shadi
 -- phpMyAdmin -> UZDUB bazasini tanlang -> SQL bo'limi -> shu faylni joylashtiring -> Bajarish
 
 USE uzdub;
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS watch_history (
     INDEX idx_episode (episode_id)
 ) ENGINE=InnoDB;
 
--- watch_history da UNIQUE key (user_id, content_id) — dublikatlarni oldini oladi
+-- watch_history da UNIQUE key (user_id, content_id) вЂ” dublikatlarni oldini oladi
 DELETE wh FROM watch_history wh INNER JOIN watch_history wh2 ON wh.user_id=wh2.user_id AND wh.content_id=wh2.content_id AND wh.id < wh2.id;
 SELECT COUNT(*) INTO @wh_unique FROM information_schema.statistics
 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'watch_history' AND INDEX_NAME = 'uniq_user_content';
@@ -255,4 +255,11 @@ CREATE TABLE IF NOT EXISTS video_source_log (
     KEY created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
+-- =====================================================
+-- 2026-08-13: Epizod darajasidagi premium qulf
+-- =====================================================
+ALTER TABLE episodes ADD COLUMN is_premium TINYINT(1) NOT NULL DEFAULT 0 AFTER intro_end;
+
 SELECT 'Yangilash muvaffaqiyatli yakunlandi!' AS natija;
+

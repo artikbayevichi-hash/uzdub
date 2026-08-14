@@ -61,7 +61,7 @@ try {
             notify_send($pdo, $cmtOwner['user_id'], 'reaction',
                 "$senderName sizning izohingizga $label",
                 '',
-                "/uzdub/watch.php?id=" . $cmtOwner['content_id'] . "#comment-$comment_id",
+                ROOT_URL . "/watch.php?id=" . $cmtOwner['content_id'] . "#comment-$comment_id",
                 $uid
             );
         }

@@ -4,6 +4,7 @@ session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/payment.php';
 
 if (!empty($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
@@ -146,9 +147,137 @@ try {
                 json_error('Invalid credentials');
             }
 
+            // ===== 2FA: ikki bosqichli himoya =====
+            if (!empty($user['two_factor_enabled'])) {
+                $email = $user['email'] ?? '';
+                $masked = $email !== '' ? (substr($email, 0, 2) . str_repeat('*', max(0, strlen($email) - 6)) . substr($email, -4)) : '';
+
+                $_SESSION['2fa_pending_id'] = (int)$user['id'];
+                $_SESSION['2fa_pending_email'] = $masked;
+
+                $tg_chat = $user['telegram_chat_id'] ?? '';
+                if ($tg_chat !== '') {
+                    // Telegram orqali Ha/Yo'q tasdiqlash
+                    $token = bin2hex(random_bytes(16));
+                    $ip = client_ip();
+                    $expires = date('Y-m-d H:i:s', time() + 180);
+                    $pdo->prepare("UPDATE login_approvals SET status = 'expired' WHERE user_id = ? AND status = 'pending'")->execute([$user['id']]);
+                    $ins = $pdo->prepare("INSERT INTO login_approvals (user_id, token, ip_address, user_agent, expires_at) VALUES (?, ?, ?, ?, ?)");
+                    $ins->execute([$user['id'], $token, $ip, $_SERVER['HTTP_USER_AGENT'] ?? '', $expires]);
+                    $_SESSION['login_approval_token'] = $token;
+                    tg_2fa_send_approval($tg_chat, $token, $ip, date('H:i d.m.Y'));
+                    json_ok([
+                        'need_2fa' => 'approval',
+                        'two_fa_type' => 'telegram',
+                        'pending_email' => $masked,
+                        'message' => 'Telegram orqali tasdiqlash so\'rovi yuborildi',
+                    ]);
+                } else {
+                    // Telegram ulanmagan — TOTP kod
+                    require_once __DIR__ . '/../includes/totp.php';
+                    if (!empty($user['two_factor_secret'])) {
+                        $_SESSION['2fa_totp_secret'] = $user['two_factor_secret'];
+                        json_ok([
+                            'need_2fa' => 'code',
+                            'two_fa_type' => 'totp',
+                            'pending_email' => $masked,
+                            'message' => 'Tasdiqlash kodini kiriting',
+                        ]);
+                    } else {
+                        unset($_SESSION['2fa_pending_id'], $_SESSION['2fa_pending_email']);
+                        json_error('2FA sozlanmagan. Admin bilan bog\'laning.');
+                    }
+                }
+            }
+
             $_SESSION['user_id'] = $user['id'];
             refresh_user_session($pdo, $user['id']);
 
+            json_ok([
+                'user' => [
+                    'id' => (int)$user['id'],
+                    'username' => $user['username'],
+                    'avatar' => $user['avatar'],
+                    'is_premium' => (bool)$user['is_premium'],
+                ]
+            ]);
+
+        case '2fa_status':
+            if (empty($_SESSION['login_approval_token']) || empty($_SESSION['2fa_pending_id'])) {
+                json_error('So\'rov mavjud emas');
+            }
+            $token = $_SESSION['login_approval_token'];
+            $stmt = $pdo->prepare("SELECT status, expires_at FROM login_approvals WHERE token = ? LIMIT 1");
+            $stmt->execute([$token]);
+            $appr = $stmt->fetch();
+            if (!$appr) json_error('So\'rov mavjud emas');
+            if ($appr['status'] === 'pending' && strtotime($appr['expires_at']) < time()) {
+                $pdo->prepare("UPDATE login_approvals SET status = 'expired' WHERE token = ?")->execute([$token]);
+                $appr['status'] = 'expired';
+            }
+            json_ok(['status' => $appr['status']]);
+
+        case '2fa_finalize':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_error('Method not allowed');
+            if (empty($_SESSION['login_approval_token']) || empty($_SESSION['2fa_pending_id'])) {
+                json_error('So\'rov mavjud emas');
+            }
+            $token = $_SESSION['login_approval_token'];
+            $stmt = $pdo->prepare("SELECT status FROM login_approvals WHERE token = ? LIMIT 1");
+            $stmt->execute([$token]);
+            $appr = $stmt->fetch();
+            if (!$appr || $appr['status'] !== 'approved') json_error('Tasdiqlanmagan');
+
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+            $stmt->execute([(int)$_SESSION['2fa_pending_id']]);
+            $user = $stmt->fetch();
+            if (!$user || empty($user['two_factor_enabled'])) {
+                unset($_SESSION['2fa_pending_id'], $_SESSION['login_approval_token'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_totp_secret']);
+                json_error('2FA sozlanmagan');
+            }
+
+            login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
+            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+            check_premium_expiry($pdo, $user['id']);
+            refresh_user_session($pdo, $user['id']);
+            session_regenerate_id(true);
+            record_user_session($pdo, $user['id']);
+            unset($_SESSION['2fa_pending_id'], $_SESSION['login_approval_token'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_totp_secret']);
+
+            json_ok([
+                'user' => [
+                    'id' => (int)$user['id'],
+                    'username' => $user['username'],
+                    'avatar' => $user['avatar'],
+                    'is_premium' => (bool)$user['is_premium'],
+                ]
+            ]);
+
+        case '2fa_verify_code':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_error('Method not allowed');
+            $input = get_input();
+            $code = trim($input['code'] ?? '');
+            if ($code === '' || empty($_SESSION['2fa_totp_secret']) || empty($_SESSION['2fa_pending_id'])) {
+                json_error('Kod muddati tugagan');
+            }
+            require_once __DIR__ . '/../includes/totp.php';
+            if (!TOTP::verifyCode($_SESSION['2fa_totp_secret'], $code)) {
+                json_error('Noto\'g\'ri tasdiqlash kodi');
+            }
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+            $stmt->execute([(int)$_SESSION['2fa_pending_id']]);
+            $user = $stmt->fetch();
+            if (!$user || empty($user['two_factor_enabled'])) {
+                unset($_SESSION['2fa_pending_id'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_totp_secret']);
+                json_error('2FA sozlanmagan');
+            }
+            login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
+            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+            check_premium_expiry($pdo, $user['id']);
+            refresh_user_session($pdo, $user['id']);
+            session_regenerate_id(true);
+            record_user_session($pdo, $user['id']);
+            unset($_SESSION['2fa_pending_id'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_totp_secret']);
             json_ok([
                 'user' => [
                     'id' => (int)$user['id'],
@@ -226,6 +355,13 @@ try {
             $avgStmt->execute([$id]);
             $content['avg_rating'] = $avgStmt->fetchColumn();
 
+            $epStmt = $pdo->prepare("SELECT id, season, episode_number, title, thumbnail, video_type, video_url,
+                                            video_url_1080p, video_url_720p, telegram_file_id, embed_code,
+                                            duration, intro_start, intro_end
+                                     FROM episodes WHERE content_id = ? ORDER BY season, episode_number");
+            $epStmt->execute([$id]);
+            $content['episodes'] = $epStmt->fetchAll();
+
             $userId = is_user() ? (int)$_SESSION['user_id'] : null;
 
             $content['user_rating'] = null;
@@ -255,6 +391,23 @@ try {
                     $progress['duration_seconds'] = (int)$progress['duration_seconds'];
                     $content['watch_progress'] = $progress;
                 }
+            }
+
+            // ===== PREMIUM PAYWALL (server tomonidan majburiy tekshiruv) =====
+            $is_locked = (bool)$content['is_premium'] && !has_premium_access($pdo);
+            $content['is_locked'] = $is_locked;
+            if ($is_locked) {
+                $content['video_type'] = null;
+                $content['video_url'] = null;
+                foreach ($content['episodes'] as &$ep) {
+                    $ep['video_type'] = null;
+                    $ep['video_url'] = null;
+                    $ep['video_url_1080p'] = null;
+                    $ep['video_url_720p'] = null;
+                    $ep['telegram_file_id'] = null;
+                    $ep['embed_code'] = null;
+                }
+                unset($ep);
             }
 
             json_ok(['content' => $content]);
@@ -884,28 +1037,43 @@ try {
         case 'get_comments':
             $contentId = (int)($_GET['content_id'] ?? 0);
             if (!$contentId) json_error('Content ID required');
-            $stmt = $pdo->prepare("SELECT c.*, u.username, u.avatar AS user_avatar FROM comments c JOIN users u ON c.user_id = u.id WHERE c.content_id = ? AND c.parent_id = 0 ORDER BY c.created_at DESC LIMIT 50");
+            $stmt = $pdo->prepare("SELECT c.*, u.username, u.avatar AS user_avatar FROM comments c JOIN users u ON c.user_id = u.id WHERE c.content_id = ? ORDER BY c.id ASC");
             $stmt->execute([$contentId]);
-            $comments = $stmt->fetchAll();
-            foreach ($comments as &$c) {
-                $c['time_ago'] = time_ago($c['created_at']);
-                $rStmt = $pdo->prepare("SELECT r.*, u2.username FROM comments r JOIN users u2 ON r.user_id = u2.id WHERE r.parent_id = ? ORDER BY r.created_at ASC");
-                $rStmt->execute([$c['id']]);
-                $replies = $rStmt->fetchAll();
-                foreach ($replies as &$r) { $r['time_ago'] = time_ago($r['created_at']); }
-                $c['replies'] = $replies;
-                $likeC = (int)$pdo->query("SELECT COUNT(*) FROM likes WHERE comment_id = {$c['id']} AND type = 'like'")->fetchColumn();
-                $dislikeC = (int)$pdo->query("SELECT COUNT(*) FROM likes WHERE comment_id = {$c['id']} AND type = 'dislike'")->fetchColumn();
-                $c['likes'] = $likeC;
-                $c['dislikes'] = $dislikeC;
-                $c['user_like'] = null;
-                if (is_user()) {
-                    $ul = $pdo->prepare("SELECT type FROM likes WHERE user_id = ? AND comment_id = ?");
-                    $ul->execute([(int)$_SESSION['user_id'], $c['id']]);
-                    $c['user_like'] = $ul->fetchColumn();
+            $rows = $stmt->fetchAll();
+            $byId = [];
+            $top = [];
+            foreach ($rows as $row) {
+                $row['replies'] = [];
+                $byId[$row['id']] = $row;
+                $pid = (int)($row['parent_id'] ?? 0);
+                if ($pid > 0 && isset($byId[$pid])) {
+                    $byId[$pid]['replies'][] = &$byId[$row['id']];
+                } else {
+                    $top[] = &$byId[$row['id']];
                 }
             }
-            json_ok(['comments' => $comments]);
+            unset($row);
+            $build = function (&$node) use (&$build, $pdo) {
+                $node['time_ago'] = time_ago($node['created_at']);
+                $likeC = (int)$pdo->query("SELECT COUNT(*) FROM likes WHERE comment_id = {$node['id']} AND type = 'like'")->fetchColumn();
+                $dislikeC = (int)$pdo->query("SELECT COUNT(*) FROM likes WHERE comment_id = {$node['id']} AND type = 'dislike'")->fetchColumn();
+                $node['likes'] = $likeC;
+                $node['dislikes'] = $dislikeC;
+                $node['user_like'] = null;
+                if (is_user()) {
+                    $ul = $pdo->prepare("SELECT type FROM likes WHERE user_id = ? AND comment_id = ?");
+                    $ul->execute([(int)$_SESSION['user_id'], $node['id']]);
+                    $node['user_like'] = $ul->fetchColumn();
+                }
+                foreach ($node['replies'] as &$r) { $build($r); }
+                unset($r);
+            };
+            foreach ($top as &$t) { $build($t); }
+            unset($t);
+            usort($top, function ($a, $b) { return strcmp($b['created_at'], $a['created_at']); });
+            foreach ($byId as &$n) { usort($n['replies'], function ($a, $b) { return strcmp($a['created_at'], $b['created_at']); }); }
+            unset($n);
+            json_ok(['comments' => $top]);
 
         case 'delete_comment':
             require_auth();
@@ -1075,6 +1243,145 @@ try {
                 'reply' => $cleanText,
                 'recommendations' => $match['matched'] ? ai_build_recommendations($match['rows']) : [],
             ]);
+
+        case 'video_stream':
+            // Mobil ilova uchun video'ni o'ynaladigan manbaga yechish.
+            // Saytdagi render_clean_video_if_possible() bilan bir xil mantiq:
+            //   VK     -> mp4 (stream.php proksi zaxira bilan)
+            //   RuTube -> HLS (stream.php hls proksi orqali)
+            //   Rumble -> CDN HLS (stream.php hls proksi orqali)
+            //   Odysee -> mp4 (stream.php proksi orqali, referer server tomonda)
+            //   YouTube / OK -> WebView embed
+            //   Telegram / lokal fayl / oddiy mp4 -> bevosita
+            //
+            // stream.php login talab qiladi, lekin ilovaning native pleyeri cookie
+            // yuborolmaydi — shuning uchun proksi URL'larga qisqa muddatli imzolangan
+            // token qo'shiladi (stream.php 'st' parametrini tekshiradi).
+            $video_url = trim($_GET['url'] ?? '');
+            if ($video_url === '') json_error('Video havolasi kiritilmagan');
+
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $base = $scheme . '://' . $host . '/uzdub';
+            $sp = $base . '/stream.php';
+
+            $stream_token = '';
+            if (is_user()) {
+                $st_uid = (int)$_SESSION['user_id'];
+                $st_exp = time() + 21600;
+                $st_sig = hash_hmac('sha256', $st_uid . '|' . $st_exp, STREAM_TOKEN_SECRET);
+                $stream_token = $st_uid . '.' . $st_exp . '.' . $st_sig;
+            }
+            $tokQ = $stream_token !== '' ? '&st=' . rawurlencode($stream_token) : '';
+
+            $url = $video_url;
+
+            // Telegram bot fayli (proksi — login talab)
+            if (strpos($url, 'tg:') === 0) {
+                if ($stream_token === '') json_error('login_required');
+                $path = ltrim(substr($url, 3), '/');
+                if ($path === '') json_error('Video topilmadi');
+                json_ok(['type' => 'video', 'url' => $sp . '?tg=' . rawurlencode($path) . $tokQ]);
+            }
+
+            $video_type = strtolower(trim($_GET['type'] ?? ''));
+
+            // Telegram'dan olingan http(s) havolalar — server proksi orqali (login talab).
+            // Lokal yuklab oluvchi server (127.0.0.1:8000/dl/...) emulyatordan
+            // ko'rinmaydi, lekin server o'zi ularga kirisha oladi
+            // (loopback ruxsati .env da ALLOW_LOOPBACK_STREAM=true).
+            if ($video_type === 'telegram' && preg_match('#^https?://#i', $url)) {
+                if ($stream_token === '') json_error('login_required');
+                json_ok(['type' => 'video', 'url' => $sp . '?url=' . rawurlencode($url) . $tokQ]);
+            }
+
+            // iframe bloki ichida src bormi
+            if (preg_match('#<iframe[^>]+src\s*=\s*["\']([^"\']+)["\']#i', $url, $m)) {
+                $url = trim($m[1]);
+            }
+            $url = trim($url, "\"' \t\n\r\0\x0B");
+            if ($url === '') json_error('Video topilmadi');
+
+            // VK — to'g'ridan-to'g'ri mp4 (ochilmasa stream.php proksi zaxira)
+            if (vk_parse_url($url)) {
+                $res = vk_resolve_video($url);
+                if ($res && !empty($res['best'])) {
+                    $payload = ['type' => 'video', 'url' => $res['best']];
+                    if ($stream_token !== '') {
+                        $payload['fallback_url'] = $sp . '?url=' . rawurlencode($res['best']) . $tokQ;
+                    }
+                    json_ok($payload);
+                }
+                json_ok(['type' => 'embed', 'url' => vk_embed_src($url)]);
+            }
+
+            // RuTube — HLS (variant) stream.php orqali proksi (login talab)
+            if (rutube_parse_url($url)) {
+                if ($stream_token === '') json_error('login_required');
+                $res = rutube_resolve($url);
+                if ($res && !empty($res['url'])) {
+                    // ExoPlayer/AVPlayer HLS'ni URL kengaytmasi (.m3u8) bilan tanidi —
+                    // shuning uchun PATH_INFO orqali .m3u8 oxiri beriladi.
+                    json_ok(['type' => 'hls', 'url' => $sp . '/master.m3u8?url=' . rawurlencode($res['url']) . '&hls=1' . $tokQ]);
+                }
+                json_error("Video hali tayyor emas. Birozdan so'ng qayta urinib ko'ring.");
+            }
+
+            // Rumble — CDN HLS stream.php orqali proksi (login talab)
+            if (rumble_parse_url($url)) {
+                if ($stream_token === '') json_error('login_required');
+                $hls = rumble_resolve_video($url);
+                if ($hls) {
+                    // ExoPlayer/AVPlayer HLS'ni URL kengaytmasi (.m3u8) bilan tanidi.
+                    json_ok(['type' => 'hls', 'url' => $sp . '/master.m3u8?url=' . rawurlencode($hls) . '&hls=1' . $tokQ]);
+                }
+                $embed = rumble_embed_src($url);
+                if ($embed && preg_match('#^https?://#i', $embed)) {
+                    json_ok(['type' => 'embed', 'url' => $embed]);
+                }
+                json_error("Video hali tayyor emas. Birozdan so'ng qayta urinib ko'ring.");
+            }
+
+            // Odysee — mp4 (referer server tomonda, stream.php proksi; login talab)
+            if (odysee_parse_url($url)) {
+                if ($stream_token === '') json_error('login_required');
+                $stream = odysee_resolve_video($url);
+                if ($stream) {
+                    json_ok(['type' => 'video', 'url' => $sp . '?url=' . rawurlencode($stream) . $tokQ]);
+                }
+                json_error('Video yuklanmadi');
+            }
+
+            // YouTube — WebView embed
+            if (preg_match('#(?:youtube\.com|youtu\.be)#i', $url)) {
+                if (preg_match('/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/', $url, $m)) {
+                    json_ok(['type' => 'embed', 'url' => 'https://www.youtube.com/embed/' . $m[1] . '?autoplay=1&rel=0']);
+                }
+                json_error('Video topilmadi');
+            }
+
+            // OK.ru — WebView embed
+            if (preg_match('#ok\.ru#i', $url)) {
+                if (preg_match('#(?:/video|/videoembed)/(\d+)#i', $url, $m)) {
+                    json_ok(['type' => 'embed', 'url' => 'https://ok.ru/videoembed/' . $m[1]]);
+                }
+                json_error('Video topilmadi');
+            }
+
+            // To'g'ridan-to'g'ri video fayl (mp4/webm/...) yoki boshqa http(s)
+            if (preg_match('#^https?://#i', $url)) {
+                json_ok(['type' => 'video', 'url' => $url]);
+            }
+
+            // Lokal yuklangan fayl (uploads/videos/...)
+            if (strpos($url, '..') === false) {
+                if (strpos($url, 'uploads/') === 0) {
+                    json_ok(['type' => 'video', 'url' => $base . '/' . ltrim($url, '/')]);
+                }
+                json_ok(['type' => 'video', 'url' => $base . '/uploads/videos/' . ltrim($url, '/')]);
+            }
+
+            json_error('Video yuklanmadi');
 
         default:
             json_error('Unknown action');

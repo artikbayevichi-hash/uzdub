@@ -50,18 +50,19 @@ $category_id = (int)$cat_stmt->fetchColumn();
 if (!$category_id) import_error('Kategoriya topilmadi');
 
 $content_code = generate_content_code($pdo, $category);
+$video_type = video_type_for_url($video_url);
 
 $stmt = $pdo->prepare(
     "INSERT INTO content (content_code, title, category_id, video_type, video_url, status, views, is_premium)
-     VALUES (?, ?, ?, 'telegram', ?, ?, 0, 0)"
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
 );
-$stmt->execute([$content_code, $title, $category_id, $video_url, $status]);
+$stmt->execute([$content_code, $title, $category_id, $video_type, $video_url, $status]);
 
 echo json_encode([
     'ok' => true,
     'content_id' => (int)$pdo->lastInsertId(),
     'content_code' => $content_code,
     'category' => $category,
-    'video_type' => 'telegram',
+    'video_type' => $video_type,
     'video_url' => $video_url,
 ], JSON_UNESCAPED_UNICODE);

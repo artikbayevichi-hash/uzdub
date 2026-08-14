@@ -6,7 +6,7 @@ $client_secret = env('GOOGLE_CLIENT_SECRET', '');
 $redirect_uri  = env('SITE_URL', 'http://localhost/uzdub') . '/auth/google-callback.php';
 
 if (!$client_id || !$client_secret) {
-    header('Location: /uzdub/auth/login.php');
+    header('Location: ' . ROOT_URL . '/auth/login.php');
     exit;
 }
 

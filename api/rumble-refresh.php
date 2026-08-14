@@ -5,7 +5,7 @@
  * player buni avtomatik chaqiradi va yangi URL olinadi — video "o'chib qolmasligi" uchun.
  *
  * ?url=<rumble video havolasi>
- * Qaytadi: {"ok":true,"url":"/uzdub/stream.php?url=...&hls=1"} yoki {"ok":false}
+ * Qaytadi: {"ok":true,"url":"/stream.php?url=...&hls=1"} yoki {"ok":false}
  */
 session_set_cookie_params(['httponly' => true, 'secure' => isset($_SERVER['HTTPS']), 'samesite' => 'Lax']);
 session_start();
@@ -61,7 +61,7 @@ if ($hls) {
 if ($hls) {
     echo json_encode([
         'ok' => true,
-        'url' => '/uzdub/stream.php?url=' . rawurlencode($hls) . '&hls=1',
+        'url' => ROOT_URL . '/stream.php?url=' . rawurlencode($hls) . '&hls=1',
     ], JSON_UNESCAPED_SLASHES);
 } else {
     echo json_encode(['ok' => false], JSON_UNESCAPED_UNICODE);
