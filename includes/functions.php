@@ -1950,3 +1950,58 @@ function video_source_log_and_notify($episode_id, $content_id, $source_type, $vi
         } catch (PDOException $e) {}
     }
 }
+
+function render_card(array $item, array $extra = []): string {
+    $id      = (int)$item['id'];
+    $title   = e(t_title($item));
+    $poster  = $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item));
+    $year    = e($item['release_year'] ?? '');
+    $rating  = e($item['rating'] ?? '');
+    $cat     = e($item['cat_name'] ?? '');
+    $desc    = e(mb_strimwidth(t_desc($item) ?? '', 0, 80, '...'));
+    $age     = $extra['age_rating'] ?? ($item['age_rating'] ?? null);
+
+    $watch_url = $extra['watch_url'] ?? ('watch.php?id=' . $id);
+    if (!empty($extra['episode_id'])) {
+        $watch_url .= '&ep=' . (int)$extra['episode_id'];
+    }
+
+    $badges = '';
+    $ep_range = $extra['ep_range'] ?? null;
+    if ($ep_range && is_array($ep_range) && $ep_range[0] !== null) {
+        $badges .= '<span class="card-badge">' . (int)$ep_range[0] . '&ndash;' . (int)$ep_range[1] . '</span>';
+    }
+    if (!empty($age)) {
+        $badges .= '<span class="card-badge card-badge-age">' . e($age) . '</span>';
+    }
+
+    $fav_class = !empty($extra['is_favorite']) ? ' active' : '';
+    $heart = '<button class="card-fav-btn' . $fav_class . '" data-id="' . $id . '" aria-label="Sevimli" onclick="event.preventDefault();event.stopPropagation();toggleCardFav(this,' . $id . ')">'
+           . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+           . '</button>';
+
+    $progress_html = '';
+    if (!empty($extra['progress']) && $extra['progress'] > 0) {
+        $pct = min(100, (int)$extra['progress']);
+        $progress_html = '<div class="card-progress"><span style="width:' . $pct . '%"></span></div>';
+    }
+
+    $html = '<a href="' . $watch_url . '" class="card">'
+          . '<div class="card-poster">'
+          . '<img src="' . $poster . '" alt="' . $title . '" loading="lazy">'
+          . $heart
+          . ($badges ? '<div class="card-badges">' . $badges . '</div>' : '')
+          . '</div>'
+          . $progress_html
+          . '<div class="card-info">'
+          . '<h3>' . $title . '</h3>'
+          . '<div class="meta">'
+          . '<span>' . $cat . ($year ? ' · ' . $year : '') . '</span>'
+          . '<span class="badge">★ ' . $rating . '</span>'
+          . '</div>'
+          . ($desc ? '<p class="card-desc">' . $desc . '</p>' : '')
+          . '</div>'
+          . '</a>';
+
+    return $html;
+}

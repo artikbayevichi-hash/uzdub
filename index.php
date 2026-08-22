@@ -4,25 +4,64 @@ require_once __DIR__ . '/includes/functions.php';
 
 $page_title = t('home');
 
-// Hero uchun eng ko'p ko'rilgan 10 ta kontent (aylanuvchi banner)
 $hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.views DESC, c.release_year DESC LIMIT 10")->fetchAll();
 
-// Kino, Anime, Multfilm kategoriyalari
 $categories = $pdo->query("SELECT * FROM categories ORDER BY id")->fetchAll();
 
-// "Davom etish" — faqat ko'rib tugallanmaganlar (10 daqiqadan ko'p qolgan)
 $continue_items = [];
 if (is_user()) {
-    $cw = $pdo->prepare(
-        "SELECT c.*, wp.position_seconds, wp.duration_seconds, wp.episode_id
-         FROM watch_progress wp
-         JOIN content c ON c.id = wp.content_id
-         JOIN (SELECT MAX(id) mid FROM watch_progress WHERE user_id = ? AND is_completed = 0 AND (duration_seconds <= 0 OR duration_seconds - position_seconds > 600) GROUP BY content_id) lastw ON lastw.mid = wp.id
-         ORDER BY wp.updated_at DESC
-         LIMIT 12"
-    );
-    $cw->execute([$_SESSION['user_id']]);
-    $continue_items = $cw->fetchAll();
+    try {
+        $cw = $pdo->prepare(
+            "SELECT c.*, wp.position_seconds, wp.duration_seconds, wp.episode_id
+             FROM watch_progress wp
+             JOIN content c ON c.id = wp.content_id
+             JOIN (SELECT MAX(id) mid FROM watch_progress WHERE user_id = ? AND is_completed = 0 AND (duration_seconds <= 0 OR duration_seconds - position_seconds > 600) GROUP BY content_id) lastw ON lastw.mid = wp.id
+             ORDER BY wp.updated_at DESC
+             LIMIT 12"
+        );
+        $cw->execute([$_SESSION['user_id']]);
+        $continue_items = $cw->fetchAll();
+    } catch (PDOException $e) {
+        error_log('index.php continue error: ' . $e->getMessage());
+    }
+}
+
+$cat_items = [];
+if (!empty($categories)) {
+    foreach ($categories as $cat) {
+        try {
+            $cs = $pdo->prepare("SELECT * FROM content WHERE category_id = ? ORDER BY created_at DESC LIMIT 20");
+            $cs->execute([$cat['id']]);
+            $cat_items[$cat['id']] = $cs->fetchAll();
+        } catch (PDOException $e) { $cat_items[$cat['id']] = []; }
+    }
+}
+
+$all_ids = [];
+foreach ($hero_items as $it) $all_ids[$it['id']] = 1;
+foreach ($continue_items as $it) $all_ids[$it['id']] = 1;
+foreach ($cat_items as $items) foreach ($items as $it) $all_ids[$it['id']] = 1;
+
+$ep_ranges = [];
+if (!empty($all_ids)) {
+    $ids_arr = array_keys($all_ids);
+    $ph = implode(',', array_fill(0, count($ids_arr), '?'));
+    try {
+        $ers = $pdo->prepare("SELECT content_id, MIN(episode_number) as min_ep, MAX(episode_number) as max_ep FROM episodes WHERE content_id IN ($ph) GROUP BY content_id");
+        $ers->execute($ids_arr);
+        while ($er = $ers->fetch(PDO::FETCH_ASSOC)) {
+            $ep_ranges[$er['content_id']] = [(int)$er['min_ep'], (int)$er['max_ep']];
+        }
+    } catch (PDOException $e) {}
+}
+
+$favorites = [];
+if (is_user()) {
+    try {
+        $fs = $pdo->prepare("SELECT content_id FROM user_content_status WHERE user_id = ? AND status = 'favorite'");
+        $fs->execute([$_SESSION['user_id']]);
+        while ($fr = $fs->fetch(PDO::FETCH_COLUMN)) $favorites[(int)$fr] = 1;
+    } catch (PDOException $e) {}
 }
 
 include __DIR__ . '/includes/header.php';
@@ -67,21 +106,26 @@ include __DIR__ . '/includes/header.php';
 
 <?php
 // AI asosida shaxsiy tavsiyalar (tizimga kirgan foydalanuvchilar uchun)
-if (is_user() && isset($_SESSION['user_id'])):
+if (is_user()):
     $recommendations = [];
     // Foydalanuvchining oxirgi ko'rgan kontent kategoriyasini olish
-    $stmt = $pdo->prepare("SELECT c.category_id FROM watch_progress wp JOIN content c ON wp.content_id = c.id WHERE wp.user_id = ? ORDER BY wp.updated_at DESC LIMIT 3");
-    $stmt->execute([$_SESSION['user_id']]);
-    $history_cats = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    try {
+        $stmt = $pdo->prepare("SELECT c.category_id FROM watch_progress wp JOIN content c ON wp.content_id = c.id WHERE wp.user_id = ? ORDER BY wp.updated_at DESC LIMIT 3");
+        $stmt->execute([$_SESSION['user_id']]);
+        $history_cats = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    if (!empty($history_cats)) {
-        $unique_cats = array_values(array_unique($history_cats));
-        $uid = (int)$_SESSION['user_id'];
-        $placeholders = implode(',', array_fill(0, count($unique_cats), '?'));
-        $stmt = $pdo->prepare("SELECT DISTINCT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id IN ($placeholders) AND c.id NOT IN (SELECT content_id FROM watch_progress WHERE user_id = ?) ORDER BY c.rating DESC, c.views DESC LIMIT 12");
-        $params = array_merge($unique_cats, [$uid]);
-        $stmt->execute($params);
-        $recommendations = $stmt->fetchAll();
+        if (!empty($history_cats)) {
+            $unique_cats = array_values(array_unique($history_cats));
+            $uid = (int)$_SESSION['user_id'];
+            $placeholders = implode(',', array_fill(0, count($unique_cats), '?'));
+            $stmt = $pdo->prepare("SELECT DISTINCT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id IN ($placeholders) AND c.id NOT IN (SELECT content_id FROM watch_progress WHERE user_id = ?) ORDER BY c.rating DESC, c.views DESC LIMIT 12");
+            $params = array_merge($unique_cats, [$uid]);
+            $stmt->execute($params);
+            $recommendations = $stmt->fetchAll();
+        }
+    } catch (PDOException $e) {
+        error_log('index.php recommendations error: ' . $e->getMessage());
+        $recommendations = [];
     }
     if (!empty($recommendations)):
 ?>
@@ -90,16 +134,7 @@ if (is_user() && isset($_SESSION['user_id'])):
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($recommendations as $item): ?>
-            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-                <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
-                <div class="card-info">
-                    <h3><?php echo e(t_title($item)); ?></h3>
-                    <div class="meta">
-                        <span><?php echo e($item['cat_name']); ?></span>
-                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
-                    </div>
-                </div>
-            </a>
+            <?php echo render_card($item, ['ep_range' => $ep_ranges[$item['id']] ?? null, 'is_favorite' => isset($favorites[$item['id']])]); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -108,9 +143,7 @@ if (is_user() && isset($_SESSION['user_id'])):
 <?php endif; ?>
 
 <?php foreach ($categories as $cat):
-    $stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? ORDER BY created_at DESC LIMIT 20");
-    $stmt->execute([$cat['id']]);
-    $items = $stmt->fetchAll();
+    $items = $cat_items[$cat['id']] ?? [];
     if (empty($items)) continue;
 ?>
 <section class="content-section reveal">
@@ -118,16 +151,7 @@ if (is_user() && isset($_SESSION['user_id'])):
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($items as $item): ?>
-            <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-                <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
-                <div class="card-info">
-                    <h3><?php echo e(t_title($item)); ?></h3>
-                    <div class="meta">
-                        <span><?php echo e($item['release_year']); ?></span>
-                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
-                    </div>
-                </div>
-            </a>
+            <?php echo render_card($item, ['ep_range' => $ep_ranges[$item['id']] ?? null, 'is_favorite' => isset($favorites[$item['id']])]); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -145,25 +169,29 @@ if (is_user() && isset($_SESSION['user_id'])):
         <div class="row-scroll">
             <?php foreach ($continue_items as $item):
                 $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
-            ?>
-            <a href="watch.php?id=<?php echo $item['id']; ?><?php echo !empty($item['episode_id']) ? '&ep=' . (int)$item['episode_id'] : ''; ?>" class="card card-continue">
-                <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
-                <div class="continue-progress" style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 10px;overflow:hidden;"><span style="display:block;height:100%;width:<?php echo $pct; ?>%;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow));border-radius:2px;transition:width 0.5s ease;"></span></div>
-                <div class="card-info">
-                    <h3><?php echo e(t_title($item)); ?></h3>
-                    <div class="meta">
-                        <span><?php echo e($item['release_year']); ?></span>
-                        <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
-                    </div>
-                </div>
-            </a>
-            <?php endforeach; ?>
+                echo render_card($item, [
+                    'ep_range' => $ep_ranges[$item['id']] ?? null,
+                    'is_favorite' => isset($favorites[$item['id']]),
+                    'episode_id' => !empty($item['episode_id']) ? (int)$item['episode_id'] : null,
+                    'progress' => (int)$pct,
+                ]);
+            endforeach; ?>
         </div>
     </div>
 </section>
 <?php endif; ?>
 
 <script>
+function toggleCardFav(btn, id) {
+    var fd = new FormData();
+    fd.append('content_id', id);
+    fd.append('csrf_token', typeof csrf !== 'undefined' ? csrf : '');
+    fetch(ROOT_URL + '/api/toggle_favorite.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.ok) btn.classList.toggle('active', !!d.added);
+    });
+}
 (function() {
     var slides = document.querySelectorAll('.hero-slide');
     var dots = document.querySelectorAll('.hero-dot');
