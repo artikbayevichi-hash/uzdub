@@ -37,34 +37,56 @@ $page_desc = t_desc($item);
 $page_image = $item['poster'] ? poster_url($item['poster']) : '';
 
 // Janrlarni olish
-$genre_rows = $pdo->prepare("SELECT g.name, g.slug, g.color FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = ? ORDER BY g.name");
-$genre_rows->execute([$id]);
-$genre_rows = $genre_rows->fetchAll();
+$genre_rows = [];
+try {
+    $genre_rows_stmt = $pdo->prepare("SELECT g.name, g.slug, g.color FROM genres g JOIN content_genres cg ON g.id = cg.genre_id WHERE cg.content_id = ? ORDER BY g.name");
+    $genre_rows_stmt->execute([$id]);
+    $genre_rows = $genre_rows_stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log('watch.php genre_rows error: ' . $e->getMessage());
+}
 
 $in_watchlist = false;
 if (is_user()) {
-    $chk = $pdo->prepare("SELECT id FROM user_content_status WHERE user_id=? AND content_id=? AND status='favorite'");
-    $chk->execute([$_SESSION['user_id'], $id]);
-    $in_watchlist = (bool)$chk->fetch();
+    try {
+        $chk = $pdo->prepare("SELECT id FROM user_content_status WHERE user_id=? AND content_id=? AND status='favorite'");
+        $chk->execute([$_SESSION['user_id'], $id]);
+        $in_watchlist = (bool)$chk->fetch();
+    } catch (PDOException $e) {
+        error_log('watch.php watchlist check error: ' . $e->getMessage());
+    }
 }
 
-$stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? AND id != ? ORDER BY RAND() LIMIT 12");
-$stmt->execute([$item['category_id'], $id]);
-$similar = $stmt->fetchAll();
+$similar = [];
+try {
+    $stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? AND id != ? ORDER BY RAND() LIMIT 12");
+    $stmt->execute([$item['category_id'], $id]);
+    $similar = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log('watch.php similar content error: ' . $e->getMessage());
+}
 
 // Aktyorlar va treyler
 $actors = [];
-$act = $pdo->prepare("SELECT * FROM content_actors WHERE content_id = ? ORDER BY sort_order ASC");
-$act->execute([$id]);
-$actors = $act->fetchAll();
+try {
+    $act = $pdo->prepare("SELECT * FROM content_actors WHERE content_id = ? ORDER BY sort_order ASC");
+    $act->execute([$id]);
+    $actors = $act->fetchAll();
+} catch (PDOException $e) {
+    error_log('watch.php actors error: ' . $e->getMessage());
+}
 
 $trailer_url = $item['trailer_url'] ?? '';
 
 // Related content (agar related_content jadvalida ma'lumot bo'lsa)
 $related = [];
-$rel = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM related_content rc JOIN content c ON rc.related_id = c.id LEFT JOIN categories cat ON c.category_id = cat.id WHERE rc.content_id = ? LIMIT 12");
-$rel->execute([$id]);
-$related = $rel->fetchAll();
+try {
+    $rel = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM related_content rc JOIN content c ON rc.related_id = c.id LEFT JOIN categories cat ON c.category_id = cat.id WHERE rc.content_id = ? LIMIT 12");
+    $rel->execute([$id]);
+    $related = $rel->fetchAll();
+} catch (PDOException $e) {
+    error_log('watch.php related_content error: ' . $e->getMessage());
+}
 
 // ===== Qismlar (episodes) =====
 $episodes = [];

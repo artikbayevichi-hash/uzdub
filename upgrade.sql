@@ -257,6 +257,20 @@ CREATE TABLE IF NOT EXISTS video_source_log (
 
 
 -- =====================================================
+-- related_content jadvali (watch.php uchun kerak)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS related_content (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content_id INT NOT NULL,
+    related_id INT NOT NULL,
+    type VARCHAR(50) DEFAULT 'similar',
+    UNIQUE KEY uniq_rel (content_id, related_id),
+    FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE,
+    FOREIGN KEY (related_id) REFERENCES content(id) ON DELETE CASCADE,
+    INDEX idx_content (content_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- =====================================================
 -- 2026-08-13: Epizod darajasidagi premium qulf
 -- =====================================================
 ALTER TABLE episodes ADD COLUMN is_premium TINYINT(1) NOT NULL DEFAULT 0 AFTER intro_end;
