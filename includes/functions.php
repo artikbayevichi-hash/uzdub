@@ -1984,7 +1984,7 @@ function render_card(array $item, array $extra = []): string {
     }
 
     // Poster ustidagi top qator
-    $top_row = '<div class="card-top-row">' . $ep_badge . $heart . '</div>';
+    $top_row = $ep_badge . $heart;
 
     // Progress bar
     $progress_html = '';
