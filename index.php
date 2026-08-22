@@ -169,11 +169,22 @@ if (is_user()):
         <div class="row-scroll">
             <?php foreach ($continue_items as $item):
                 $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
+                $cur_ep = null;
+                if (!empty($item['episode_id'])) {
+                    try {
+                        $ep_stmt = $pdo->prepare("SELECT episode_number FROM episodes WHERE id = ?");
+                        $ep_stmt->execute([(int)$item['episode_id']]);
+                        $ep_row = $ep_stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($ep_row) $cur_ep = (int)$ep_row['episode_number'];
+                    } catch (PDOException $e) {}
+                }
                 echo render_card($item, [
                     'ep_range' => $ep_ranges[$item['id']] ?? null,
                     'is_favorite' => isset($favorites[$item['id']]),
                     'episode_id' => !empty($item['episode_id']) ? (int)$item['episode_id'] : null,
                     'progress' => (int)$pct,
+                    'is_continue' => true,
+                    'current_episode' => $cur_ep,
                 ]);
             endforeach; ?>
         </div>
