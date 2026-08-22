@@ -1959,7 +1959,8 @@ function render_card(array $item, array $extra = []): string {
     $rating  = e($item['rating'] ?? '');
     $cat     = e($item['cat_name'] ?? '');
     $desc    = e(mb_strimwidth(t_desc($item) ?? '', 0, 80, '...'));
-    $age     = $extra['age_rating'] ?? ($item['age_rating'] ?? null);
+    $age = $extra['age_rating'] ?? ($item['age_rating'] ?? null);
+    if (empty($age)) $age = '0+';
 
     $watch_url = $extra['watch_url'] ?? ('watch.php?id=' . $id);
     if (!empty($extra['episode_id'])) {
@@ -1971,9 +1972,7 @@ function render_card(array $item, array $extra = []): string {
     if ($ep_range && is_array($ep_range) && $ep_range[0] !== null) {
         $badges .= '<span class="card-badge">' . (int)$ep_range[0] . '&ndash;' . (int)$ep_range[1] . '</span>';
     }
-    if (!empty($age)) {
-        $badges .= '<span class="card-badge card-badge-age">' . e($age) . '</span>';
-    }
+    $badges .= '<span class="card-badge card-badge-age">' . e($age) . '</span>';
 
     $fav_class = !empty($extra['is_favorite']) ? ' active' : '';
     $heart = '<button class="card-fav-btn' . $fav_class . '" data-id="' . $id . '" aria-label="Sevimli" onclick="event.preventDefault();event.stopPropagation();toggleCardFav(this,' . $id . ')">'
