@@ -1999,8 +1999,6 @@ function render_card(array $item, array $extra = []): string {
           . '<img src="' . $poster . '" alt="' . $title . '" loading="lazy">'
           . $top_row
           . $continue_badge
-          . '</div>'
-          . $progress_html
           . '<div class="card-info">'
           . '<h3>' . $title . '</h3>'
           . '<div class="card-meta">'
@@ -2008,6 +2006,8 @@ function render_card(array $item, array $extra = []): string {
           . '<span class="card-rating">★ ' . $rating . '</span>'
           . '</div>'
           . '</div>'
+          . '</div>'
+          . $progress_html
           . '</a>';
 
     return $html;
