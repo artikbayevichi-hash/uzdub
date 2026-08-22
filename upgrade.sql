@@ -271,6 +271,14 @@ CREATE TABLE IF NOT EXISTS related_content (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- =====================================================
+-- Profil muqova rasm (cover_photo)
+-- =====================================================
+SELECT COUNT(*) INTO @cp_col FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'cover_photo';
+SET @cp_sql = IF(@cp_col = 0, 'ALTER TABLE users ADD COLUMN cover_photo VARCHAR(255) DEFAULT NULL AFTER avatar', 'SELECT 1');
+PREPARE cp_stmt FROM @cp_sql; EXECUTE cp_stmt; DEALLOCATE PREPARE cp_stmt;
+
+-- =====================================================
 -- 2026-08-13: Epizod darajasidagi premium qulf
 -- =====================================================
 ALTER TABLE episodes ADD COLUMN is_premium TINYINT(1) NOT NULL DEFAULT 0 AFTER intro_end;

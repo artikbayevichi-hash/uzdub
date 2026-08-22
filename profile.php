@@ -1172,7 +1172,17 @@ include __DIR__ . '/includes/header.php';
 
 <div class="profile-header">
     <div class="profile-banner">
-        <div class="profile-banner-overlay"></div>
+        <?php if (!empty($profile_user['cover_photo'])): ?>
+            <img src="<?php echo e($profile_user['cover_photo']); ?>" alt="Cover" class="profile-banner-img">
+        <?php else: ?>
+            <div class="profile-banner-overlay"></div>
+        <?php endif; ?>
+        <?php if ($is_own): ?>
+        <label class="cover-upload-btn" id="coverUploadBtn" title="Muqovani o'zgartirish">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <input type="file" accept="image/*" id="coverPhotoInput" style="display:none">
+        </label>
+        <?php endif; ?>
     </div>
     <div class="profile-header-inner">
         <div class="profile-avatar-section">
@@ -1454,6 +1464,44 @@ var PF_CURRENT_CAT = 'all';
         })
         .catch(function() {});
     }, 60000);
+})();
+</script>
+<script>
+(function(){
+    var input = document.getElementById('coverPhotoInput');
+    var banner = document.querySelector('.profile-banner');
+    if (!input || !banner) return;
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    input.addEventListener('change', function(){
+        var file = input.files[0];
+        if (!file) return;
+        var fd = new FormData();
+        fd.append('cover_photo', file);
+        if (csrf) fd.append('csrf_token', csrf.content);
+        var btn = document.getElementById('coverUploadBtn');
+        if (btn) btn.style.opacity = '0.4';
+        fetch(ROOT_URL + '/api/upload-cover.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            if (d.ok && d.url) {
+                var existing = banner.querySelector('.profile-banner-img');
+                if (existing) { existing.src = d.url; }
+                else {
+                    var ov = banner.querySelector('.profile-banner-overlay');
+                    if (ov) ov.remove();
+                    var img = document.createElement('img');
+                    img.src = d.url;
+                    img.alt = 'Cover';
+                    img.className = 'profile-banner-img';
+                    banner.insertBefore(img, banner.firstChild);
+                }
+            }
+            if (btn) btn.style.opacity = '';
+        })
+        .catch(function(){
+            if (btn) btn.style.opacity = '';
+        });
+    });
 })();
 </script>
 

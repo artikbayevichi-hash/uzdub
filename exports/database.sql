@@ -1058,6 +1058,7 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `avatar` varchar(255) DEFAULT NULL,
+  `cover_photo` varchar(255) DEFAULT NULL,
   `bio` text DEFAULT NULL,
   `is_premium` tinyint(1) DEFAULT 0,
   `premium_expires_at` datetime DEFAULT NULL,
