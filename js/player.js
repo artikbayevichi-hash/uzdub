@@ -20,7 +20,9 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         cinemaOff: '<svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
         gear: '<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.74 8.87a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.39.31.61.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.58-.24 1.12-.56 1.62-.94l2.39.96c.22.08.48 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>',
         cc: '<svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM8.5 14.8c-2.9 0-2.9-5.6 0-5.6 1.3 0 2.1.6 2.7 1.4l-1.5 1c-.3-.5-.6-.8-1.2-.8-.9 0-.9 2.4 0 2.4.6 0 .9-.3 1.2-.8l1.5 1c-.6.8-1.4 1.4-2.7 1.4zm7 0c-2.9 0-2.9-5.6 0-5.6 1.3 0 2.1.6 2.7 1.4l-1.5 1c-.3-.5-.6-.8-1.2-.8-.9 0-.9 2.4 0 2.4.6 0 .9-.3 1.2-.8l1.5 1c-.6.8-1.4 1.4-2.7 1.4z"/></svg>',
-        replay: '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>'
+        replay: '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
+        replay10: '<svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="none"/><text x="9" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>',
+        forward10: '<svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="none"/><text x="7.5" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>'
     };
 
     function parseConfig(root) {
@@ -156,6 +158,16 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         playBtn.type = 'button';
         row.appendChild(playBtn);
 
+        var skipBackBtn = el('button', 'udp-btn udp-skip-back', ICONS.replay10);
+        skipBackBtn.type = 'button';
+        skipBackBtn.title = '10 soniya orqaga';
+        row.appendChild(skipBackBtn);
+
+        var skipFwdBtn = el('button', 'udp-btn udp-skip-fwd', ICONS.forward10);
+        skipFwdBtn.type = 'button';
+        skipFwdBtn.title = '10 soniya oldinga';
+        row.appendChild(skipFwdBtn);
+
         // Volume
         var volWrap = el('div', 'udp-volume');
         var muteBtn = el('button', 'udp-btn udp-mute', ICONS.volOn);
@@ -185,18 +197,16 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         qualityBtn.hidden = true;
         row.appendChild(qualityBtn);
 
-        // Subtitles
+        // Subtitles (hidden, handled by settings menu)
         var ccBtn = el('button', 'udp-btn udp-cc', ICONS.cc);
         ccBtn.type = 'button';
         ccBtn.title = S.subtitles || 'Subtitrlar';
         ccBtn.hidden = true;
-        row.appendChild(ccBtn);
 
-        // Cinema
+        // Cinema (hidden, handled by settings menu)
         var cinemaBtn = el('button', 'udp-btn udp-cinema-toggle', ICONS.cinema);
         cinemaBtn.type = 'button';
         cinemaBtn.title = S.cinema || 'Kino rejimi';
-        row.appendChild(cinemaBtn);
 
         // PiP
         var pipBtn = el('button', 'udp-btn udp-pip', ICONS.pip);
@@ -768,6 +778,10 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             fitVideo();
         }
         cinemaBtn.onclick = function (ev) { ev.stopPropagation(); toggleCinema(); };
+
+        /* ================= Skip 10s buttons ================= */
+        skipBackBtn.onclick = function (ev) { ev.stopPropagation(); video.currentTime = Math.max(0, video.currentTime - 10); showUi(); };
+        skipFwdBtn.onclick = function (ev) { ev.stopPropagation(); video.currentTime = Math.min((video.duration || 0), video.currentTime + 10); showUi(); };
 
         /* ================= Keyboard ================= */
         var kbTarget = document.querySelector('.detail-wrap');

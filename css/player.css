@@ -374,7 +374,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    background: linear-gradient(90deg, #2196f3, #4fc3f7);
+    background: rgba(255,255,255,0.9);
     border-radius: 3px;
     width: 0;
 }
@@ -432,6 +432,8 @@
 .udp-btn:hover { background: rgba(255, 255, 255, 0.14); }
 .udp-btn:active { transform: scale(0.92); }
 .udp-btn svg { width: 22px; height: 22px; fill: currentColor; }
+.udp-skip-back, .udp-skip-fwd { width: 42px; }
+.udp-skip-back svg, .udp-skip-fwd svg { width: 26px; height: 26px; }
 .udp-btn .udp-btn-label {
     font-size: 12px;
     font-weight: 600;
@@ -605,6 +607,7 @@ body.udp-cinema .udp-cinema-close:hover { background: rgba(255,255,255,0.15); }
     .udp-volume:hover .udp-volume-bar,
     .udp-volume.udp-expanded .udp-volume-bar { width: 54px; }
     .udp-btn svg { width: 20px; height: 20px; }
+    .udp-skip-back svg, .udp-skip-fwd svg { width: 22px; height: 22px; }
     .udp-titlebar { padding: 10px 12px; }
     body.udp-cinema .udp-player { height: 78vh; }
 }
