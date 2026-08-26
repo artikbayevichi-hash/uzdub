@@ -194,16 +194,6 @@ if (is_user()):
 <?php endif; ?>
 
 <script>
-function toggleCardFav(btn, id) {
-    var fd = new FormData();
-    fd.append('content_id', id);
-    fd.append('csrf_token', typeof csrf !== 'undefined' ? csrf : '');
-    fetch(ROOT_URL + '/api/toggle_favorite.php', { method: 'POST', body: fd, credentials: 'same-origin' })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-        if (d.ok) btn.classList.toggle('active', !!d.added);
-    });
-}
 (function() {
     var slides = document.querySelectorAll('.hero-slide');
     var dots = document.querySelectorAll('.hero-dot');

@@ -435,6 +435,16 @@ document.getElementById('navLinks').addEventListener('click', function(e) {
     if (!bellBtn || !dropdown) return;
 
     var csrf = <?php echo json_encode(csrf_token()); ?>;
+    function toggleCardFav(btn, id) {
+        var fd = new FormData();
+        fd.append('content_id', id);
+        fd.append('csrf_token', typeof csrf !== 'undefined' ? csrf : '');
+        fetch(ROOT_URL + '/api/toggle_favorite.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) btn.classList.toggle('active', !!d.added);
+        });
+    }
     var notifPage = 1;
     var notifTotal = 0;
     var pollTimer = null;
