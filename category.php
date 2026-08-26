@@ -18,6 +18,25 @@ $stmt = $pdo->prepare("SELECT * FROM content WHERE category_id = ? ORDER BY crea
 $stmt->execute([$category['id']]);
 $items = $stmt->fetchAll();
 
+$ep_ranges = [];
+if (!empty($items)) {
+    $ids = array_column($items, 'id');
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $ep_stmt = $pdo->prepare("SELECT content_id, MIN(number) AS first_ep, MAX(number) AS last_ep, COUNT(*) AS ep_count FROM episodes WHERE content_id IN ($placeholders) GROUP BY content_id");
+    $ep_stmt->execute($ids);
+    while ($er = $ep_stmt->fetch(PDO::FETCH_ASSOC)) {
+        $ep_ranges[$er['content_id']] = $er;
+    }
+}
+
+$favs = [];
+if (is_user()) {
+    $uid = $_SESSION['user_id'];
+    $fav_stmt = $pdo->prepare("SELECT content_id FROM watchlist WHERE user_id = ?");
+    $fav_stmt->execute([$uid]);
+    $favs = array_flip($fav_stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
 // Hero uchun ushbu kategoriyadan eng ko'p ko'rilgan 10 ta
 $hero_stmt = $pdo->prepare("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id=? ORDER BY c.views DESC, c.release_year DESC LIMIT 10");
 $hero_stmt->execute([$category['id']]);
@@ -111,18 +130,18 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <div class="grid-wrap">
-    <?php foreach ($items as $item): ?>
-    <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
-        <div class="card-info">
-            <h3><?php echo e(t_title($item)); ?></h3>
-            <div class="meta">
-                <span><?php echo e($item['release_year']); ?></span>
-                <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
-            </div>
-        </div>
-    </a>
-    <?php endforeach; ?>
+    <?php foreach ($items as $item):
+        $id = $item['id'];
+        $er = $ep_ranges[$id] ?? null;
+        echo render_card($item, [
+            'show_ep'       => true,
+            'first_ep'      => $er['first_ep'] ?? null,
+            'last_ep'       => $er['last_ep'] ?? null,
+            'total_episodes'=> $er['ep_count'] ?? null,
+            'aired_episodes'=> $er['last_ep'] ?? null,
+            'is_favorite'   => isset($favs[$id]),
+        ]);
+    endforeach; ?>
     <?php if (empty($items)): ?>
         <p><?php echo t('no_content_in_section'); ?></p>
     <?php endif; ?>
