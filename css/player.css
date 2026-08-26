@@ -1,8 +1,9 @@
 /* ============================================================
-   css/player.css - Telegram Desktop style video player
+   css/player.css - Telegram Desktop style video player (2-row)
+   Row 1: [vol+slider] --- [PLAY] --- [fs][pip][gear+badge]
+   Row 2: [time] [==========seek bar==========] [-remaining]
    ============================================================ */
 
-/* ===== Base ===== */
 .udp-player {
     position: relative;
     width: 100%;
@@ -29,7 +30,6 @@
     -webkit-appearance: none;
 }
 
-/* ===== Gradient overlay ===== */
 .udp-player::before {
     content: '';
     position: absolute;
@@ -142,7 +142,7 @@
 .udp-resume[hidden] { display: none; }
 .udp-resume-box {
     background: rgba(15, 22, 40, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255,255,255,0.12);
     border-radius: 12px;
     padding: 24px 28px;
     text-align: center;
@@ -270,7 +270,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);
     color: #fff;
     border-radius: 6px;
@@ -284,9 +284,9 @@
 .udp-titlebar-next:hover { background: rgba(255,255,255,0.18); }
 
 /* ============================================================
-   CONTROLS — Telegram Desktop style
-   Single compact bar at bottom
-   Layout: [volume icon + slider] [play] [current time] [===seek===] [-remaining] [aspect] [pip] [settings]
+   CONTROLS — Two-row Telegram Desktop style
+   Row 1: vol+slider ---- PLAY ---- fs/pip/gear+badge
+   Row 2: time ---- seek bar ---- -remaining
    ============================================================ */
 .udp-controls {
     position: absolute;
@@ -294,27 +294,53 @@
     right: 0;
     bottom: 0;
     z-index: 18;
-    height: 48px;
-    background: rgba(0,0,0,0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: linear-gradient(0deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 70%, transparent 100%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     opacity: 0;
     transition: opacity 0.25s ease;
     display: flex;
-    align-items: center;
-    padding: 0 8px;
-    gap: 0;
+    flex-direction: column;
+    padding: 0 8px 6px;
 }
 .udp-player:hover .udp-controls,
 .udp-player.udp-paused .udp-controls,
 .udp-player.udp-ui-visible .udp-controls { opacity: 1; }
 
-.udp-controls-row {
+/* --- ROW 1: vol | play | icons --- */
+.udp-controls-row1 {
     display: flex;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    justify-content: space-between;
+    height: 40px;
+    padding: 0 2px;
+}
+.udp-controls-row1-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.udp-controls-row1-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+.udp-controls-row1-right {
+    display: flex;
+    align-items: center;
     gap: 2px;
+    flex-shrink: 0;
+}
+
+/* --- ROW 2: time | seek | remaining --- */
+.udp-controls-row2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    padding: 0 2px;
 }
 
 /* ===== Buttons ===== */
@@ -322,8 +348,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border: none;
     border-radius: 6px;
     background: transparent;
@@ -336,22 +362,15 @@
 .udp-btn:hover { background: rgba(255,255,255,0.12); }
 .udp-btn:active { transform: scale(0.9); }
 .udp-btn svg { width: 20px; height: 20px; fill: currentColor; }
-.udp-skip-back, .udp-skip-fwd { width: 34px; }
-.udp-skip-back svg, .udp-skip-fwd svg { width: 22px; height: 22px; }
-.udp-btn .udp-btn-label {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0;
-}
 
-/* ===== Play button (center emphasis) ===== */
+/* Play button — biggest, center */
 .udp-play {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
 }
-.udp-play svg { width: 24px; height: 24px; }
+.udp-play svg { width: 26px; height: 26px; }
 
-/* ===== Volume — always visible slider ===== */
+/* ===== Volume ===== */
 .udp-volume {
     display: flex;
     align-items: center;
@@ -360,7 +379,7 @@
 }
 .udp-volume-bar {
     position: relative;
-    width: 68px;
+    width: 80px;
     height: 4px;
     background: rgba(255,255,255,0.25);
     border-radius: 2px;
@@ -380,29 +399,44 @@
     width: 100%;
 }
 
-/* ===== Time display ===== */
+/* ===== Quality badge (inside gear button) ===== */
+.udp-quality-badge {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    line-height: 1;
+    pointer-events: none;
+    color: #fff;
+    text-shadow: 0 0 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7);
+}
+.udp-settings {
+    position: relative;
+}
+
+/* ===== Time (row 2) ===== */
 .udp-time {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255,255,255,0.85);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-    padding: 0 6px;
     flex-shrink: 0;
     line-height: 1;
+    min-width: 32px;
 }
-.udp-time-current {
-    /* current time - always shown */
-}
+.udp-time-current { text-align: right; }
 .udp-time-remaining {
-    /* remaining time in negative format */
     color: rgba(255,255,255,0.55);
+    text-align: left;
 }
 
-/* ===== Seek bar (fills remaining space) ===== */
+/* ===== Seek bar (row 2) ===== */
 .udp-seek {
     position: relative;
     flex: 1;
-    height: 24px;
+    height: 20px;
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -412,13 +446,13 @@
 .udp-seek-track {
     position: relative;
     width: 100%;
-    height: 4px;
+    height: 3px;
     background: rgba(255,255,255,0.25);
     border-radius: 2px;
     overflow: visible;
     transition: height 0.12s ease;
 }
-.udp-seek:hover .udp-seek-track { height: 6px; }
+.udp-seek:hover .udp-seek-track { height: 5px; }
 .udp-seek-buffer {
     position: absolute;
     left: 0;
@@ -455,11 +489,11 @@
 .udp-seek.udp-dragging .udp-seek-thumb { opacity: 1; }
 .udp-seek-tooltip {
     position: absolute;
-    bottom: 22px;
+    bottom: 18px;
     left: 0;
     background: rgba(0,0,0,0.9);
     color: #fff;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     padding: 3px 8px;
     border-radius: 4px;
@@ -471,103 +505,76 @@
 .udp-seek:hover .udp-seek-tooltip,
 .udp-seek.udp-dragging .udp-seek-tooltip { display: block; }
 
-/* ===== Right side buttons ===== */
-.udp-controls-right {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    flex-shrink: 0;
-    margin-left: auto;
-}
-
-/* ===== Spacer ===== */
-.udp-spacer { flex: 1; }
-
-/* ===== Settings gear with quality badge ===== */
-.udp-settings {
-    position: relative;
-}
-.udp-quality-badge {
-    position: absolute;
-    top: 4px;
-    right: 2px;
-    font-size: 7px;
-    font-weight: 800;
-    color: #fff;
-    background: rgba(255,255,255,0.25);
-    border-radius: 3px;
-    padding: 0 3px;
-    line-height: 1.3;
-    pointer-events: none;
-}
-
-/* ===== Settings menus ===== */
+/* ===== Settings menu ===== */
 .udp-menu {
     position: absolute;
-    right: 8px;
-    bottom: 52px;
-    z-index: 30;
-    background: rgba(12, 18, 34, 0.97);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    padding: 4px;
+    bottom: 68px;
+    right: 10px;
     min-width: 180px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-    opacity: 0;
-    transform: translateY(6px);
-    pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    background: rgba(15, 20, 35, 0.96);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 6px 0;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    z-index: 30;
+    display: none;
+    font-size: 13px;
+    color: #fff;
 }
-.udp-menu.udp-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
-.udp-menu-group { display: flex; flex-direction: column; }
+.udp-menu.udp-open { display: block; }
 .udp-menu-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: rgba(255,255,255,0.45);
-    padding: 6px 10px 4px;
+    gap: 8px;
+    padding: 8px 14px;
     font-weight: 700;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 .udp-menu-back {
     background: none;
     border: none;
-    color: rgba(255,255,255,0.45);
+    color: #fff;
+    font-size: 14px;
     cursor: pointer;
-    font-size: 12px;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 0 2px;
+    line-height: 1;
 }
-.udp-menu-back:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.udp-menu-group { padding: 2px 0; }
+.udp-menu-sep {
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 4px 0;
+}
 .udp-menu-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     width: 100%;
+    padding: 9px 14px;
     border: none;
-    background: transparent;
-    color: rgba(255,255,255,0.8);
+    background: none;
+    color: #fff;
     font-size: 13px;
-    padding: 8px 10px;
-    border-radius: 6px;
     cursor: pointer;
     text-align: left;
     transition: background 0.1s;
 }
-.udp-menu-item:hover { background: rgba(255,255,255,0.06); }
-.udp-menu-item.udp-active { color: #fff; font-weight: 700; }
-.udp-menu-item .udp-menu-check {
-    margin-left: auto;
-    color: #fff;
-    font-weight: 800;
+.udp-menu-item:hover { background: rgba(255,255,255,0.08); }
+.udp-menu-check {
+    font-size: 12px;
+    color: #2196f3;
     opacity: 0;
+    margin-left: 10px;
 }
 .udp-menu-item.udp-active .udp-menu-check { opacity: 1; }
-.udp-menu-item .udp-menu-arrow { margin-left: auto; color: rgba(255,255,255,0.4); font-size: 11px; }
-.udp-menu-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 8px; }
-.udp-btn-cc-on { color: #4fc3f7; }
+.udp-menu-arrow {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-left: 8px;
+}
 .udp-menu-backdrop {
     position: fixed;
     inset: 0;
@@ -584,100 +591,17 @@
     border-radius: 0;
 }
 
-/* ===== Cinema mode ===== */
-body.udp-cinema { background: #000; }
-body.udp-cinema .udp-player {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100vw;
-    height: 85vh;
-    max-height: 85vh;
-    border-radius: 0;
-    z-index: 900;
-}
-.udp-cinema-scrim {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.82);
-    z-index: 890;
-}
-.udp-cinema-close {
-    position: fixed;
-    top: 12px;
-    right: 14px;
-    z-index: 901;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.udp-cinema-close:hover { background: rgba(255,255,255,0.12); }
-
-/* ===== Subtitles ===== */
-.udp-player video::-webkit-media-text-track-container {
-    bottom: 56px;
-}
-
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
-    .udp-controls { height: 44px; padding: 0 6px; }
-    .udp-btn { width: 32px; height: 32px; }
+    .udp-controls { padding: 0 6px 4px; }
+    .udp-controls-row1 { height: 36px; }
+    .udp-controls-row2 { height: 22px; gap: 6px; }
+    .udp-btn { width: 30px; height: 30px; }
     .udp-btn svg { width: 18px; height: 18px; }
-    .udp-play { width: 34px; height: 34px; }
+    .udp-play { width: 36px; height: 36px; }
     .udp-play svg { width: 22px; height: 22px; }
-    .udp-volume-bar { width: 48px; }
-    .udp-time { font-size: 11px; padding: 0 4px; }
-    .udp-skip-back, .udp-skip-fwd { width: 30px; }
-    .udp-skip-back svg, .udp-skip-fwd svg { width: 20px; height: 20px; }
+    .udp-volume-bar { width: 56px; }
+    .udp-time { font-size: 10px; min-width: 28px; }
     .udp-titlebar { padding: 8px 10px; }
-    body.udp-cinema .udp-player { height: 78vh; }
-    .udp-quality-badge { display: none; }
+    .udp-quality-badge { font-size: 7px; top: 2px; right: 2px; }
 }
-
-/* ===== Hover state for seek expand ===== */
-.udp-seek:hover .udp-seek-track {
-    height: 6px;
-}
-
-/* ===== Lock overlay ===== */
-.udp-lock {
-    position: absolute;
-    inset: 0;
-    z-index: 27;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 30px 20px;
-    background: rgba(5, 10, 20, 0.5);
-}
-.udp-lock[hidden] { display: none; }
-.udp-lock-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: blur(20px) brightness(0.3); transform: scale(1.1); }
-.udp-lock-content { position: relative; z-index: 1; max-width: 380px; }
-.udp-lock-icon { font-size: 44px; margin-bottom: 10px; }
-.udp-lock-title { font-size: 19px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-.udp-lock-sub { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 18px; line-height: 1.5; }
-.udp-btn-unlock {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #f9a825;
-    color: #000;
-    border-radius: 8px;
-    padding: 12px 26px;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 14px;
-    transition: background 0.15s;
-}
-.udp-btn-unlock:hover { background: #fbc02d; }

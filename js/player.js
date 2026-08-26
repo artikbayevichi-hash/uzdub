@@ -1,5 +1,7 @@
 /* ============================================================
-   js/player.js - UZDUB custom video player (Telegram Desktop style)
+   js/player.js - UZDUB custom video player (2-row Telegram style)
+   Row 1: [vol+slider] --- [PLAY] --- [fs][pip][gear+badge]
+   Row 2: [time] [==========seek bar==========] [-remaining]
    Vanilla JS. Elementi: <div class="udp-player" data-udp data-udp-config='{...}'>
    ============================================================ */
 
@@ -20,10 +22,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         cinemaOff: '<svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
         gear: '<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.74 8.87a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.39.31.61.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.58-.24 1.12-.56 1.62-.94l2.39.96c.22.08.48 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>',
         cc: '<svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM8.5 14.8c-2.9 0-2.9-5.6 0-5.6 1.3 0 2.1.6 2.7 1.4l-1.5 1c-.3-.5-.6-.8-1.2-.8-.9 0-.9 2.4 0 2.4.6 0 .9-.3 1.2-.8l1.5 1c-.6.8-1.4 1.4-2.7 1.4zm7 0c-2.9 0-2.9-5.6 0-5.6 1.3 0 2.1.6 2.7 1.4l-1.5 1c-.3-.5-.6-.8-1.2-.8-.9 0-.9 2.4 0 2.4.6 0 .9-.3 1.2-.8l1.5 1c-.6.8-1.4 1.4-2.7 1.4z"/></svg>',
-        replay: '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
-        replay10: '<svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="none"/><text x="9" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>',
-        forward10: '<svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="none"/><text x="7.5" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>',
-        aspect: '<svg viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5a2 2 0 0 0-2 2zm2 10H3v4a2 2 0 0 0 2 2h4v-2H5v-4zm14 4h-4v2h4a2 2 0 0 0 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5a2 2 0 0 0-2-2z"/></svg>'
+        replay: '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>'
     };
 
     function parseConfig(root) {
@@ -138,11 +137,14 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         endedOv.appendChild(endedBtns);
         root.appendChild(endedOv);
 
-        /* ===== CONTROLS (Telegram Desktop layout) ===== */
+        /* ===== CONTROLS (2-row Telegram layout) ===== */
         var controls = el('div', 'udp-controls');
-        var row = el('div', 'udp-controls-row');
 
-        // --- LEFT: Volume ---
+        /* --- ROW 1: vol+slider | PLAY | fs+pip+gear --- */
+        var row1 = el('div', 'udp-controls-row1');
+
+        // Row1 LEFT: Volume
+        var row1Left = el('div', 'udp-controls-row1-left');
         var volWrap = el('div', 'udp-volume');
         var muteBtn = el('button', 'udp-btn udp-mute', ICONS.volOn);
         muteBtn.type = 'button';
@@ -151,28 +153,46 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         volBar.appendChild(volFill);
         volWrap.appendChild(muteBtn);
         volWrap.appendChild(volBar);
-        row.appendChild(volWrap);
+        row1Left.appendChild(volWrap);
+        row1.appendChild(row1Left);
 
-        // --- Skip 10s buttons ---
-        var skipBackBtn = el('button', 'udp-btn udp-skip-back', ICONS.replay10);
-        skipBackBtn.type = 'button';
-        skipBackBtn.title = '10 soniya orqaga';
-        row.appendChild(skipBackBtn);
-
-        var skipFwdBtn = el('button', 'udp-btn udp-skip-fwd', ICONS.forward10);
-        skipFwdBtn.type = 'button';
-        skipFwdBtn.title = '10 soniya oldinga';
-        row.appendChild(skipFwdBtn);
-
-        // --- CENTER: Play + Current time + Seek + Remaining time ---
+        // Row1 CENTER: Play button
+        var row1Center = el('div', 'udp-controls-row1-center');
         var playBtn = el('button', 'udp-btn udp-play', ICONS.play);
         playBtn.type = 'button';
-        row.appendChild(playBtn);
+        row1Center.appendChild(playBtn);
+        row1.appendChild(row1Center);
+
+        // Row1 RIGHT: fs + pip + gear+badge
+        var row1Right = el('div', 'udp-controls-row1-right');
+
+        var pipBtn = el('button', 'udp-btn udp-pip', ICONS.pip);
+        pipBtn.type = 'button';
+        pipBtn.title = S.pip || 'Kichik oyna';
+        pipBtn.hidden = !document.pictureInPictureEnabled;
+        row1Right.appendChild(pipBtn);
+
+        var gearBtn = el('button', 'udp-btn udp-settings', ICONS.gear);
+        gearBtn.type = 'button';
+        gearBtn.title = S.settings || 'Sozlamalar';
+        var qualityBadge = el('span', 'udp-quality-badge', 'HD');
+        gearBtn.appendChild(qualityBadge);
+        row1Right.appendChild(gearBtn);
+
+        var fsBtn = el('button', 'udp-btn udp-fs-btn', ICONS.fs);
+        fsBtn.type = 'button';
+        fsBtn.title = S.fullscreen || 'To\u2018liq ekran';
+        row1Right.appendChild(fsBtn);
+
+        row1.appendChild(row1Right);
+        controls.appendChild(row1);
+
+        /* --- ROW 2: time | seek bar | -remaining --- */
+        var row2 = el('div', 'udp-controls-row2');
 
         var timeCurrent = el('span', 'udp-time udp-time-current', '00:00');
-        row.appendChild(timeCurrent);
+        row2.appendChild(timeCurrent);
 
-        // Seek bar
         var seekWrap = el('div', 'udp-seek');
         var seekTrack = el('div', 'udp-seek-track');
         var seekBuffer = el('div', 'udp-seek-buffer');
@@ -184,62 +204,15 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         seekWrap.appendChild(seekTrack);
         var seekTooltip = el('div', 'udp-seek-tooltip', '0:00');
         seekWrap.appendChild(seekTooltip);
-        row.appendChild(seekWrap);
+        row2.appendChild(seekWrap);
 
         var timeRemaining = el('span', 'udp-time udp-time-remaining', '-00:00');
-        row.appendChild(timeRemaining);
+        row2.appendChild(timeRemaining);
 
-        // --- RIGHT: Aspect ratio + PiP + Settings ---
-        var rightGroup = el('div', 'udp-controls-right');
-
-        var aspectBtn = el('button', 'udp-btn udp-aspect', ICONS.aspect);
-        aspectBtn.type = 'button';
-        aspectBtn.title = 'Aspekt nisbati';
-        aspectBtn.hidden = true; // shown only for vertical video
-        rightGroup.appendChild(aspectBtn);
-
-        var pipBtn = el('button', 'udp-btn udp-pip', ICONS.pip);
-        pipBtn.type = 'button';
-        pipBtn.title = S.pip || 'Kichik oyna';
-        pipBtn.hidden = !document.pictureInPictureEnabled;
-        rightGroup.appendChild(pipBtn);
-
-        var gearBtn = el('button', 'udp-btn udp-settings', ICONS.gear);
-        gearBtn.type = 'button';
-        gearBtn.title = S.settings || 'Sozlamalar';
-        var qualityBadge = el('span', 'udp-quality-badge', 'HD');
-        gearBtn.appendChild(qualityBadge);
-        rightGroup.appendChild(gearBtn);
-
-        // Hidden buttons (handled by settings menu)
-        var cinemaBtn = el('button', 'udp-btn udp-cinema-toggle', ICONS.cinema);
-        cinemaBtn.type = 'button';
-        cinemaBtn.title = S.cinema || 'Kino rejimi';
-        cinemaBtn.hidden = true;
-
-        var qualityBtn = el('button', 'udp-btn udp-quality', '<span class="udp-btn-label">Auto</span>');
-        qualityBtn.type = 'button';
-        qualityBtn.hidden = true;
-
-        var speedBtn = el('button', 'udp-btn udp-speed', '<span class="udp-btn-label">1x</span>');
-        speedBtn.type = 'button';
-        speedBtn.hidden = true;
-
-        var ccBtn = el('button', 'udp-btn udp-cc', ICONS.cc);
-        ccBtn.type = 'button';
-        ccBtn.title = S.subtitles || 'Subtitrlar';
-        ccBtn.hidden = true;
-
-        var fsBtn = el('button', 'udp-btn udp-fs-btn', ICONS.fs);
-        fsBtn.type = 'button';
-        fsBtn.title = S.fullscreen || 'To\u2018liq ekran';
-        rightGroup.appendChild(fsBtn);
-
-        row.appendChild(rightGroup);
-        controls.appendChild(row);
+        controls.appendChild(row2);
         root.appendChild(controls);
 
-        // Settings menu
+        // Settings menu (inside player)
         var menu = el('div', 'udp-menu');
         root.appendChild(menu);
         var menuBackdrop = el('div', 'udp-menu-backdrop');
@@ -399,7 +372,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
 
         function setRate(r) {
             video.playbackRate = r;
-            speedBtn.querySelector('.udp-btn-label').textContent = r + 'x';
         }
 
         function updateTime() {
@@ -513,7 +485,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         video.addEventListener('progress', updateBuffer);
         video.addEventListener('durationchange', function () { updateTime(); updateSeek(); });
         video.addEventListener('volumechange', updateVolumeUI);
-        video.addEventListener('ratechange', function () { speedBtn.querySelector('.udp-btn-label').textContent = video.playbackRate + 'x'; });
 
         /* ================= Buffering ================= */
         function setLoading(show, label) {
@@ -529,17 +500,12 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         video.addEventListener('seeked', function () { if (video.readyState >= 3) setLoading(false); });
 
         /* ================= Aspect ratio (vertikal video) ================= */
-        var currentAspect = 'contain'; // 'contain' | 'cover' | 'fill'
-        var aspectModes = ['contain', 'cover', 'fill'];
-        var aspectIndex = 0;
-
         function fitVideo() {
             var w = video.videoWidth, h = video.videoHeight;
             if (!w || !h) return;
             var ratio = w / h;
             if (ratio < 1.25) {
                 root.classList.add('udp-vertical');
-                aspectBtn.hidden = false;
                 var maxW = Math.round(0.78 * window.innerHeight * ratio);
                 var wrapW = root.parentElement ? root.parentElement.clientWidth : window.innerWidth;
                 root.style.maxWidth = Math.min(wrapW, maxW) + 'px';
@@ -547,7 +513,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
                 root.style.marginRight = 'auto';
             } else {
                 root.classList.remove('udp-vertical');
-                aspectBtn.hidden = true;
                 root.style.maxWidth = '';
                 root.style.marginLeft = '';
                 root.style.marginRight = '';
@@ -556,14 +521,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         video.addEventListener('loadedmetadata', fitVideo);
         video.addEventListener('resize', fitVideo);
         window.addEventListener('resize', fitVideo);
-
-        // Aspect ratio toggle (only for vertical videos)
-        aspectBtn.onclick = function (ev) {
-            ev.stopPropagation();
-            aspectIndex = (aspectIndex + 1) % aspectModes.length;
-            currentAspect = aspectModes[aspectIndex];
-            video.style.objectFit = currentAspect;
-        };
 
         /* ================= Skip intro ================= */
         var introStart = cfg.introStart || 0;
@@ -637,7 +594,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             var hasMulty = hls.levels.length > 1;
             if (hasMulty) {
                 hlsAutoLevels = hls.levels.map(function (l) { return l.height || 0; });
-                // Update quality badge
                 var currentLevel = hls.currentLevel;
                 var label = 'Auto';
                 if (currentLevel >= 0 && hls.levels[currentLevel]) {
@@ -736,14 +692,8 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             list.forEach(function (tr, idx) {
                 tr.mode = idx === i ? 'showing' : 'disabled';
             });
-            var has = list.length > 0 && i >= 0;
-            ccBtn.classList.toggle('udp-btn-cc-on', has);
         };
-        if (trackList().length) {
-            ccBtn.hidden = false;
-            ccBtn.onclick = function () { openMenu('cc'); };
-        }
-        ccBtn.classList.remove('udp-btn-cc-on');
+        trackList(); // ensure function works
 
         /* ================= PiP ================= */
         function togglePip() {
@@ -786,7 +736,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         var cinemaCloseBtn = null;
         function toggleCinema() {
             var on = document.body.classList.toggle('udp-cinema');
-            cinemaBtn.innerHTML = on ? ICONS.cinemaOff : ICONS.cinema;
             if (on) {
                 if (!scrim) {
                     scrim = el('div', 'udp-cinema-scrim');
@@ -803,11 +752,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             }
             fitVideo();
         }
-        cinemaBtn.onclick = function (ev) { ev.stopPropagation(); toggleCinema(); };
-
-        /* ================= Skip 10s buttons ================= */
-        skipBackBtn.onclick = function (ev) { ev.stopPropagation(); video.currentTime = Math.max(0, video.currentTime - 10); showUi(); };
-        skipFwdBtn.onclick = function (ev) { ev.stopPropagation(); video.currentTime = Math.min((video.duration || 0), video.currentTime + 10); showUi(); };
 
         /* ================= Keyboard ================= */
         document.addEventListener('keydown', function (ev) {
@@ -868,8 +812,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
 
         /* ================= Menu buttons ================= */
         gearBtn.onclick = function (ev) { ev.stopPropagation(); openMenu('main'); };
-        speedBtn.onclick = function (ev) { ev.stopPropagation(); openMenu('speed'); };
-        qualityBtn.onclick = function (ev) { ev.stopPropagation(); openMenu('quality'); };
 
         /* ================= Resume ================= */
         var resumeAt = parseInt(cfg.resumeAt || '0', 10);
@@ -969,7 +911,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         updateSeek();
         setRate(1);
         if (hasQualityOptions()) {
-            // Determine initial quality badge label
             if (isHls && hls && hls.currentLevel >= 0 && hls.levels[hls.currentLevel]) {
                 var h = hls.levels[hls.currentLevel].height || 0;
                 qualityBadge.textContent = h >= 1000 ? Math.round(h / 1000) + 'k' : h + 'p';
