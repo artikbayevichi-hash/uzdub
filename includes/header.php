@@ -425,16 +425,6 @@ document.getElementById('navLinks').addEventListener('click', function(e) {
 
 // Notification Bell
 var csrf = <?php echo json_encode(csrf_token()); ?>;
-function toggleCardFav(btn, id) {
-    var fd = new FormData();
-    fd.append('content_id', id);
-    fd.append('csrf_token', typeof csrf !== 'undefined' ? csrf : '');
-    fetch(ROOT_URL + '/api/toggle_favorite.php', { method: 'POST', body: fd, credentials: 'same-origin' })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-        if (d.ok) btn.classList.toggle('active', !!d.added);
-    });
-}
 (function() {
     var bellBtn = document.getElementById('notifBellBtn');
     var dropdown = document.getElementById('notifDropdown');
@@ -579,3 +569,16 @@ function toggleCardFav(btn, id) {
     pollTimer = setInterval(fetchUnreadCount, 30000);
 })();
 </script>
+<script>
+function toggleCardFav(btn, id) {
+    var fd = new FormData();
+    fd.append('content_id', id);
+    fd.append('csrf_token', typeof csrf !== 'undefined' ? csrf : '');
+    fetch(ROOT_URL + '/api/toggle_favorite.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.ok) btn.classList.toggle('active', !!d.added);
+        else console.error('Fav error:', d);
+    })
+    .catch(function(e) { console.error('Fav fetch error:', e); });
+}
