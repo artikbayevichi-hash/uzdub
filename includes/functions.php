@@ -1958,7 +1958,8 @@ function render_card(array $item, array $extra = []): string {
     $year    = e($item['release_year'] ?? '');
     $rating  = e($item['rating'] ?? '0.0');
     $age     = $extra['age_rating'] ?? ($item['age_rating'] ?? null);
-    if (empty($age)) $age = '0+';
+    if (empty($age)) $age = '0';
+    $age = rtrim(trim($age), '+') . '+';
 
     $watch_url = $extra['watch_url'] ?? ('watch.php?id=' . $id);
     if (!empty($extra['episode_id'])) {
