@@ -571,6 +571,9 @@ var csrf = <?php echo json_encode(csrf_token()); ?>;
 </script>
 <script>
 function toggleCardFav(btn, id) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
     var fd = new FormData();
     fd.append('content_id', id);
     fd.append('csrf_token', typeof csrf !== 'undefined' ? csrf : '');
@@ -581,5 +584,17 @@ function toggleCardFav(btn, id) {
         else console.error('Fav error:', d);
     })
     .catch(function(e) { console.error('Fav fetch error:', e); });
+    return false;
 }
+document.addEventListener('click', function(e) {
+    var fav = e.target.closest('.card-b.fav');
+    if (fav) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        var id = parseInt(fav.getAttribute('data-id'));
+        if (id) toggleCardFav(fav, id);
+        return false;
+    }
+}, true);
 </script>

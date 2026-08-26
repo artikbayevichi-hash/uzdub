@@ -58,6 +58,15 @@ function require_user() {
     if (!is_user()) { header('Location: ' . ROOT_URL . '/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI'])); exit; }
 }
 
+function log_user_activity($pdo, $user_id, $action, $target_type = null, $target_id = null, $detail = null) {
+    try {
+        $pdo->prepare("INSERT INTO user_activity_log (user_id, action, target_type, target_id, detail, ip_address, user_agent) VALUES (?,?,?,?,?,?,?)")
+            ->execute([$user_id, $action, $target_type, $target_id, $detail, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
+    } catch (PDOException $e) {
+        error_log('log_user_activity error: ' . $e->getMessage());
+    }
+}
+
 function check_premium_expiry($pdo, $user_db_id) {
     $stmt = $pdo->prepare("SELECT is_premium, premium_expires_at FROM users WHERE id = ?");
     $stmt->execute([$user_db_id]);
@@ -1983,7 +1992,7 @@ function render_card(array $item, array $extra = []): string {
 
     // 3) Tepa-ONG: Yurak (bosilganda qizil)
     $fav_class = !empty($extra['is_favorite']) ? ' active' : '';
-    $badges .= '<button class="card-b fav' . $fav_class . '" data-id="' . $id . '" aria-label="Sevimli" onclick="event.preventDefault();event.stopPropagation();toggleCardFav(this,' . $id . ')">'
+    $badges .= '<button class="card-b fav' . $fav_class . '" data-id="' . $id . '" aria-label="Sevimli">'
              . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
              . '</button>';
 
