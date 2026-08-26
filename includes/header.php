@@ -582,3 +582,4 @@ function toggleCardFav(btn, id) {
     })
     .catch(function(e) { console.error('Fav fetch error:', e); });
 }
+</script>
