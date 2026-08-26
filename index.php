@@ -134,7 +134,7 @@ if (is_user()):
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($recommendations as $item): ?>
-            <?php echo render_card($item, ['ep_range' => $ep_ranges[$item['id']] ?? null, 'is_favorite' => isset($favorites[$item['id']])]); ?>
+            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']][1] ?? null]); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -151,7 +151,7 @@ if (is_user()):
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($items as $item): ?>
-            <?php echo render_card($item, ['ep_range' => $ep_ranges[$item['id']] ?? null, 'is_favorite' => isset($favorites[$item['id']])]); ?>
+            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']][1] ?? null]); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -179,12 +179,13 @@ if (is_user()):
                     } catch (PDOException $e) {}
                 }
                 echo render_card($item, [
-                    'ep_range' => $ep_ranges[$item['id']] ?? null,
                     'is_favorite' => isset($favorites[$item['id']]),
                     'episode_id' => !empty($item['episode_id']) ? (int)$item['episode_id'] : null,
                     'progress' => (int)$pct,
                     'is_continue' => true,
                     'current_episode' => $cur_ep,
+                    'total_episodes' => $item['total_episodes'] ?? null,
+                    'aired_episodes' => $ep_ranges[$item['id']][1] ?? null,
                 ]);
             endforeach; ?>
         </div>
