@@ -340,15 +340,9 @@ include __DIR__ . '/includes/header.php';
         <h2><?php echo t('similar_content'); ?></h2>
         <div class="row-wrap">
             <div class="row-scroll">
-                <?php foreach ($similar as $s): ?>
-                <a href="watch.php?id=<?php echo $s['id']; ?>" class="card">
-                    <img src="<?php echo $s['poster'] ? e(poster_url($s['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($s)); ?>" alt="<?php echo e(t_title($s)); ?>">
-                    <div class="card-info">
-                        <h3><?php echo e(t_title($s)); ?></h3>
-                        <div class="meta"><span><?php echo e($s['release_year']); ?></span><span class="badge">&#9733; <?php echo e($s['rating']); ?></span></div>
-                    </div>
-                </a>
-                <?php endforeach; ?>
+                <?php foreach ($similar as $s):
+                    echo render_card($s, ['category_id' => $s['category_id']]);
+                endforeach; ?>
             </div>
         </div>
     </section>

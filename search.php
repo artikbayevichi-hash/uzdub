@@ -94,18 +94,9 @@ include __DIR__ . '/includes/header.php';
 <?php if ($found_content && empty($items)): $items = [$found_content]; endif; ?>
 
 <div class="grid-wrap">
-    <?php foreach ($items as $item): $dtitle = search_display_title($item, $q); ?>
-    <a href="watch.php?id=<?php echo $item['id']; ?>" class="card">
-        <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode($dtitle); ?>" alt="<?php echo e($dtitle); ?>">
-        <div class="card-info">
-            <h3><?php echo e($dtitle); ?></h3>
-            <div class="meta">
-                <span><?php echo e($item['content_code'] ?? ''); ?></span>
-                <span class="badge">&#9733; <?php echo e($item['rating']); ?></span>
-            </div>
-        </div>
-    </a>
-    <?php endforeach; ?>
+    <?php foreach ($items as $item): $dtitle = search_display_title($item, $q);
+        echo render_card($item, ['category_id' => $item['category_id'] ?? 0]);
+    endforeach; ?>
     <?php if ($q !== '' && empty($items) && !$found_user): ?>
         <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);">
             <div style="font-size:48px;margin-bottom:16px;">🔍</div>
