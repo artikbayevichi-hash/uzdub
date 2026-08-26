@@ -1,5 +1,5 @@
 /* ============================================================
-   js/player.js - UZDUB custom video player (anibla-style)
+   js/player.js - UZDUB custom video player (Telegram Desktop style)
    Vanilla JS. Elementi: <div class="udp-player" data-udp data-udp-config='{...}'>
    ============================================================ */
 
@@ -13,7 +13,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         pause: '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
         volOn: '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
         volMute: '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12 20 8.5M20 15.5 16.5 12"/></svg>',
-        pip: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/><path d="M2 5a2 2 0 0 1 2-2h7v2H4v14h16v-7h2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+        pip: '<svg viewBox="0 0 24 24"><path d="M2 5a2 2 0 0 1 2-2h7v2H4v14h16v-7h2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"/><path d="M8 11v6l4-3z"/></svg>',
         fs: '<svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zM5 10h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
         fsExit: '<svg viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>',
         cinema: '<svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 9v6M22 9v6"/></svg>',
@@ -22,7 +22,8 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         cc: '<svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM8.5 14.8c-2.9 0-2.9-5.6 0-5.6 1.3 0 2.1.6 2.7 1.4l-1.5 1c-.3-.5-.6-.8-1.2-.8-.9 0-.9 2.4 0 2.4.6 0 .9-.3 1.2-.8l1.5 1c-.6.8-1.4 1.4-2.7 1.4zm7 0c-2.9 0-2.9-5.6 0-5.6 1.3 0 2.1.6 2.7 1.4l-1.5 1c-.3-.5-.6-.8-1.2-.8-.9 0-.9 2.4 0 2.4.6 0 .9-.3 1.2-.8l1.5 1c-.6.8-1.4 1.4-2.7 1.4z"/></svg>',
         replay: '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
         replay10: '<svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="none"/><text x="9" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>',
-        forward10: '<svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="none"/><text x="7.5" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>'
+        forward10: '<svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="none"/><text x="7.5" y="16" font-size="9" font-weight="700" fill="currentColor" font-family="sans-serif">10</text></svg>',
+        aspect: '<svg viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5a2 2 0 0 0-2 2zm2 10H3v4a2 2 0 0 0 2 2h4v-2H5v-4zm14 4h-4v2h4a2 2 0 0 0 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5a2 2 0 0 0-2-2z"/></svg>'
     };
 
     function parseConfig(root) {
@@ -137,8 +138,41 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         endedOv.appendChild(endedBtns);
         root.appendChild(endedOv);
 
-        // Controls
+        /* ===== CONTROLS (Telegram Desktop layout) ===== */
         var controls = el('div', 'udp-controls');
+        var row = el('div', 'udp-controls-row');
+
+        // --- LEFT: Volume ---
+        var volWrap = el('div', 'udp-volume');
+        var muteBtn = el('button', 'udp-btn udp-mute', ICONS.volOn);
+        muteBtn.type = 'button';
+        var volBar = el('div', 'udp-volume-bar');
+        var volFill = el('div', 'udp-volume-fill');
+        volBar.appendChild(volFill);
+        volWrap.appendChild(muteBtn);
+        volWrap.appendChild(volBar);
+        row.appendChild(volWrap);
+
+        // --- Skip 10s buttons ---
+        var skipBackBtn = el('button', 'udp-btn udp-skip-back', ICONS.replay10);
+        skipBackBtn.type = 'button';
+        skipBackBtn.title = '10 soniya orqaga';
+        row.appendChild(skipBackBtn);
+
+        var skipFwdBtn = el('button', 'udp-btn udp-skip-fwd', ICONS.forward10);
+        skipFwdBtn.type = 'button';
+        skipFwdBtn.title = '10 soniya oldinga';
+        row.appendChild(skipFwdBtn);
+
+        // --- CENTER: Play + Current time + Seek + Remaining time ---
+        var playBtn = el('button', 'udp-btn udp-play', ICONS.play);
+        playBtn.type = 'button';
+        row.appendChild(playBtn);
+
+        var timeCurrent = el('span', 'udp-time udp-time-current', '00:00');
+        row.appendChild(timeCurrent);
+
+        // Seek bar
         var seekWrap = el('div', 'udp-seek');
         var seekTrack = el('div', 'udp-seek-track');
         var seekBuffer = el('div', 'udp-seek-buffer');
@@ -150,77 +184,58 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         seekWrap.appendChild(seekTrack);
         var seekTooltip = el('div', 'udp-seek-tooltip', '0:00');
         seekWrap.appendChild(seekTooltip);
-        controls.appendChild(seekWrap);
+        row.appendChild(seekWrap);
 
-        var row = el('div', 'udp-controls-row');
+        var timeRemaining = el('span', 'udp-time udp-time-remaining', '-00:00');
+        row.appendChild(timeRemaining);
 
-        var playBtn = el('button', 'udp-btn udp-play', ICONS.play);
-        playBtn.type = 'button';
-        row.appendChild(playBtn);
+        // --- RIGHT: Aspect ratio + PiP + Settings ---
+        var rightGroup = el('div', 'udp-controls-right');
 
-        var skipBackBtn = el('button', 'udp-btn udp-skip-back', ICONS.replay10);
-        skipBackBtn.type = 'button';
-        skipBackBtn.title = '10 soniya orqaga';
-        row.appendChild(skipBackBtn);
+        var aspectBtn = el('button', 'udp-btn udp-aspect', ICONS.aspect);
+        aspectBtn.type = 'button';
+        aspectBtn.title = 'Aspekt nisbati';
+        aspectBtn.hidden = true; // shown only for vertical video
+        rightGroup.appendChild(aspectBtn);
 
-        var skipFwdBtn = el('button', 'udp-btn udp-skip-fwd', ICONS.forward10);
-        skipFwdBtn.type = 'button';
-        skipFwdBtn.title = '10 soniya oldinga';
-        row.appendChild(skipFwdBtn);
+        var pipBtn = el('button', 'udp-btn udp-pip', ICONS.pip);
+        pipBtn.type = 'button';
+        pipBtn.title = S.pip || 'Kichik oyna';
+        pipBtn.hidden = !document.pictureInPictureEnabled;
+        rightGroup.appendChild(pipBtn);
 
-        // Volume
-        var volWrap = el('div', 'udp-volume');
-        var muteBtn = el('button', 'udp-btn udp-mute', ICONS.volOn);
-        muteBtn.type = 'button';
-        var volBar = el('div', 'udp-volume-bar');
-        var volFill = el('div', 'udp-volume-fill');
-        volBar.appendChild(volFill);
-        volWrap.appendChild(muteBtn);
-        volWrap.appendChild(volBar);
-        row.appendChild(volWrap);
+        var gearBtn = el('button', 'udp-btn udp-settings', ICONS.gear);
+        gearBtn.type = 'button';
+        gearBtn.title = S.settings || 'Sozlamalar';
+        var qualityBadge = el('span', 'udp-quality-badge', 'HD');
+        gearBtn.appendChild(qualityBadge);
+        rightGroup.appendChild(gearBtn);
 
-        var timeEl = el('span', 'udp-time', '0:00 / 0:00');
-        row.appendChild(timeEl);
+        // Hidden buttons (handled by settings menu)
+        var cinemaBtn = el('button', 'udp-btn udp-cinema-toggle', ICONS.cinema);
+        cinemaBtn.type = 'button';
+        cinemaBtn.title = S.cinema || 'Kino rejimi';
+        cinemaBtn.hidden = true;
 
-        row.appendChild(el('div', 'udp-spacer'));
-
-        // Speed
-        var speedBtn = el('button', 'udp-btn udp-speed', '<span class="udp-btn-label">1x</span>');
-        speedBtn.type = 'button';
-        speedBtn.title = S.speed || 'Tezlik';
-        row.appendChild(speedBtn);
-
-        // Quality
         var qualityBtn = el('button', 'udp-btn udp-quality', '<span class="udp-btn-label">Auto</span>');
         qualityBtn.type = 'button';
-        qualityBtn.title = S.quality || 'Sifat';
         qualityBtn.hidden = true;
-        row.appendChild(qualityBtn);
 
-        // Subtitles (hidden, handled by settings menu)
+        var speedBtn = el('button', 'udp-btn udp-speed', '<span class="udp-btn-label">1x</span>');
+        speedBtn.type = 'button';
+        speedBtn.hidden = true;
+
         var ccBtn = el('button', 'udp-btn udp-cc', ICONS.cc);
         ccBtn.type = 'button';
         ccBtn.title = S.subtitles || 'Subtitrlar';
         ccBtn.hidden = true;
 
-        // Cinema (hidden, handled by settings menu)
-        var cinemaBtn = el('button', 'udp-btn udp-cinema-toggle', ICONS.cinema);
-        cinemaBtn.type = 'button';
-        cinemaBtn.title = S.cinema || 'Kino rejimi';
-
-        // PiP
-        var pipBtn = el('button', 'udp-btn udp-pip', ICONS.pip);
-        pipBtn.type = 'button';
-        pipBtn.title = S.pip || 'Kichik oyna';
-        pipBtn.hidden = !document.pictureInPictureEnabled;
-        row.appendChild(pipBtn);
-
-        // Fullscreen
         var fsBtn = el('button', 'udp-btn udp-fs-btn', ICONS.fs);
         fsBtn.type = 'button';
         fsBtn.title = S.fullscreen || 'To\u2018liq ekran';
-        row.appendChild(fsBtn);
+        rightGroup.appendChild(fsBtn);
 
+        row.appendChild(rightGroup);
         controls.appendChild(row);
         root.appendChild(controls);
 
@@ -231,7 +246,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         menuBackdrop.style.display = 'none';
         document.body.appendChild(menuBackdrop);
 
-        var activeMenu = null; // 'main' | 'speed' | 'quality' | 'cc'
+        var activeMenu = null;
 
         function openMenu(name) {
             menu.classList.add('udp-open');
@@ -314,16 +329,14 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
                 g1.appendChild(menuItem(S.subtitles || 'Subtitrlar', false, function () { renderMenu('cc'); }, true));
             }
             menu.appendChild(g1);
-            if (document.pictureInPictureEnabled || true) {
-                menu.appendChild(el('div', 'udp-menu-sep'));
-                var g2 = el('div', 'udp-menu-group');
-                if (document.pictureInPictureEnabled) {
-                    g2.appendChild(menuItem(S.pip || 'Kichik oyna', false, togglePip));
-                }
-                g2.appendChild(menuItem(S.cinema || 'Kino rejimi', document.body.classList.contains('udp-cinema'), toggleCinema));
-                g2.appendChild(menuItem(S.fullscreen || 'To\u2018liq ekran', false, toggleFullscreen));
-                menu.appendChild(g2);
+            menu.appendChild(el('div', 'udp-menu-sep'));
+            var g2 = el('div', 'udp-menu-group');
+            if (document.pictureInPictureEnabled) {
+                g2.appendChild(menuItem(S.pip || 'Kichik oyna', false, togglePip));
             }
+            g2.appendChild(menuItem(S.cinema || 'Kino rejimi', document.body.classList.contains('udp-cinema'), toggleCinema));
+            g2.appendChild(menuItem(S.fullscreen || 'To\u2018liq ekran', false, toggleFullscreen));
+            menu.appendChild(g2);
         }
 
         menuBackdrop.onclick = closeMenu;
@@ -345,11 +358,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         updateVolumeUI();
 
         function updatePlayIcon() {
-            if (video.paused || video.ended) {
-                playBtn.innerHTML = ICONS.play;
-            } else {
-                playBtn.innerHTML = ICONS.pause;
-            }
+            playBtn.innerHTML = (video.paused || video.ended) ? ICONS.play : ICONS.pause;
         }
         function updateVolumeUI() {
             muteBtn.innerHTML = video.muted || video.volume === 0 ? ICONS.volMute : ICONS.volOn;
@@ -396,7 +405,10 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         function updateTime() {
             var d = video.duration;
             if (!isFinite(d)) d = 0;
-            timeEl.textContent = fmtTime(video.currentTime) + ' / ' + fmtTime(d);
+            var remaining = d - video.currentTime;
+            if (remaining < 0) remaining = 0;
+            timeCurrent.textContent = fmtTime(video.currentTime);
+            timeRemaining.textContent = '-' + fmtTime(remaining);
         }
 
         function updateSeek() {
@@ -436,8 +448,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             var ratio = (ev.clientX - rect.left) / rect.width;
             ratio = Math.max(0, Math.min(1, ratio));
             seekTooltip.textContent = fmtTime(ratio * (video.duration || 0));
-            var pos = rect.left + ratio * rect.width - seekTrack.getBoundingClientRect().left;
-            seekTooltip.style.left = pos + 'px';
+            seekTooltip.style.left = (ratio * rect.width) + 'px';
         }
 
         seekWrap.addEventListener('pointerdown', function (ev) {
@@ -483,18 +494,12 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             v = Math.max(0, Math.min(1, v));
             setVolume(v);
         }
-        volWrap.addEventListener('click', function (ev) {
-            if (ev.target !== muteBtn && ev.target !== volBar && ev.target !== volFill) {
-                if (ev.clientX && volBar.getBoundingClientRect().width < 5) setVolFromEvent(ev);
-            }
-        });
 
         muteBtn.addEventListener('click', toggleMute);
         playBtn.addEventListener('click', togglePlay);
         video.addEventListener('click', function (ev) {
             if (ev.target === video && !video.dragging) togglePlay();
         });
-        video.addEventListener('dblclick', function () { toggleFullscreen(); });
 
         video.addEventListener('play', function () { root.classList.add('udp-playing'); root.classList.remove('udp-paused'); updatePlayIcon(); });
         video.addEventListener('pause', function () { root.classList.remove('udp-playing'); root.classList.add('udp-paused'); updatePlayIcon(); root.classList.add('udp-ui-visible'); });
@@ -524,12 +529,17 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         video.addEventListener('seeked', function () { if (video.readyState >= 3) setLoading(false); });
 
         /* ================= Aspect ratio (vertikal video) ================= */
+        var currentAspect = 'contain'; // 'contain' | 'cover' | 'fill'
+        var aspectModes = ['contain', 'cover', 'fill'];
+        var aspectIndex = 0;
+
         function fitVideo() {
             var w = video.videoWidth, h = video.videoHeight;
             if (!w || !h) return;
             var ratio = w / h;
             if (ratio < 1.25) {
                 root.classList.add('udp-vertical');
+                aspectBtn.hidden = false;
                 var maxW = Math.round(0.78 * window.innerHeight * ratio);
                 var wrapW = root.parentElement ? root.parentElement.clientWidth : window.innerWidth;
                 root.style.maxWidth = Math.min(wrapW, maxW) + 'px';
@@ -537,6 +547,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
                 root.style.marginRight = 'auto';
             } else {
                 root.classList.remove('udp-vertical');
+                aspectBtn.hidden = true;
                 root.style.maxWidth = '';
                 root.style.marginLeft = '';
                 root.style.marginRight = '';
@@ -545,6 +556,14 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         video.addEventListener('loadedmetadata', fitVideo);
         video.addEventListener('resize', fitVideo);
         window.addEventListener('resize', fitVideo);
+
+        // Aspect ratio toggle (only for vertical videos)
+        aspectBtn.onclick = function (ev) {
+            ev.stopPropagation();
+            aspectIndex = (aspectIndex + 1) % aspectModes.length;
+            currentAspect = aspectModes[aspectIndex];
+            video.style.objectFit = currentAspect;
+        };
 
         /* ================= Skip intro ================= */
         var introStart = cfg.introStart || 0;
@@ -616,9 +635,16 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         function buildHlsQualityMenu() {
             if (!hls || !hls.levels || !hls.levels.length) return;
             var hasMulty = hls.levels.length > 1;
-            qualityBtn.hidden = !hasMulty;
             if (hasMulty) {
                 hlsAutoLevels = hls.levels.map(function (l) { return l.height || 0; });
+                // Update quality badge
+                var currentLevel = hls.currentLevel;
+                var label = 'Auto';
+                if (currentLevel >= 0 && hls.levels[currentLevel]) {
+                    var h = hls.levels[currentLevel].height || 0;
+                    label = h >= 1000 ? Math.round(h / 1000) + 'k' : h + 'p';
+                }
+                qualityBadge.textContent = label;
             }
         }
         var hlsAutoLevels = [];
@@ -655,7 +681,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             if (isHls && hlsAutoLevels.length) {
                 var opts = [{ label: 'Auto', level: -1, active: hls.currentLevel === -1 }];
                 hlsAutoLevels.forEach(function (height) {
-                    opts.push({ label: height >= 1000 ? (height / 1000).toFixed(1) + 'k' : height + 'p', level: height, active: hls.currentLevel === height });
+                    opts.push({ label: height >= 1000 ? Math.round(height / 1000) + 'k' : height + 'p', level: height, active: hls.currentLevel === height });
                 });
                 return opts;
             }
@@ -667,7 +693,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             }
             if (qs.length > 1) {
                 var cur = video.currentSrc || '';
-                qs.forEach(function (q) { q.active = q.url === cur || (label === 'Auto' && !cur); });
+                qs.forEach(function (q) { q.active = q.url === cur; });
             }
             return qs;
         };
@@ -678,7 +704,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         var setQuality = function (q) {
             if (isHls && hls) {
                 hls.currentLevel = q.level;
-                qualityBtn.querySelector('.udp-btn-label').textContent = q.label;
+                qualityBadge.textContent = q.label;
                 return;
             }
             if (!q.url) return;
@@ -691,7 +717,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
                 video.removeEventListener('loadedmetadata', handler);
             });
             if (wasPlaying) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
-            qualityBtn.querySelector('.udp-btn-label').textContent = q.label;
+            qualityBadge.textContent = q.label;
         };
 
         /* ================= Subtitles ================= */
@@ -784,7 +810,6 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         skipFwdBtn.onclick = function (ev) { ev.stopPropagation(); video.currentTime = Math.min((video.duration || 0), video.currentTime + 10); showUi(); };
 
         /* ================= Keyboard ================= */
-        var kbTarget = document.querySelector('.detail-wrap');
         document.addEventListener('keydown', function (ev) {
             if (document.activeElement && /input|textarea|select/.test(document.activeElement.tagName)) return;
             if (!root.getBoundingClientRect().width) return;
@@ -796,10 +821,12 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
                 case 'ArrowRight':
                     ev.preventDefault();
                     video.currentTime = Math.min((video.duration || 0), video.currentTime + 10);
+                    showUi();
                     break;
                 case 'ArrowLeft':
                     ev.preventDefault();
                     video.currentTime = Math.max(0, video.currentTime - 10);
+                    showUi();
                     break;
                 case 'ArrowUp':
                     ev.preventDefault();
@@ -832,20 +859,15 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
             if (!video.paused && !video.ended) {
                 hideTimer = setTimeout(function () {
                     root.classList.remove('udp-ui-visible');
-                }, 2600);
+                }, 3000);
             }
         }
         root.addEventListener('mousemove', showUi);
         root.addEventListener('mouseenter', showUi);
         root.addEventListener('pointerdown', showUi);
 
-        /* ================= Menus buttons ================= */
-        var gearBtn = el('button', 'udp-btn udp-settings', ICONS.gear);
-        gearBtn.type = 'button';
-        gearBtn.title = S.settings || 'Sozlamalar';
-        row.appendChild(gearBtn);
+        /* ================= Menu buttons ================= */
         gearBtn.onclick = function (ev) { ev.stopPropagation(); openMenu('main'); };
-
         speedBtn.onclick = function (ev) { ev.stopPropagation(); openMenu('speed'); };
         qualityBtn.onclick = function (ev) { ev.stopPropagation(); openMenu('quality'); };
 
@@ -882,7 +904,7 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         /* ================= Autoplay ================= */
         video.addEventListener('loadedmetadata', function onMeta() {
             video.removeEventListener('loadedmetadata', onMeta);
-            if (resumeAt > 5) return; // resume overlay kutamiz
+            if (resumeAt > 5) return;
             setTimeout(function () {
                 if (!video.paused) return;
                 var p = video.play();
@@ -946,8 +968,14 @@ window.ROOT_URL = window.ROOT_URL || '/uzdub';
         updateTime();
         updateSeek();
         setRate(1);
-        if (cfg.qualities && Object.keys(cfg.qualities).length > 1) {
-            qualityBtn.hidden = false;
+        if (hasQualityOptions()) {
+            // Determine initial quality badge label
+            if (isHls && hls && hls.currentLevel >= 0 && hls.levels[hls.currentLevel]) {
+                var h = hls.levels[hls.currentLevel].height || 0;
+                qualityBadge.textContent = h >= 1000 ? Math.round(h / 1000) + 'k' : h + 'p';
+            } else if (cfg.qualities && Object.keys(cfg.qualities).length > 1) {
+                qualityBadge.textContent = 'HD';
+            }
         }
     }
 
