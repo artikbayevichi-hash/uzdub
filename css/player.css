@@ -1,12 +1,15 @@
 /* ============================================================
    css/player.css - Telegram Desktop style video player (2-row)
-   Row 1: [vol+slider] --- [PLAY] --- [fs][pip][gear+badge]
+   Row 1: [vol+slider] --- [PLAY] --- [gear+badge]
    Row 2: [time] [==========seek bar==========] [-remaining]
+   PiP & Fullscreen are inside gear menu
    ============================================================ */
 
 .udp-player {
     position: relative;
     width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
     aspect-ratio: 16 / 9;
     background: #000;
     overflow: hidden;
@@ -592,6 +595,9 @@
 }
 
 /* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .udp-player { max-width: 100%; }
+}
 @media (max-width: 640px) {
     .udp-controls { padding: 0 6px 4px; }
     .udp-controls-row1 { height: 36px; }
