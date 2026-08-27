@@ -337,7 +337,7 @@ function addEpisodeRow(data) {
         '<div class="ep-fields">' +
             '<div id="src-url-' + i + '" style="grid-column:1/-1;">' +
                 '<label>Video havolasi *</label>' +
-                '<input type="text" name="episodes[' + i + '][video_url]" placeholder="https://... cloud havola (VK, mp4, RuTube)" value="' + (data.video_url || '') + '">' +
+                '<input type="text" name="episodes[' + i + '][video_url]" placeholder="https://... cloud havola (VK, Sibnet, RuTube, OK.ru, mp4)" value="' + (data.video_url || '') + '">' +
             '</div>' +
             '<div id="src-embed-' + i + '" class="ep-field-hidden" style="grid-column:1/-1;">' +
                 '<label>Embed code / iframe URL</label>' +

@@ -156,7 +156,7 @@ foreach ($series as $s) {
                             <option value="cloud" selected>Cloud</option>
                         </select>
                     </div>
-                    <div style="flex:1;min-width:220px;"><label>Video havolasi *</label><br><input type="text" name="episode_video_url" required placeholder="https://... cloud havola (VK, mp4, RuTube)" style="width:100%;box-sizing:border-box;"></div>
+                    <div style="flex:1;min-width:220px;"><label>Video havolasi *</label><br><input type="text" name="episode_video_url" required placeholder="https://... cloud havola (VK, Sibnet, RuTube, OK.ru, mp4)" style="width:100%;box-sizing:border-box;"></div>
                     <div><button type="submit" class="btn" name="add_episode" value="1">Qism qo'shish</button></div>
                 </div>
             </form>

@@ -199,8 +199,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="single-video-block" class="regular-only">
         <input type="hidden" name="video_type" value="cloud">
         <label>Video havolasi *</label>
-        <input type="text" name="video_url" placeholder="https://... cloud havola (VK, mp4, RuTube va h.k.)" style="width:100%;box-sizing:border-box;">
-        <small style="opacity:.55;">Cloud havola: to'g'ridan-to'g'ri mp4, VK video yoki RuTube havolasi.</small>
+        <input type="text" name="video_url" placeholder="https://... cloud havola (VK, Sibnet, RuTube, OK.ru, Anibla, mp4 va h.k.)" style="width:100%;box-sizing:border-box;">
+        <small style="opacity:.55;">Cloud havola: VK, Sibnet, RuTube, OK.ru, Anibla yoki to'g'ridan-to'g'ri mp4 havolasi.</small>
     </div>
 
     <button type="submit" class="btn">Saqlash</button>

@@ -157,6 +157,8 @@ function stream_validate_host(string $url, bool $allow_loopback): bool {
 // Redirect URL'ni (nisbiy bo'lishi mumkin) mutlaq qilish
 function stream_resolve_redirect(string $current, string $location): string {
     if (preg_match('#^https?://#i', $location)) return $location;
+    // Protocol-relative: //host/path
+    if (strpos($location, '//') === 0) return 'https:' . $location;
     $parts = parse_url($current);
     if (!$parts || empty($parts['scheme']) || empty($parts['host'])) return '';
     $base = $parts['scheme'] . '://' . $parts['host'];
@@ -183,6 +185,10 @@ function stream_request(string $url, array $opts, bool $allow_loopback, int $max
         // Odysee CDN Referer talab qiladi (aks holda 401 qaytaradi)
         if (stripos($current, 'player.odycdn.com') !== false) {
             $req_opts[CURLOPT_REFERER] = 'https://odysee.com/';
+        }
+        // Sibnet hotlink himoyasi — Referer kerak
+        if (stripos($current, 'video.sibnet.ru') !== false) {
+            $req_opts[CURLOPT_REFERER] = 'https://video.sibnet.ru/';
         }
         curl_setopt_array($ch, $req_opts + [
             CURLOPT_FOLLOWLOCATION => false,
@@ -218,10 +224,12 @@ function http_probe($url, $allow_loopback) {
     $fileSize = 0;
     $acceptRanges = 'bytes';
     $errCode = '';
+    $resolvedUrl = $url;
 
-    if (isset($res['error'])) return [0, '', 0, 'none', ''];
+    if (isset($res['error'])) return [0, '', 0, 'none', '', $url];
     $status = $res['status'];
     $headers = $res['body'];
+    if (!empty($res['url'])) $resolvedUrl = $res['url'];
 
     // Content-Type va Content-Length ni headerlardan o'qiymiz
     $contentType = '';
@@ -235,17 +243,17 @@ function http_probe($url, $allow_loopback) {
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_RANGE => '0-0',
         ], $allow_loopback);
-        if (isset($res2['error'])) return [0, '', 0, 'none', ''];
+        if (isset($res2['error'])) return [0, '', 0, 'none', '', $url];
         $status = $res2['status'];
         $body = $res2['body'];
+        if (!empty($res2['url'])) $resolvedUrl = $res2['url'];
         if (preg_match('/Content-Range:\s*bytes\s+0-0\/(\d+)/i', $body, $m)) $fileSize = (int)$m[1];
         if (preg_match('/Content-Type:\s*([^\r\n]+)/i', $body, $m)) $contentType = trim($m[1]);
         if (!preg_match('/Accept-Ranges:\s*bytes/i', $body)) $acceptRanges = 'none';
-        // JSON xatolik tanasidan sababni aniqlaymiz (Pixeldrain hotlink / max_concurrent va h.k.)
         if (preg_match('/"value"\s*:\s*"([^"]+)"/i', $body, $m)) $errCode = $m[1];
     }
 
-    return [$status, $contentType, $fileSize, $acceptRanges, $errCode];
+    return [$status, $contentType, $fileSize, $acceptRanges, $errCode, $resolvedUrl];
 }
 
 // ================= HLS (m3u8) playlist proxy =================
@@ -312,9 +320,9 @@ $lastProbe = [0, '', 0, 'none', ''];
 for ($attempt = 0; $attempt < 4 && !$probe; $attempt++) {
     foreach ($candidates as $cand) {
         if (!stream_validate_host($cand, $allow_loopback)) continue;
-        [$h, $ct, $fs, $ar, $ec] = http_probe($cand, $allow_loopback);
+        [$h, $ct, $fs, $ar, $ec, $resolved] = http_probe($cand, $allow_loopback);
         if ($h >= 200 && $h < 400) {
-            $url = $cand;
+            $url = $resolved;
             $probe = [$h, $ct, $fs, $ar];
             break;
         }
@@ -433,26 +441,24 @@ for ($i = 0; $i <= 5; $i++) {
     $opts = [
         CURLOPT_RETURNTRANSFER => false,
         CURLOPT_HEADER => false,
-        CURLOPT_FOLLOWLOCATION => false,
-        CURLOPT_MAXREDIRS => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
         CURLOPT_BUFFERSIZE => 65536,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_CONNECTTIMEOUT => 15,
     ];
     if ($rangeSpec !== null) $opts[CURLOPT_RANGE] = $rangeSpec;
-    // Odysee CDN Referer talab qiladi (aks holda 401 qaytaradi)
-    if (stripos($current, 'player.odycdn.com') !== false) {
-        $opts[CURLOPT_REFERER] = 'https://odysee.com/';
-    }
+    if (stripos($current, 'player.odycdn.com') !== false) $opts[CURLOPT_REFERER] = 'https://odysee.com/';
+    if (stripos($current, 'video.sibnet.ru') !== false) $opts[CURLOPT_REFERER] = 'https://video.sibnet.ru/';
     curl_setopt_array($ch, $opts);
     curl_exec($ch);
-    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $redirect = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+    $finalStatus = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $finalErr = curl_error($ch);
     curl_close($ch);
 
-    if ($status >= 300 && $status < 400 && $redirect) {
-        $next = stream_resolve_redirect($current, $redirect);
-        if ($next === '') break;
-        $current = $next;
-        continue;
+    if ($finalStatus >= 400 || ($finalStatus === 0 && $finalErr)) {
+        http_response_code(502);
+        die('Upstream error');
     }
     break;
 }

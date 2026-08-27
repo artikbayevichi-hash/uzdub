@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div id="video_url_block" style="<?php echo $item['video_type']=='cloud'?'':'display:none;'; ?>">
             <label>Video havolasi (Cloud link)</label>
-            <input type="text" name="video_url" value="<?php echo $item['video_type']=='cloud' ? e($item['video_url']) : ''; ?>" placeholder="https://... cloud havola (VK, mp4, RuTube va h.k.)">
+            <input type="text" name="video_url" value="<?php echo $item['video_type']=='cloud' ? e($item['video_url']) : ''; ?>" placeholder="https://... cloud havola (VK, Sibnet, RuTube, OK.ru, Anibla, mp4 va h.k.)">
         </div>
     </div>
 
@@ -356,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" name="episode_title" placeholder="Masalan: 1-qism" style="width:200px;">
         <input type="hidden" name="episode_video_type" value="cloud">
         <label>Video havolasi *</label>
-        <input type="text" name="episode_video_url" required placeholder="https://... cloud havola (VK, mp4, RuTube)" style="width:100%;box-sizing:border-box;">
+        <input type="text" name="episode_video_url" required placeholder="https://... cloud havola (VK, Sibnet, RuTube, OK.ru, mp4)" style="width:100%;box-sizing:border-box;">
         <button type="submit" class="btn" name="add_episode" value="1">Qism qo'shish</button>
     </form>
 </div>

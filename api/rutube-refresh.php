@@ -61,7 +61,7 @@ if ($res && !empty($res['url'])) {
 if ($res && !empty($res['url'])) {
     echo json_encode([
         'ok' => true,
-        'url' => ROOT_URL . '/stream.php?url=' . rawurlencode($res['url']) . '&hls=1',
+        'url' => $res['url'],
     ], JSON_UNESCAPED_SLASHES);
 } else {
     echo json_encode(['ok' => false], JSON_UNESCAPED_UNICODE);

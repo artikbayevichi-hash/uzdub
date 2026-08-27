@@ -657,14 +657,96 @@ function vk_resolve_video($url, $ttl_hours = 24) {
 
 // VK video'ni toza HTML5 playerda ko'rsatadi; mp4 olinmasa VK iframe'ga qaytadi.
 function render_vk_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $refresh = ROOT_URL . '/api/vk-refresh.php?url=' . rawurlencode($video_url);
     $res = vk_resolve_video($video_url);
     if ($res) {
-        // Agar to'g'ridan-to'g'ri VK CDN biror tarmoqda ochilmasa — o'z serverimiz
-        // orqali stream.php proxy'ga tushish (bandwidth ishlatadi, lekin ishonchli).
         $fallback = ROOT_URL . '/stream.php?url=' . urlencode($res['best']);
-        return build_video_player($player_id, $res['best'], $poster, $subs_html, $res['sources'], $intro_start, $intro_end, false, false, $fallback);
+        return build_video_player($player_id, $res['best'], $poster, $subs_html, $res['sources'], $intro_start, $intro_end, false, false, $fallback, false, $refresh);
     }
     return '<div class="player-wrap"><iframe src="' . e(vk_embed_src($video_url)) . '" allowfullscreen></iframe></div>';
+}
+
+// ===== Sibnet — to'g'ridan-to'g'ri mp4 =====
+function sibnet_parse_url($url) {
+    if (preg_match('#video\.sibnet\.ru/(?:shell\.php\?videoid=|v/[^/]+/)(\d+)#i', $url, $m)) return $m[1];
+    return null;
+}
+
+function sibnet_resolve($video_url, $ttl_hours = 1) {
+    $id = sibnet_parse_url($video_url);
+    if (!$id) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/sibnet_' . $id . '.json' : null;
+    if ($file && is_file($file)) {
+        $c = @json_decode(@file_get_contents($file), true);
+        if (is_array($c) && !empty($c['url']) && isset($c['ts'])
+            && (time() - (int)$c['ts']) < $ttl_hours * 3600) {
+            return $c;
+        }
+    }
+
+    $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    $page_url = 'https://video.sibnet.ru/shell.php?videoid=' . $id;
+    $ctx = stream_context_create(['http' => ['timeout' => 10, 'header' => "User-Agent: $ua\r\nReferer: https://video.sibnet.ru/\r\n"]]);
+    $html = @file_get_contents($page_url, false, $ctx);
+    if ($html === false) return null;
+
+    if (preg_match('#player\.src\(\[\{src:\s*["\']([^"\']+\.mp4)["\']#i', $html, $m)) {
+        $src = $m[1];
+        if (strpos($src, '//') === 0) $src = 'https:' . $src;
+        elseif (strpos($src, '/') === 0) $src = 'https://video.sibnet.ru' . $src;
+
+        $final = sibnet_follow_redirects($src);
+
+        $result = ['url' => $final, 'id' => $id, 'ts' => time()];
+        if ($file) {
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            @file_put_contents($file, json_encode($result));
+        }
+        return $result;
+    }
+    return null;
+}
+
+function sibnet_follow_redirects($url) {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HEADER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_MAXREDIRS => 0,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_NOBODY => false,
+        CURLOPT_RANGE => '0-0',
+        CURLOPT_REFERER => 'https://video.sibnet.ru/',
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    ]);
+    for ($i = 0; $i < 5; $i++) {
+        $resp = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $redirect = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+        if ($resp === false) break;
+        if ($status >= 300 && $status < 400 && $redirect) {
+            if (strpos($redirect, '//') === 0) $redirect = 'https:' . $redirect;
+            curl_setopt($ch, CURLOPT_URL, $redirect);
+            continue;
+        }
+        break;
+    }
+    $final = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+    curl_close($ch);
+    return $final ?: $url;
+}
+
+function render_sibnet_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $refresh = ROOT_URL . '/api/sibnet-refresh.php?url=' . rawurlencode($video_url);
+    $res = sibnet_resolve($video_url);
+    if ($res && $res['url']) {
+        return build_video_player($player_id, $res['url'], $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, false, $refresh);
+    }
+    return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen></iframe></div>';
 }
 
 // ===== RuTube (HLS) — toza HTML5 player =====
@@ -780,9 +862,7 @@ function render_rutube_player($video_url, $player_id, $poster = null, $subs_html
     $refresh = ROOT_URL . '/api/rutube-refresh.php?url=' . rawurlencode($video_url);
     $res = rutube_resolve($video_url);
     if ($res && !empty($res['url'])) {
-        $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($res['url']) . '&hls=1';
-        // data-hls-refresh: keshlangan URL muddati o'tsa player avtomatik yangi havola oladi
-        return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
+        return build_video_player($player_id, $res['url'], $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
     }
     return build_video_player($player_id, '', $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
 }
@@ -956,6 +1036,96 @@ function render_direct_video($video_url, $player_id, $poster = null, $subs_html 
     return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, $fallback);
 }
 
+// ===== Anibla.uz (to'g'ridan HLS) =====
+// Anibla.uz o'zining HLS proxy API si bor (anibla.uz/api/hls-proxy?url=...).
+// HLS URL to'g'ridan hls.js orqali ishlaydi — qo'shimcha proxy kerak emas.
+
+function anibla_parse_url($url) {
+    if (preg_match('~https?://(?:www\.)?anibla\.uz~i', $url)) {
+        return true;
+    }
+    return false;
+}
+
+function render_anibla_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true);
+}
+
+// ===== OK.ru (toza HTML5 player) =====
+// OK.ru CDN URL lari IP bilan bog'langan (srcIp parametri). Shuning uchun
+// to'g'ridan CDN ishlamaydi — stream.php proxy orqali o'tkaziladi.
+
+function okru_parse_url($url) {
+    if (preg_match('~https?://(?:www\.)?ok\.ru/(?:video|embed)/(\d+)~i', $url, $m)) {
+        return $m[1];
+    }
+    return null;
+}
+
+function okru_resolve($url, $ttl_hours = 24) {
+    $video_id = okru_parse_url($url);
+    if (!$video_id) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/okru_' . $video_id . '.json' : null;
+    if ($file && is_file($file)) {
+        $cached = @json_decode(@file_get_contents($file), true);
+        if (is_array($cached) && !empty($cached['url']) && isset($cached['ts'])
+            && (time() - (int)$cached['ts']) < $ttl_hours * 3600) {
+            return $cached;
+        }
+    }
+
+    $page_url = "https://ok.ru/video/{$video_id}";
+    $ch = curl_init($page_url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_HTTPHEADER => ['Accept-Language: en-US,en;q=0.9'],
+    ]);
+    $html = curl_exec($ch);
+    curl_close($ch);
+    if (!$html) return null;
+
+    if (!preg_match('/data-options=["\']([^"\']+)/s', $html, $m)) return null;
+    $decoded = html_entity_decode($m[1]);
+    $opts = json_decode($decoded, true);
+    if (!$opts || empty($opts['flashvars']['metadata'])) return null;
+
+    $meta = json_decode($opts['flashvars']['metadata'], true);
+    if (!$meta || empty($meta['videos'])) return null;
+
+    $best = null;
+    foreach ($meta['videos'] as $v) {
+        if (isset($v['url']) && (!isset($best['name']) || $v['name'] === 'hd')) {
+            $best = $v;
+        }
+    }
+    if (!$best || empty($best['url'])) return null;
+
+    $result = [
+        'url' => $best['url'],
+        'name' => $best['name'] ?? 'sd',
+        'title' => $meta['title'] ?? '',
+        'duration' => $meta['duration'] ?? 0,
+    ];
+
+    if ($file) @file_put_contents($file, json_encode(['url' => $result['url'], 'ts' => time()]));
+
+    return $result;
+}
+
+function render_okru_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $res = okru_resolve($video_url);
+    if ($res && !empty($res['url'])) {
+        $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($res['url']);
+        return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false);
+    }
+    return build_video_player($player_id, '', $poster, $subs_html, [], $intro_start, $intro_end, false, false);
+}
+
 // ===== Odysee (toza HTML5 player) =====
 // Odysee o'z saytini iframe'da ochishga yo'l qo'ymaydi (frame blokirovkasi). Shuning uchun
 // video'ni to'g'ridan-to'g'ri mp4 streaming URL orqali O'Z playerimizda ko'rsatamiz.
@@ -1032,9 +1202,12 @@ function render_odysee_player($video_url, $player_id, $poster = null, $subs_html
 // VK, RuTube, Rumble, Odysee yoki to'g'ridan-to'g'ri video fayl bo'lsa — toza player qaytaradi, aks holda null
 function render_clean_video_if_possible($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0, array $sources = []) {
     if (vk_parse_url($video_url)) return render_vk_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (sibnet_parse_url($video_url)) return render_sibnet_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (rutube_parse_url($video_url)) return render_rutube_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (rumble_parse_url($video_url)) return render_rumble_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (odysee_parse_url($video_url)) return render_odysee_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (okru_parse_url($video_url)) return render_okru_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (anibla_parse_url($video_url)) return render_anibla_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (is_direct_video_url($video_url)) return render_direct_video($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     return null;
 }
@@ -1119,8 +1292,7 @@ function resolve_video_stream_url($video_url, $base_path = 'uploads/videos/') {
 function video_type_for_url($url) {
     $u = (string)$url;
     if (strpos($u, 'tg:') === 0) return 'telegram';
-    if (stripos($u, 'ok.ru/') !== false) return 'cloud';
-    if (vk_parse_url($u) || rutube_parse_url($u) || rumble_parse_url($u) || odysee_parse_url($u) || is_direct_video_url($u)) {
+    if (vk_parse_url($u) || sibnet_parse_url($u) || rutube_parse_url($u) || rumble_parse_url($u) || odysee_parse_url($u) || okru_parse_url($u) || anibla_parse_url($u) || is_direct_video_url($u)) {
         return 'cloud';
     }
     return 'file';
@@ -1315,6 +1487,7 @@ function build_video_player($player_id, $stream_url, $poster = null, $subs_html 
         $src_attr = '';
     } else {
         $src_attr = ' src="' . e($stream_url) . '"';
+        if ($hls_refresh) $attrs .= ' data-refresh="' . e($hls_refresh) . '"';
     }
 
     $qualities = [];
