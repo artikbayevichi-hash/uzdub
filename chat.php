@@ -25,13 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     $attachment = null; $attachment_type = null;
 
     if (!empty($_FILES['attachment']['name'])) {
-        if (!$user['is_premium']) { echo json_encode(['ok'=>false,'msg'=>t('image_gif_premium')]); exit; }
-        $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg','jpeg','png','webp','gif'];
-        if (!in_array($ext, $allowed)) { echo json_encode(['ok'=>false,'msg'=>t('only_images_gifs')]); exit; }
-        $attachment = upload_file('attachment', __DIR__ . '/uploads/chat/', $allowed);
+        require_once __DIR__ . '/includes/imgbb.php';
+        $attachment = imgbb_upload_chat($_FILES['attachment']);
         if (!$attachment) { echo json_encode(['ok'=>false,'msg'=>t('upload_error')]); exit; }
-        $attachment_type = ($ext === 'gif') ? 'gif' : 'image';
+        $attachment_type = 'image';
     }
 
     if ($txt === '' && !$attachment) { echo json_encode(['ok'=>false,'msg'=>t('empty_message')]); exit; }
@@ -147,7 +144,7 @@ function renderMsg(msg) {
     var isOwn = msg.sender_id == currentUserId;
     var body = '';
     if (msg.message) body += '<div class="msg-text">' + escHtml(msg.message) + '</div>';
-    if (msg.attachment) body += '<img class="msg-image" src="' + ROOT_URL + '/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
+    if (msg.attachment) body += '<img class="msg-image" src="' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
     body += '<span class="msg-time-small">' + escHtml(msg.created_at.substring(11,16)) + '</span>';
     return '<div class="msg-item ' + (isOwn ? 'own' : 'other') + '" data-id="' + msg.id + '">' + body + '</div>';
 }

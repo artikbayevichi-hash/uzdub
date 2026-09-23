@@ -87,15 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ep_url  = trim($ep['video_url'] ?? '');
                 $ep_1080 = trim($ep['video_url_1080p'] ?? '');
                 $ep_720  = trim($ep['video_url_720p'] ?? '');
-                $ep_tg_id = trim($ep['telegram_file_id'] ?? '');
                 $ep_embed = trim($ep['embed_code'] ?? '');
                 $ep_duration = trim($ep['duration'] ?? '');
                 $ep_intro_start = (int)($ep['intro_start'] ?? 0);
                 $ep_intro_end = (int)($ep['intro_end'] ?? 0);
 
-                // Formadan faqat cloud / embed tanlanadi; 'telegram' turi eski qismlar
-                // o'zgarishsiz saqlanishi uchun yashirin maydon orqali o'tkaziladi.
-                $allowed_ep_types = ['cloud', 'embed', 'telegram'];
+                // Formadan faqat cloud / embed tanlanadi
+                $allowed_ep_types = ['cloud', 'embed'];
                 if (!in_array($ep_type, $allowed_ep_types, true)) $ep_type = 'cloud';
 
                 if ($ep_num >= 1 && ($ep_url !== '' || $ep_embed !== '')) {
@@ -108,7 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'video_url' => $ep_url,
                         'video_url_1080p' => $ep_1080,
                         'video_url_720p' => $ep_720,
-                        'telegram_file_id' => $ep_tg_id,
                         'embed_code' => $ep_embed,
                         'duration' => $ep_duration,
                         'intro_start' => $ep_intro_start,
@@ -150,11 +147,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($chk->fetch()) $genre_stmt->execute([$id, $gid]);
                 }
 
-                $upd_stmt = $pdo->prepare("UPDATE episodes SET season=?, episode_number=?, title=?, video_type=?, video_url=?, video_url_1080p=?, video_url_720p=?, telegram_file_id=?, embed_code=?, duration=?, intro_start=?, intro_end=? WHERE id=? AND content_id=?");
-                $ins_stmt = $pdo->prepare("INSERT INTO episodes (content_id, season, episode_number, title, video_type, video_url, video_url_1080p, video_url_720p, telegram_file_id, embed_code, duration, intro_start, intro_end) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $upd_stmt = $pdo->prepare("UPDATE episodes SET season=?, episode_number=?, title=?, video_type=?, video_url=?, video_url_1080p=?, video_url_720p=?, embed_code=?, duration=?, intro_start=?, intro_end=? WHERE id=? AND content_id=?");
+                $ins_stmt = $pdo->prepare("INSERT INTO episodes (content_id, season, episode_number, title, video_type, video_url, video_url_1080p, video_url_720p, embed_code, duration, intro_start, intro_end) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
                 foreach ($clean_episodes as $ce) {
                     $vals = [$season, $ce['episode_number'], $ce['title'] ?: null, $ce['video_type'], $ce['video_url'],
-                             $ce['video_url_1080p'] ?: null, $ce['video_url_720p'] ?: null, $ce['telegram_file_id'] ?: null,
+                             $ce['video_url_1080p'] ?: null, $ce['video_url_720p'] ?: null,
                              $ce['embed_code'] ?: null, $ce['duration'] ?: null, $ce['intro_start'] ?: 0, $ce['intro_end'] ?: 0];
                     if ($ce['ep_id']) {
                         $upd_stmt->execute(array_merge($vals, [$ce['ep_id'], $id]));
@@ -365,7 +362,7 @@ function addEpisodeRow(data) {
             '<div><label>Intro tugashi</label><input type="number" min="0" max="3600" name="episodes[' + i + '][intro_end]" value="' + (data.intro_end || 0) + '"></div>' +
         '</div>' +
         '<div class="ep-type-toggle">' +
-            (['cloud', 'embed'].indexOf(data.video_type || 'cloud') === -1 ? '<input type="hidden" name="episodes[' + i + '][video_type]" value="' + (data.video_type || 'telegram') + '">' : '') +
+            (['cloud', 'embed'].indexOf(data.video_type || 'cloud') === -1 ? '<input type="hidden" name="episodes[' + i + '][video_type]" value="' + (data.video_type || 'cloud') + '">' : '') +
             '<label><input type="radio" name="episodes[' + i + '][video_type]" value="cloud" ' + ((!data.video_type || data.video_type === 'cloud') ? 'checked' : '') + ' onchange="epFieldSource(\'episodes\',' + i + ')"> Direct URL</label>' +
             '<label><input type="radio" name="episodes[' + i + '][video_type]" value="embed" ' + (data.video_type === 'embed' ? 'checked' : '') + ' onchange="epFieldSource(\'episodes\',' + i + ')"> Embed code</label>' +
         '</div>' +
@@ -380,7 +377,6 @@ function addEpisodeRow(data) {
             '</div>' +
             '<div><label>1080p URL (ixtiyoriy)</label><input type="text" name="episodes[' + i + '][video_url_1080p]" placeholder="https://...1080.mp4" value="' + (data.video_url_1080p || '') + '"></div>' +
             '<div><label>720p URL (ixtiyoriy)</label><input type="text" name="episodes[' + i + '][video_url_720p]" placeholder="https://...720.mp4" value="' + (data.video_url_720p || '') + '"></div>' +
-            (data.telegram_file_id ? '<input type="hidden" name="episodes[' + i + '][telegram_file_id]" value="' + data.telegram_file_id + '">' : '') +
         '</div>';
     epContainer.appendChild(row);
     epFieldSource('episodes', i);
@@ -408,7 +404,6 @@ addEpisodeRow({
     video_url: <?php echo json_encode($ep['video_url'] ?? ''); ?>,
     video_url_1080p: <?php echo json_encode($ep['video_url_1080p'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
     video_url_720p: <?php echo json_encode($ep['video_url_720p'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-    telegram_file_id: <?php echo json_encode($ep['telegram_file_id'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
     embed_code: <?php echo json_encode($ep['embed_code'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
     duration: <?php echo json_encode($ep['duration'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
     intro_start: <?php echo (int)($ep['intro_start'] ?? 0); ?>,

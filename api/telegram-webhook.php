@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $raw = file_get_contents('php://input');
 $update = json_decode($raw, true);
-if (!$update || empty($update['message'])) {
+if (!$update || (empty($update['message']) && empty($update['callback_query']))) {
     echo json_encode(['ok' => true]);
     exit;
 }

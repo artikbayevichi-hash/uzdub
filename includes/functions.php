@@ -867,6 +867,97 @@ function render_rutube_player($video_url, $player_id, $poster = null, $subs_html
     return build_video_player($player_id, '', $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true, $refresh);
 }
 
+// ===== Uqload (HLS) — toza HTML5 player =====
+// AniHub Uqload manbasi faqat uqload.is embed havolasini beradi. Haqiqiy video HLS
+// (m3u8) sahifadagi o'rama (packed) havolada yashiringan: https://uqload.is/e/C0DE
+// sahifasi ochilganda Dean Edwards packer'idagi jwplayer setup orqali ko'rsatiladi.
+// Manba turini provider nomiga emas, URL qismiga qarab taniymiz (uqload.is / uqload.vc).
+// Kod'ni Uqload embed yoki asosiy sahifasidan ajratib oladi.
+function uqload_parse_url($url) {
+    if (preg_match('#uqload\.(?:[a-z]{2,4})/(?:e/)?([a-z0-9]{6,20})#i', $url, $m)) return $m[1];
+    return null;
+}
+
+// Uqload packer'ini (Dean Edwards) PHP'da yechib, HLS havolasini va poster'ni chiqaradi.
+function uqload_depack($html, &$hls, &$image) {
+    $hls = '';
+    $image = '';
+    $start = strpos($html, "}('");
+    if ($start === false) return false;
+    if (!preg_match("#',(\d+),(\d+),'#", substr($html, $start), $t)) return false;
+    $base = (int)$t[1];
+    $count = (int)$t[2];
+    $trans = $start + strpos(substr($html, $start), "'," . $t[1] . "," . $t[2] . ",'");
+    $encoded = substr($html, $start + 3, $trans - ($start + 3));
+    $after = $trans + strlen("'," . $t[1] . "," . $t[2] . ",'");
+    $split = strpos($html, ".split('|')", $after);
+    if ($split === false) return false;
+    $k = explode('|', substr($html, $after, $split - $after));
+
+    $d = '0123456789abcdefghijklmnopqrstuvwxyz';
+    $p = $encoded;
+    for ($i = $count - 1; $i >= 0; $i--) {
+        if ($i >= count($k) || $k[$i] === '') continue;
+        $key = '';
+        $n = $i;
+        if ($n === 0) $key = '0';
+        else { while ($n > 0) { $key = $d[$n % 36] . $key; $n = (int)($n / 36); } }
+        $p = preg_replace('/\b' . preg_quote($key) . '\b/', $k[$i], $p);
+    }
+
+    if (preg_match('#sources:\s*\[\s*\{\s*file:\s*"([^"]+)"#i', $p, $fm)) $hls = $fm[1];
+    if (preg_match('#image:\s*"([^"]+)"#i', $p, $im)) $image = $im[1];
+    return $hls !== '';
+}
+
+// Uqload HLS havolasini oladi va keshlaydi. Token ~12 soat (e=43200) amal qiladi,
+// shuning uchun 10 soatda bir qayta so'raladi; keshlangan URL o'lsa player avtomatik
+// (data-hls-refresh) yangi havolani oladi. Qaytadi: ['url'=>..., 'image'=>..., 'ts'=>...].
+function uqload_resolve($video_url, $ttl_hours = 10) {
+    $code = uqload_parse_url($video_url);
+    if (!$code) return null;
+
+    $dir = vk_cache_dir();
+    $file = $dir ? $dir . '/uqload_' . $code . '.json' : null;
+    if ($file && is_file($file)) {
+        $c = @json_decode(@file_get_contents($file), true);
+        if (is_array($c) && !empty($c['url']) && isset($c['ts'])
+            && (time() - (int)$c['ts']) < $ttl_hours * 3600) {
+            return $c;
+        }
+    }
+
+    // Uqload TLD'lar (uqload.is) vaqtincha nomlanadi; ishonchli uqload.vc dan olamiz.
+    $page_url = 'https://uqload.vc/' . rawurlencode($code);
+    $ch = curl_init($page_url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 6,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        CURLOPT_HTTPHEADER => ['Accept-Language: en-US,en;q=0.9'],
+    ]);
+    $html = curl_exec($ch);
+    curl_close($ch);
+
+    if ($html === false || $html === '') return null;
+    $hls = '';
+    $image = '';
+    if (!uqload_depack($html, $hls, $image)) return null;
+
+    $result = ['url' => $hls, 'image' => $image ?: '', 'id' => $code, 'ts' => time()];
+    if ($file) {
+        if (!is_dir($dir)) @mkdir($dir, 0755, true);
+        @file_put_contents($file, json_encode($result));
+    }
+    return $result;
+}
+
+// Uqload HLS'ni o'z playerimizda (hls.js) ko'rsatadi. HLS havolasi hozircha topilmasa
+// ham iframe emas — o'z playerimiz chiqadi va token paydo bo'lishi bilanoq avtomatik
+// yuklanadi (data-hls-pending rejimi), token o'lsa data-hls-refresh yangisini oladi.
 // ===== Rumble (iframe embed) =====
 // Rumble'da watch sahifa ID'si va embed ID'si boshqa-boshqa bo'ladi
 // (masalan /v7dvvd6-...html sahifa, lekin embed /v7bpc7y/). Shuning uchun
@@ -1002,15 +1093,14 @@ function rumble_resolve_video($url, $ttl_hours = 24) {
 }
 
 // Rumble video'ni o'z playerimizda (hls.js) ko'rsatadi. CDN chunklist (HLS) topilsa —
-// stream.php (hls=1) orqali proksi qilinib o'z playerda ko'rsatiladi. Topilmasa
-// (video hali tayyor emas va h.k.) — eski iframe embed zaxira sifatida ishlatiladi.
+// to'g'ridan-to'g'ri CDN'dan olinadi (referrer o'chirilgan, server proxy ishtirok etmaydi).
+// Topilmasa (video hali tayyor emas va h.k.) — eski iframe embed zaxira sifatida ishlatiladi.
 function render_rumble_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
     $refresh = ROOT_URL . '/api/rumble-refresh.php?url=' . rawurlencode($video_url);
     $hls = rumble_resolve_video($video_url);
     if ($hls) {
-        $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($hls) . '&hls=1';
         // data-hls-refresh: keshlangan CDN URL muddati o'tsa player avtomatik yangi havola oladi
-        return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, true, true, null, true, $refresh);
+        return build_video_player($player_id, $hls, $poster, $subs_html, [], $intro_start, $intro_end, true, true, null, true, $refresh, 0, '', null, 'referrerpolicy="no-referrer"');
     }
 
     $src = rumble_embed_src($video_url);
@@ -1036,6 +1126,58 @@ function render_direct_video($video_url, $player_id, $poster = null, $subs_html 
     return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, $fallback);
 }
 
+// ===== Mover.uz (to'g'ridan-to'g'ri mp4 CDN) =====
+// Mover embed/watch konfigi quyidagi manbalarni beradi:
+//   "file":"[360p]https://v.mover.uz/<code>_m.mp4,[720p]https://v.mover.uz/<code>_h.mp4"
+// Shuning uchun orqa fon/proksi kerak emas — to'g'ridan-to'g'ri CDN URL ishlatamiz.
+
+function mover_parse_url($url) {
+    if (preg_match('#mover\.uz/(?:watch/|video/embed/)([a-z0-9]+)#i', (string)$url, $m)) {
+        return $m[1];
+    }
+    return null;
+}
+
+function render_mover_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    $code = mover_parse_url($video_url);
+    if (!$code) return null;
+    // Sinov natijasi: v.mover.uz faqat Referer bo'lsa 403 qaytaradi (Origin emas,
+    // boshlang'ich ham no-referer berilganda 200). Brauzer <video> media so'rovida
+    // referrerpolicy="no-referrer" bilan Referer yubormaydi — video millionlab
+    // ko'ruvchi uchun TO'G'RIDAN-DAN CDN'dan oqiladi, serverimiz yuklanmaydi.
+    // Agar nimadir xato bo'lsa data-fallback stream.php proxy'siga o'tadi.
+    $m_url = 'https://v.mover.uz/' . $code . '_m.mp4';
+    $h_url = 'https://v.mover.uz/' . $code . '_h.mp4';
+    // Poster (i.mover.uz) ham Referer'ga 403 beradi — poster'ni stream.php orqali
+    // yuklaymiz (faqat poster, video CDN'dan to'g'ridan-to'g'ri).
+    $poster = $poster ?: (ROOT_URL . '/stream.php?url=' . rawurlencode('https://i.mover.uz/' . $code . '_h2.jpg'));
+    $fallback = ROOT_URL . '/stream.php?url=' . rawurlencode($m_url);
+    $sources = ['720p' => $h_url, '360p' => $m_url];
+    return build_video_player($player_id, $m_url, $poster, $subs_html, $sources, $intro_start, $intro_end, false, true, $fallback, false, null, 0, '', null, 'referrerpolicy="no-referrer"');
+}
+
+// ===== Umumiy HLS (.m3u8) manba — o'z playerimizda =====
+// HLS havolasi ma'lum platformaga tegishli bo'lmasa ham to'g'ridan-to'g'ri hls.js
+// yordamida o'ynatiladi (CORS qo'llab-quvvatlansa). CORS bermasa keyinchalik
+// stream.php HLS proksi (translate &hls=1) orqali ulash mumkin.
+function is_hls_url($url) {
+    if (!preg_match('#^https?://#i', (string)$url)) return false;
+    return (bool)preg_match('~\.m3u8(?:[?#].*)?$~i', trim((string)$url));
+}
+
+function render_hls_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true);
+}
+
+// ===== Uqload =====
+// strm*.uqload.vc HLS'ini to'g'ridan-to'g'ri ham, PHP proxy orqali ham so'rash 403
+// qaytaradi — uqload faqat o'z sahifasi ichida oqimlaydi. Server yukini CDN'ga qoldirish
+// uchun uqload'ning o'z playeri (iframe) ishlatiladi: u o'z CDN'ida o'zi oqiladi.
+function render_uqload_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
+    if (!preg_match('#^https?://#i', $video_url)) return null;
+    return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" title="player"></iframe></div>';
+}
+
 // ===== Anibla.uz (to'g'ridan HLS) =====
 // Anibla.uz o'zining HLS proxy API si bor (anibla.uz/api/hls-proxy?url=...).
 // HLS URL to'g'ridan hls.js orqali ishlaydi — qo'shimcha proxy kerak emas.
@@ -1051,12 +1193,13 @@ function render_anibla_player($video_url, $player_id, $poster = null, $subs_html
     return build_video_player($player_id, $video_url, $poster, $subs_html, [], $intro_start, $intro_end, false, false, null, true);
 }
 
-// ===== OK.ru (toza HTML5 player) =====
-// OK.ru CDN URL lari IP bilan bog'langan (srcIp parametri). Shuning uchun
-// to'g'ridan CDN ishlamaydi — stream.php proxy orqali o'tkaziladi.
+// ===== OK.ru =====
+// OK.ru CDN URL lari IP bilan bog'langan (srcIp parametri) — brauzerda to'g'ridan-to'g'ri
+// o'ynamaydi, server proxy esa trafikni bizdan o'tkazardi (o'chirilgan). Shuning uchun
+// ok.ru'ning o'z playeri (iframe) ishlatiladi — u CDN'ida o'zi oqiladi.
 
 function okru_parse_url($url) {
-    if (preg_match('~https?://(?:www\.)?ok\.ru/(?:video|embed)/(\d+)~i', $url, $m)) {
+    if (preg_match('~https?://(?:www\.)?ok\.ru/(?:video|videoembed|embed)/(\d+)~i', $url, $m)) {
         return $m[1];
     }
     return null;
@@ -1118,19 +1261,20 @@ function okru_resolve($url, $ttl_hours = 24) {
 }
 
 function render_okru_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
-    $res = okru_resolve($video_url);
-    if ($res && !empty($res['url'])) {
-        $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($res['url']);
-        return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false);
-    }
-    return build_video_player($player_id, '', $poster, $subs_html, [], $intro_start, $intro_end, false, false);
+    // Ok.ru CDN havolalari IP'ga bog'lanadi — brauzerda to'g'ridan-to'g'ri o'ynamaydi,
+    // server proxy esa trafikni bizdan o'tkazardi. Server yukisiz ishlash uchun
+    // ok.ru'ning o'z playeri ishlatiladi (u video'ni o'z CDN'idan oqiladi).
+    $id = okru_parse_url($video_url);
+    if (!$id) return null;
+    return '<div class="player-wrap"><iframe src="https://ok.ru/videoembed/' . e($id) . '" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" title="player"></iframe></div>';
 }
 
 // ===== Odysee (toza HTML5 player) =====
 // Odysee o'z saytini iframe'da ochishga yo'l qo'ymaydi (frame blokirovkasi). Shuning uchun
 // video'ni to'g'ridan-to'g'ri mp4 streaming URL orqali O'Z playerimizda ko'rsatamiz.
 // Streaming URL Odysee JSON-RPC "get" methodidan olinadi (player.odycdn.com) va 48 soatga
-// keshlanadi. Odysee CDN Referer tekshiradi — shuning uchun stream.php proksi ishlatiladi.
+// keshlanadi. Odysee CDN Referer tekshiradi — Referer brauzerda o'chiriladi (referrerpolicy
+// = "no-referrer"), shu tariqa video to'g'ridan-to'g'ri CDN'dan o'z playerimizda oqiladi.
 
 // Odysee havolasidan kanal va claim nomini ajratadi.
 // Formatlar: https://odysee.com/@Kanal/Claim  yoki  https://odysee.com/Claim
@@ -1195,8 +1339,11 @@ function odysee_resolve_video($url, $ttl_hours = 48) {
 function render_odysee_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
     $stream = odysee_resolve_video($video_url);
     if (!$stream) return null;
-    $proxy = ROOT_URL . '/stream.php?url=' . rawurlencode($stream);
-    return build_video_player($player_id, $proxy, $poster, $subs_html, [], $intro_start, $intro_end, false, false);
+    // Odysee CDN (player.odycdn.com) Referer'ga qarab 403 beradi. Referer'ni brauzerda
+    // o'chiramiz (referrerpolicy="no-referrer") — video TO'G'RIDAN-DAN Odysee CDN'idan,
+    // O'Z playerimizda oqiladi (server yuki nol). Xatolik bo'lsa proxy zaxira vazifasida.
+    $fallback = ROOT_URL . '/stream.php?url=' . rawurlencode($stream);
+    return build_video_player($player_id, $stream, $poster, $subs_html, [], $intro_start, $intro_end, false, false, $fallback, false, null, 0, '', null, 'referrerpolicy="no-referrer"');
 }
 
 // VK, RuTube, Rumble, Odysee yoki to'g'ridan-to'g'ri video fayl bo'lsa — toza player qaytaradi, aks holda null
@@ -1207,7 +1354,10 @@ function render_clean_video_if_possible($video_url, $player_id, $poster = null, 
     if (rumble_parse_url($video_url)) return render_rumble_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (odysee_parse_url($video_url)) return render_odysee_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (okru_parse_url($video_url)) return render_okru_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (uqload_parse_url($video_url)) return render_uqload_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (anibla_parse_url($video_url)) return render_anibla_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (mover_parse_url($video_url)) return render_mover_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
+    if (is_hls_url($video_url)) return render_hls_player($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     if (is_direct_video_url($video_url)) return render_direct_video($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end);
     return null;
 }
@@ -1269,16 +1419,12 @@ function login_clear_attempts($pdo, $identifier) {
     $pdo->prepare("DELETE FROM login_attempts WHERE identifier = ?")->execute([$identifier]);
 }
 
-// ===== Telegram video havolasini stream proxy URL ga aylantirish =====
 // ===== Video oqim URL — barcha turdagi manbalar uchun yagona yo'l =====
-// Nisbiy fayl (uploads/videos/...), mutlaq http(s) havola yoki Telegram
-// file_path (tg:...) → stream.php proksi havolasiga aylantiradi.
+// Nisbiy fayl (uploads/videos/...) yoki mutlaq http(s) havola →
+// stream.php proksi havolasiga aylantiradi. (Faqat o'z serverimizdagi fayllar uchun.)
 function resolve_video_stream_url($video_url, $base_path = 'uploads/videos/') {
     $v = trim((string)$video_url);
     if ($v === '') return null;
-    if (strpos($v, 'tg:') === 0) {
-        return ROOT_URL . '/stream.php?tg=' . urlencode(substr($v, 3));
-    }
     if (preg_match('#^https?://#i', $v)) {
         return ROOT_URL . '/stream.php?url=' . urlencode($v);
     }
@@ -1286,28 +1432,14 @@ function resolve_video_stream_url($video_url, $base_path = 'uploads/videos/') {
 }
 
 // ===== URL'ga qarab video_type tanlash (bot/admin URL bilan qo'shganda) =====
-// tg: (Telegram fayli) -> telegram; mashhur platformalar va to'g'ridan-to'g'ri mp4 -> cloud
-// (o'z playerida, to'g'ridan-to'g'ri CDN — minglab tomoshabin uchun yaxshi);
-// qolgan https havolalar -> file (stream.php proksi orqali).
+// Mashhur platformalar va to'g'ridan-to'g'ri mp4 -> cloud (o'z playerida, to'g'ridan-to'g'ri
+// CDN — minglab tomoshabin uchun yaxshi); qolgan https havolalar -> file (stream.php proksi).
 function video_type_for_url($url) {
     $u = (string)$url;
-    if (strpos($u, 'tg:') === 0) return 'telegram';
-    if (vk_parse_url($u) || sibnet_parse_url($u) || rutube_parse_url($u) || rumble_parse_url($u) || odysee_parse_url($u) || okru_parse_url($u) || anibla_parse_url($u) || is_direct_video_url($u)) {
+    if (vk_parse_url($u) || sibnet_parse_url($u) || rutube_parse_url($u) || rumble_parse_url($u) || odysee_parse_url($u) || okru_parse_url($u) || anibla_parse_url($u) || mover_parse_url($u) || is_direct_video_url($u)) {
         return 'cloud';
     }
     return 'file';
-}
-
-// ===== Telegram havolasini saqlashga tayyorlash =====
-// api.telegram.org/file/bot<TOKEN>/<path> -> tg:<path> (token serverda qoladi)
-// qolgan barcha https havolalar o'zicha saqlanadi
-function telegram_normalize_url($url) {
-    $u = trim((string)$url);
-    if ($u === '') return null;
-    if (preg_match('#^https?://api\.telegram\.org/file/bot[^/]+/(.+)$#i', $u, $m)) {
-        return 'tg:' . $m[1];
-    }
-    return $u;
 }
 
 // ===== Poster ko'rsatish =====
@@ -1426,7 +1558,7 @@ function download_poster($url, $target_dir) {
 }
 
 // ===== Video player (subtitrlar bilan) =====
-// $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar (file/telegram uchun)
+// $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar (file uchun)
 // $intro_start / $intro_end: o'tkazib yuboriladigan intro oralig'i (soniyada) — "Skip Intro" tugmasi uchun
 function render_player($video_type, $video_url, $base_path = 'uploads/videos/', array $subtitles = [], $player_id = 'mainVideo', $poster = null, array $sources = [], $intro_start = 0, $intro_end = 0, $resume_at = 0, $title = '', $next = null) {
     $subs_html = '';
@@ -1440,21 +1572,29 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/', 
     if ($video_type === 'cloud') {
         $clean = render_clean_video_if_possible($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end, $sources);
         if ($clean) return $clean;
+        // Taninmagan platforma — server proxy ishlatilmaydi, provider iframe qaytariladi
+        // (video ichida o'z CDN'idan oqiladi, bizning server yuklanmaydi).
+        if (preg_match('#^https?://#i', $video_url)) {
+            return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe></div>';
+        }
         return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen></iframe></div>';
     } elseif ($video_type === 'embed') {
         if (preg_match('#^https?://#i', $video_url)) {
             $clean = render_clean_video_if_possible($video_url, $player_id, $poster, $subs_html, $intro_start, $intro_end, $sources);
             if ($clean) return $clean;
-            return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>';
+            return '<div class="player-wrap"><iframe src="' . e($video_url) . '" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe></div>';
         }
         // Embed code (iframe tegi) ichidagi VK/direct video havolasini ham toza playerda ko'rsatamiz
         if (preg_match('#<iframe[^>]+src=["\']([^"\']+)["\']#i', $video_url, $m)) {
             $inner = html_entity_decode($m[1]);
             $clean = render_clean_video_if_possible($inner, $player_id, $poster, $subs_html, $intro_start, $intro_end, $sources);
             if ($clean) return $clean;
+            if (preg_match('#^https?://#i', $inner)) {
+                return '<div class="player-wrap"><iframe src="' . e($inner) . '" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe></div>';
+            }
         }
         return '<div class="player-wrap">' . $video_url . '</div>';
-    } elseif ($video_type === 'file' || $video_type === 'telegram') {
+    } elseif ($video_type === 'file') {
         $stream_url = resolve_video_stream_url($video_url, $base_path);
         if ($stream_url) {
             return build_video_player($player_id, $stream_url, $poster, $subs_html, $sources, $intro_start, $intro_end, true, true, null, false, null, $resume_at, $title, $next);
@@ -1467,13 +1607,14 @@ function render_player($video_type, $video_url, $base_path = 'uploads/videos/', 
 // ===== HTML5 video player (yagona, xatolik fallback bilan) =====
 // $sources: ['1080p' => url, '720p' => url] — ixtiyoriy sifatli manbalar
 // $intro_start / $intro_end: o'tkazib yuboriladigan intro oralig'i (soniyada) — "Skip Intro" tugmasi uchun
-function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '', array $sources = [], $intro_start = 0, $intro_end = 0, $crossorigin = true, $autoplay = true, $fallback_url = null, $hls = false, $hls_refresh = null, $resume_at = 0, $title = '', $next = null) {
+function build_video_player($player_id, $stream_url, $poster = null, $subs_html = '', array $sources = [], $intro_start = 0, $intro_end = 0, $crossorigin = true, $autoplay = true, $fallback_url = null, $hls = false, $hls_refresh = null, $resume_at = 0, $title = '', $next = null, $video_attrs = '') {
     $intro_start = max(0, (int)$intro_start);
     $intro_end = max(0, (int)$intro_end);
     // Custom (anibla-style) player. Barcha UI/JS: js/player.js da.
     // video elemanti: data-hls / data-hls-pending / data-hls-refresh / data-fallback
     // attribute'lari orqali konfiguratsiya oladi.
-    $attrs = 'playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false"';
+    $attrs = 'playsinline preload="auto" controlsList="nodownload" oncontextmenu="return false"';
+    if ($video_attrs !== '') $attrs .= ' ' . trim($video_attrs);
     if ($crossorigin) $attrs .= ' crossorigin="anonymous"';
     if ($poster) $attrs .= ' poster="' . e($poster) . '"';
     if ($fallback_url) $attrs .= ' data-fallback="' . e($fallback_url) . '"';
@@ -1658,7 +1799,13 @@ function og_meta_tags(string $title, string $description = '', ?string $image = 
 
 // ===== Avatar URL =====
 function avatar_url($avatar, $base = ROOT_URL . '/') {
-    if ($avatar) return $base . 'uploads/avatars/' . e($avatar);
+    if ($avatar) {
+        // To'liq URL (http/https) yoki "//" bilan boshlansa — to'g'ridan-to'g'ri qaytaramiz
+        if (strpos($avatar, 'http://') === 0 || strpos($avatar, 'https://') === 0 || strpos($avatar, '//') === 0) {
+            return e($avatar);
+        }
+        return $base . 'uploads/avatars/' . e($avatar);
+    }
     return $base . 'assets/default-avatar.svg';
 }
 
@@ -2133,6 +2280,80 @@ function video_source_log_and_notify($episode_id, $content_id, $source_type, $vi
     }
 }
 
+// Joriy foydalanuvchi uchun "yangi" belgisi holatini bitta so'rov bilan oladi.
+// since — oxirgi tashrifdan oldingi qo'shilish bazasi (users.new_since)
+// seen  — foydalanuvchi ochgan kontentlar (content_id => seen_at)
+function user_new_state(): array {
+    static $state = null;
+    if ($state !== null) return $state;
+
+    $state = ['since' => null, 'seen' => []];
+    if (!is_user()) return $state;
+
+    global $pdo;
+    $uid = (int)$_SESSION['user_id'];
+    if ($uid <= 0 || empty($pdo)) return $state;
+
+    try {
+        $st = $pdo->prepare("SELECT new_since FROM users WHERE id = ?");
+        $st->execute([$uid]);
+        $since = $st->fetchColumn();
+
+        // Baza yo'q bo'lsa (yangi foydalanuvchi / eski hisob) — oxirgi 7 kun
+        if (empty($since)) $since = date('Y-m-d H:i:s', time() - 7 * 86400);
+        $state['since'] = $since;
+
+        $s = $pdo->prepare("SELECT content_id, seen_at FROM user_content_new_seen WHERE user_id = ?");
+        $s->execute([$uid]);
+        while ($row = $s->fetch(PDO::FETCH_ASSOC)) {
+            $state['seen'][(int)$row['content_id']] = $row['seen_at'];
+        }
+    } catch (PDOException $e) {}
+
+    return $state;
+}
+
+// Karta uchun "YANGI" / "YANGI QISM" yorlig'ini hisoblaydi (har bir foydalanuvchi uchun ayrim).
+// Foydalanuvchi oxirgi tashrifidan keyin qo'shilgan va hali ochmagan kontent "YANGI",
+// anime'da esa oxirgi qism foydalanuvchi oxirgi ochganidan keyin qo'shilgan bo'lsa "YANGI QISM".
+function content_new_label(array $item, array $extra = []): string {
+    $state = user_new_state();
+    $since = $state['since'];
+    if (empty($since)) return '';
+
+    $cid = (int)($item['id'] ?? 0);
+    if ($cid <= 0) return '';
+
+    $is_anime = (int)($extra['category_id'] ?? ($item['category_id'] ?? 0)) === 2;
+    $seen_at = $state['seen'][$cid] ?? null;
+
+    if ($is_anime) {
+        $last_ep = $extra['last_ep_created_at'] ?? null;
+        if (empty($last_ep)) {
+            global $pdo;
+            if (!empty($pdo)) {
+                try {
+                    $st = $pdo->prepare("SELECT MAX(created_at) FROM episodes WHERE content_id = ?");
+                    $st->execute([$cid]);
+                    $last_ep = $st->fetchColumn();
+                } catch (PDOException $e) {}
+            }
+        }
+        $ep_ts = strtotime($last_ep ?? '');
+        if ($ep_ts) {
+            $ref = strtotime($since);
+            if ($seen_at) $ref = max($ref, strtotime($seen_at));
+            if ($ep_ts > $ref) return 'YANGI QISM';
+        }
+    }
+
+    if (empty($seen_at) && !empty($item['created_at']) && strtotime($item['created_at']) > strtotime($since)) {
+        return 'YANGI';
+    }
+
+    return '';
+}
+
 function render_card(array $item, array $extra = []): string {
     $id      = (int)$item['id'];
     $title   = e(t_title($item));
@@ -2155,6 +2376,13 @@ function render_card(array $item, array $extra = []): string {
 
     // 1) Tepa-CHAP: Yosh chegarasi (ko'k) — barcha kartalarda
     $badges .= '<span class="card-b age">' . e($age) . '</span>';
+
+    // 1.1) Yangi qo'shilgan kontent / yangi qism (24 soat ichida) — pastki qismda (yil va status o'rtasida)
+    $new_badge = '';
+    $new_label = content_new_label($item, $extra);
+    if ($new_label) {
+        $new_badge = '<span class="card-b new">' . e($new_label) . '</span>';
+    }
 
     // 2) Tepa-MARKAZ: Ep badge (faqat anime, epizodli kontent)
     if ($is_anime && !empty($extra['total_episodes'])) {
@@ -2200,6 +2428,7 @@ function render_card(array $item, array $extra = []): string {
           . '<img src="' . $poster . '" alt="' . $title . '" loading="lazy">'
           . '<div class="card-badges">' . $badges . '</div>'
           . $status_badge
+          . $new_badge
           . '<div class="card-info">'
           . '<h3>' . $title . '</h3>'
           . '<div class="card-meta">'

@@ -70,7 +70,7 @@ if ($action === 'finalize') {
     unset($_SESSION['2fa_pending_id'], $_SESSION['login_approval_token'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_redirect'], $_SESSION['2fa_show_totp']);
 
     login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
-    $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+    $pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
     check_premium_expiry($pdo, $user['id']);
     refresh_user_session($pdo, $user['id']);
     session_regenerate_id(true);

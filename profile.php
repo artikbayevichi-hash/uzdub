@@ -305,6 +305,7 @@ if (isset($_GET['ajax_tab']) && isset($_GET['uid'])) {
                 fetch(saveSettingsUrl,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
                 .then(function(r){return r.json();})
                 .then(function(d){
+                    if(d.ok===false){if(window.showToast)showToast(d.msg||d.error||'Xatolik','error');return;}
                     if(d.error){if(window.showToast)showToast(d.error,'error');return;}
                     if(d.avatar_url){document.getElementById('rbxAvatarImg').src=d.avatar_url;}
                     if(window.showToast)showToast(d.message||'Saqlandi','success');
@@ -1012,12 +1013,16 @@ if ($is_own && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $resp = ['ok' => true, 'msg' => ''];
     if (!empty($_FILES['avatar']['tmp_name'])) {
-        $av = upload_file('avatar', __DIR__ . '/uploads/avatars/', ['jpg','jpeg','png','webp','gif'], ['image/jpeg','image/png','image/webp','image/gif']);
+        require_once __DIR__ . '/includes/imgbb.php';
+        $av = imgbb_upload_avatar($_FILES['avatar']);
         if ($av) {
             $pdo->prepare("UPDATE users SET avatar=? WHERE id=?")->execute([$av, $profile_user['id']]);
             $profile_user['avatar'] = $av;
-            $resp['avatar_url'] = ROOT_URL . '/uploads/avatars/' . $av;
+            $resp['avatar_url'] = $av;
             $resp['msg'] .= t('avatar_updated') . ' ';
+        } else {
+            $resp['ok'] = false;
+            $resp['msg'] .= t('upload_error') . ' ';
         }
     }
     $new_username = trim($_POST['new_username'] ?? '');
@@ -1232,32 +1237,27 @@ include __DIR__ . '/includes/header.php';
 
 <div class="profile-stats-grid">
     <div class="stat-card">
-        <div class="stat-icon">📊</div>
+        <div class="stat-icon watched-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
         <div class="stat-value"><?php echo number_format($stat_watched_count); ?></div>
         <div class="stat-label"><?php echo t('watched'); ?></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">⭐</div>
-        <div class="stat-value"><?php echo number_format($stat_ratings_count); ?></div>
-        <div class="stat-label"><?php echo t('ratings'); ?></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
+        <div class="stat-icon time-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="stat-value" id="liveTotalTime"><?php echo $stat_watch_hours > 0 ? $stat_watch_hours . t('hours_abbrev') . $stat_watch_mins . t('minutes_abbrev_short') : ($stat_watch_mins > 0 ? $stat_watch_mins . t('minutes_abbrev_short') : '0' . t('minutes_abbrev_short')); ?></div>
         <div class="stat-label"><?php echo t('total_time'); ?></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">🔥</div>
-        <div class="stat-value"><?php echo $stat_streak; ?></div>
-        <div class="stat-label"><?php echo t('streak'); ?> (<?php echo $stat_streak_record; ?><?php echo t('records'); ?></div>
+        <div class="stat-icon streak-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="stat-value"><?php echo $stat_streak; ?> <span class="stat-unit"><?php echo t('records'); ?></span></div>
+        <div class="stat-label"><?php echo t('streak'); ?> (<?php echo $stat_streak_record; ?>)</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">❤️</div>
+        <div class="stat-icon fav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div class="stat-value"><?php echo number_format($stat_favorites_count); ?></div>
         <div class="stat-label"><?php echo t('favorites'); ?></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">💬</div>
+        <div class="stat-icon comment-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <div class="stat-value"><?php echo number_format($stat_comments_count); ?></div>
         <div class="stat-label"><?php echo t('comments'); ?></div>
     </div>

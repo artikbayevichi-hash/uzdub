@@ -23,6 +23,27 @@ function anihub_fetch($url) {
     return $body ?: null;
 }
 
+// SSR (sayt) sahifasidan mover/sibnet source'larini epizod raqamiga bog'lab olish
+function anihub_parse_ssr_links($html) {
+    $out = [];
+    if (!$html) return $out;
+    $patterns = [
+        'mover'  => 'mover\.uz\/video\/embed\/[A-Za-z0-9]+',
+        'sibnet' => 'sibnet[^"\\\\]*',
+    ];
+    foreach ($patterns as $prov => $pat) {
+        preg_match_all('/episode_number\\\\":(\d+).{0,1400}?(' . $pat . ')/', $html, $m, PREG_SET_ORDER);
+        foreach ($m as $p) {
+            $ep = (int)$p[1];
+            $raw = $p[2];
+            $url = (strpos($raw, 'http') === 0) ? $raw : 'https://' . $raw;
+            if ($ep <= 0 || !$url) continue;
+            $out[$ep][] = ['provider' => $prov, 'url' => $url];
+        }
+    }
+    return $out;
+}
+
 // Anime qidirish
 $search_query = trim($_GET['q'] ?? '');
 $anime_data = null;
@@ -46,6 +67,12 @@ if ($selected_anime_id) {
         $resp = @json_decode($json, true);
         if (!empty($resp['data']['anime'])) {
             $episodes_data = $resp['data']['anime'];
+            // SSR sahifadan ham mover/sibnet manbalarini olish (API ularni qaytarmasligi mumkin)
+            $slug = $episodes_data['slug'] ?? '';
+            if ($slug) {
+                $ssr_html = anihub_fetch("https://www.anihub.top/anime/$selected_anime_id-$slug");
+                $ssr_links = anihub_parse_ssr_links($ssr_html);
+            }
         }
     }
 }
@@ -64,6 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_content_id'], 
                 $kind = $ep['kind'] ?? 'ovoz';
                 if ($ep_num <= 0 || !$source_url) { $skipped++; continue; }
 
+                // Mover embed manbasini to'g'ridan-to'g'ri mp4 ga aylantiramiz
+                // (iframe o'rniga HTML5 player'da ishonchli ko'rinishi uchun).
+                $video_type = 'embed';
+                if (preg_match('#mover\.uz/video/embed/([A-Za-z0-9]+)#i', $source_url, $mm)) {
+                    $source_url = 'https://v.mover.uz/' . $mm[1] . '_m.mp4';
+                    $video_type = 'cloud';
+                }
+
                 // mavjud epizodni topish
                 $stmt = $pdo->prepare("SELECT id, video_url FROM episodes WHERE content_id = ? AND episode_number = ?");
                 $stmt->execute([$content_id, $ep_num]);
@@ -72,17 +107,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_content_id'], 
                 if ($existing) {
                     // Faqat agar URL o'zgargan bo'lsa yangilash
                     if ($existing['video_url'] !== $source_url) {
-                        $upd = $pdo->prepare("UPDATE episodes SET video_url = ?, video_type = 'embed' WHERE id = ?");
-                        $upd->execute([$source_url, $existing['id']]);
+                        $upd = $pdo->prepare("UPDATE episodes SET video_url = ?, video_type = ? WHERE id = ?");
+                        $upd->execute([$source_url, $video_type, $existing['id']]);
                         $imported++;
                     } else {
                         $skipped++;
                     }
                 } else {
                     // Yangi epizod yaratish
-                    $ins = $pdo->prepare("INSERT INTO episodes (content_id, episode_number, season, video_url, video_type, title) VALUES (?, ?, 1, ?, 'embed', ?)");
-                    $title = $kind === 'sub' ? "Episode $ep_num (Sub)" : "Episode $ep_num";
-                    $ins->execute([$content_id, $ep_num, $source_url, $title]);
+                    $ins = $pdo->prepare("INSERT INTO episodes (content_id, episode_number, season, video_url, video_type, title) VALUES (?, ?, 1, ?, ?, '')");
+                    $ins->execute([$content_id, $ep_num, $source_url, $video_type]);
                     $imported++;
                 }
             }
@@ -126,8 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_content_id'], 
 
 <?php if ($episodes_data): ?>
 <?php
-    // DB'dagi content lar ro'yxatini olish
-    $contents = $pdo->query("SELECT id, title FROM content ORDER BY title")->fetchAll();
+    // DB'dagi content lar ro'yxatini olish (qidiruv uchun)
+    $contents = $pdo->query("SELECT id, title, title_ru, title_en FROM content ORDER BY title")->fetchAll();
     $anime = $episodes_data;
     $anime_id = $selected_anime_id;
     $anime_title = $anime['title_uz'] ?: $anime['title_en'];
@@ -140,32 +174,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_content_id'], 
     <form method="post" id="importForm">
         <?php echo csrf_input(); ?>
         <div style="margin:12px 0;">
-            <label><strong>Uzdub kontentini tanlang:</strong></label>
-            <select name="import_content_id" required style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);min-width:300px;">
-                <option value="">— Kontent tanlang —</option>
-                <?php foreach ($contents as $c): ?>
-                <option value="<?php echo $c['id']; ?>"><?php echo e($c['title']); ?> (#<?php echo $c['id']; ?>)</option>
-                <?php endforeach; ?>
-            </select>
+            <label><strong>Uzdub kontentini qidirib tanlang:</strong></label>
+            <input type="text" id="contentSearch" placeholder="Kontent nomini yozing... (masalan: Naruto)" autocomplete="off" style="margin-top:6px;width:100%;box-sizing:border-box;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);">
+            <div id="contentResults" style="margin-top:8px;max-height:260px;overflow-y:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;display:none;"></div>
+            <input type="hidden" name="import_content_id" id="importContentId" required>
+            <div id="contentSelected" style="margin-top:8px;display:none;padding:8px 12px;border-radius:8px;background:rgba(76,175,80,.12);border:1px solid rgba(76,175,80,.4);"></div>
         </div>
 
         <div style="margin:12px 0;max-height:400px;overflow-y:auto;">
             <table>
                 <tr><th>Qism</th><th>Manba URL</th><th>Turi</th><th>Sifat</th><th></th></tr>
                 <?php
+                $ssr_links = $ssr_links ?? [];
                 $import_items = [];
+                $added = [];
                 foreach ($anime['episodes'] ?? [] as $ep) {
+                    $ep_num = (int)$ep['episode_number'];
+                    // 1) API manbalaridan reklamasiz resolve bo'ladiganlarni olish:
+                    //    Sibnet, Mover, VK (video_ext), OK.ru — hammasi UZDUB player'ida HTML5 mp4 qilib ko'rsatiladi.
                     foreach ($ep['sources'] ?? [] as $src) {
                         $provider = strtolower(trim($src['provider'] ?? ''));
                         $url = $src['url'] ?? '';
-                        // Faqat Sibnet manbalarini qabul qilish
-                        if ($provider !== 'sibnet' && strpos($url, 'sibnet') === false) continue;
+                        $is_sibnet  = $provider === 'sibnet'  || strpos($url, 'sibnet')  !== false;
+                        $is_mover   = $provider === 'mover'   || strpos($url, 'mover')   !== false;
+                        $is_vk      = $provider === 'vk'      || strpos($url, 'vk.com/video_ext') !== false || strpos($url, 'vkvideo.ru/video_ext') !== false;
+                        $is_okru    = $provider === 'ok'      || strpos($url, 'ok.ru') !== false;
+                        $is_uqload  = $provider === 'uqload'  || strpos($url, 'uqload.') !== false;
+                        $is_dood    = $provider === 'doodstream' || $provider === 'dood' || strpos($url, 'dood') !== false || strpos($url, 'd000d') !== false;
+                        if (!$is_sibnet && !$is_mover && !$is_vk && !$is_okru && !$is_uqload && !$is_dood) continue;
+                        if (isset($added[$ep_num][$url])) continue;
+                        $added[$ep_num][$url] = true;
                         $import_items[] = [
-                            'episode_number' => $ep['episode_number'],
+                            'episode_number' => $ep_num,
                             'source_url' => $url,
                             'kind' => $src['kind'] ?? 'ovoz',
                             'quality' => $src['quality'] ?? '',
                             'provider' => $provider,
+                        ];
+                    }
+                    // 2) SSR sahifadan topilgan Mover/Sibnet manbalari
+                    foreach ($ssr_links[$ep_num] ?? [] as $link) {
+                        if (isset($added[$ep_num][$link['url']])) continue;
+                        $added[$ep_num][$link['url']] = true;
+                        $import_items[] = [
+                            'episode_number' => $ep_num,
+                            'source_url' => $link['url'],
+                            'kind' => 'ovoz',
+                            'quality' => '',
+                            'provider' => $link['provider'],
                         ];
                     }
                 }
@@ -191,6 +247,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_content_id'], 
 </div>
 
 <script>
+// Uzdub kontentlari qidiruv tizimi
+var CONTENTS = <?php echo json_encode($contents, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE); ?>;
+var contentSearch = document.getElementById('contentSearch');
+var contentResults = document.getElementById('contentResults');
+var contentSelected = document.getElementById('contentSelected');
+var contentId = document.getElementById('importContentId');
+
+function escHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+}
+
+function renderContentResults(q) {
+    q = (q || '').toLowerCase().trim();
+    var list = [];
+    if (q.length >= 1) {
+        list = CONTENTS.filter(function(c) {
+            var ok = false;
+            if ((c.title || '').toLowerCase().indexOf(q) !== -1) ok = true;
+            if ((c.title_ru || '').toLowerCase().indexOf(q) !== -1) ok = true;
+            if ((c.title_en || '').toLowerCase().indexOf(q) !== -1) ok = true;
+            if (/^\d+$/.test(q) && String(c.id) === q) ok = true;
+            return ok;
+        });
+    }
+    list = list.slice(0, 30);
+    contentResults.innerHTML = '';
+    if (!list.length) {
+        contentResults.style.display = 'block';
+        contentResults.innerHTML = '<div style="padding:10px;opacity:.7;">' + (q ? 'Hech narsa topilmadi' : 'Nomini yozing...') + '</div>';
+        return;
+    }
+    list.forEach(function(c) {
+        var d = document.createElement('div');
+        d.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06);';
+        d.innerHTML = escHtml(c.title) + ' <small style="opacity:.5;">(#' + c.id + ')</small>';
+        d.onmouseover = function(){ d.style.background='rgba(33,150,243,.12)'; };
+        d.onmouseout = function(){ d.style.background='transparent'; };
+        d.onclick = function(){
+            contentId.value = c.id;
+            contentResults.style.display = 'none';
+            contentSearch.value = c.title;
+            contentSelected.style.display = 'block';
+            contentSelected.innerHTML = '✅ Tanlandi: <strong>' + escHtml(c.title) + '</strong> (#' + c.id + ') <span style="cursor:pointer;margin-left:10px;color:#ef5350;" onclick="clearSelected()">&#10005; bekor qilish</span>';
+        };
+        contentResults.appendChild(d);
+    });
+    contentResults.style.display = 'block';
+}
+
+function clearSelected() {
+    contentId.value = '';
+    contentSearch.value = '';
+    contentSelected.style.display = 'none';
+    renderContentResults('');
+}
+
+contentSearch.addEventListener('input', function() {
+    contentResults.style.display = 'block';
+    renderContentResults(this.value);
+});
+document.addEventListener('click', function(e) {
+    if (!contentResults.contains(e.target) && e.target !== contentSearch) {
+        contentResults.style.display = 'none';
+    }
+});
+
 function prepareImport() {
     var items = [];
     document.querySelectorAll('.ep-check:checked').forEach(function(cb) {

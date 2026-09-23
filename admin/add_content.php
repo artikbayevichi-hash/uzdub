@@ -130,14 +130,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Nomi (Inglizcha)</label>
     <input type="text" name="title_en" placeholder="English title">
 
-    <label class="regular-only">Tavsif</label>
-    <textarea name="description" class="regular-only"></textarea>
+    <label>Tavsif</label>
+    <textarea name="description"></textarea>
 
-    <label class="regular-only">Tavsif (Ruscha)</label>
-    <textarea name="description_ru" class="regular-only" placeholder="Описание на русском"></textarea>
+    <label>Tavsif (Ruscha)</label>
+    <textarea name="description_ru" placeholder="Описание на русском"></textarea>
 
-    <label class="regular-only">Tavsif (Inglizcha)</label>
-    <textarea name="description_en" class="regular-only" placeholder="Description in English"></textarea>
+    <label>Tavsif (Inglizcha)</label>
+    <textarea name="description_en" placeholder="Description in English"></textarea>
 
     <label class="regular-only">Kategoriya *</label>
     <select name="category_id" class="regular-only" required>

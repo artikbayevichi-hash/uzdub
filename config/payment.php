@@ -4,7 +4,6 @@ require_once __DIR__ . '/env.php';
 define('CARD_NUMBER', env('CARD_NUMBER', '8600XXXX0000XXXX'));
 define('CARD_OWNER', env('CARD_OWNER', 'UZDUB PLATFORM'));
 define('TG_BOT_TOKEN', env('TG_BOT_TOKEN', ''));
-define('TG_ADMIN_BOT_TOKEN', env('TG_ADMIN_BOT_TOKEN', ''));
 define('TG_CHAT_ID', env('TG_CHAT_ID', 'YOUR_CHAT_ID'));
 define('TG_2FA_BOT_TOKEN', env('TG_2FA_BOT_TOKEN', ''));
 define('TG_2FA_BOT_USERNAME', env('TG_2FA_BOT_USERNAME', 'UZDUB_2FA_BOT'));
@@ -159,6 +158,23 @@ function tg_send_photo($photo_path, $caption = '') {
     ]);
     $result = curl_exec($ch);
     curl_close($ch);
+    return $result;
+}
+
+/**
+ * Remote (URL) rasmdagi chegni Telegram'ga yuboradi.
+ * Rasm milliy diskda saqlanmasdan vaqtinchalik yuklab olinadi va yuboriladi.
+ */
+function tg_send_remote_photo($url, $caption = '') {
+    if (TG_CHAT_ID === 'YOUR_CHAT_ID' || !TG_BOT_TOKEN) return false;
+    $tmp = tempnam(sys_get_temp_dir(), 'uzdub_') . '.jpg';
+    $fp  = @fopen($url, 'rb');
+    if (!$fp) { @unlink($tmp); return false; }
+    file_put_contents($tmp, stream_get_contents($fp));
+    fclose($fp);
+    if (!filesize($tmp) || filesize($tmp) < 10) { @unlink($tmp); return false; }
+    $result = tg_send_photo($tmp, $caption);
+    @unlink($tmp);
     return $result;
 }
 

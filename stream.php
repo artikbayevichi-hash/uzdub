@@ -6,7 +6,6 @@
  *
  * Parametrlar:
  *   ?url=<https://...>  — istalgan http/https video URL
- *   ?tg=<file_path>     — Telegram Bot API file_path (token server tomonda, URL da yo'q)
  *
  * Xavfsizlik: SSRF himoyasi — barcha DNS yozuvlari (A/AAAA) tekshiriladi,
  * shaxsiy/reserved IP'lar bloklanadi, redirect'lar har qadamda qayta tekshiriladi.
@@ -50,27 +49,9 @@ if ($stream_user === 0) {
 // bloklanib qoladi.
 if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
-$tg = trim($_GET['tg'] ?? '');
 $url = trim($_GET['url'] ?? '');
-$tgCandidates = [];
 
-if ($tg !== '') {
-    $tokens = [];
-    if (TG_ADMIN_BOT_TOKEN) $tokens[] = TG_ADMIN_BOT_TOKEN;
-    if (TG_BOT_TOKEN && TG_BOT_TOKEN !== TG_ADMIN_BOT_TOKEN) $tokens[] = TG_BOT_TOKEN;
-    if (!$tokens) {
-        http_response_code(500);
-        die('Telegram bot token sozlanmagan');
-    }
-    if (strpos($tg, '..') !== false || strpos($tg, '\\') !== false || preg_match('#^/#', $tg)) {
-        http_response_code(403);
-        die('Access denied');
-    }
-    foreach ($tokens as $tok) {
-        $tgCandidates[] = 'https://api.telegram.org/file/bot' . $tok . '/' . ltrim($tg, '/');
-    }
-    $url = $tgCandidates[0];
-} elseif ($url === '') {
+if ($url === '') {
     http_response_code(400);
     die('Missing url parameter');
 }
@@ -88,8 +69,8 @@ if (!preg_match('#^https?://#i', $url)) {
 }
 
 // ================= SSRF himoyasi =================
-// Loopback (127.0.0.1) faqat .env da ALLOW_LOOPBACK_STREAM=true bo'lsa ruxsat (Telegram yuklab
-// oluvchi server shu kompyuterda ishlaganda). Sukut bo'yicha YOPIQ.
+// Loopback (127.0.0.1) faqat .env da ALLOW_LOOPBACK_STREAM=true bo'lsa ruxsat.
+// Sukut bo'yicha YOPIQ.
 $allow_loopback = env('ALLOW_LOOPBACK_STREAM', 'false') !== 'false';
 
 function stream_is_private_ip(string $ip, bool $allow_loopback): bool {
@@ -305,13 +286,7 @@ if ($hls) {
     exit;
 }
 
-// Get file info — birinchi ishlaydigan token (admin bot, so'ng video bot)
-// DIQQAT: /dl/<msg_id> havolasi birinchi marta ochilganda video hali diskka
-// yuklab olinayotgan bo'lishi mumkin (bot avval yuklab bo'lgach link beradi,
-// lekin eski/avtomatik havolalarda yuklash hozir boshlanadi). Probe muvaffaq
-// bo'lmaguncha bir necha marta KUTIB qayta urinamiz — aks holda "Video
-// yuklanmadi" xatosi chiqib qolardi (probe 502 qaytaradi).
-$candidates = $tgCandidates ?: [$url];
+$candidates = [$url];
 $probe = null;
 $lastProbe = [0, '', 0, 'none', ''];
 // Probe qayta urinishi: ilgari 12s*8 = ~96s osilib qolardi ("Video yuklanmoqda...").

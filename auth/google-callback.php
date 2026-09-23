@@ -134,7 +134,7 @@ if ($user && !empty($user['two_factor_enabled'])) {
     exit;
 }
 
-$pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user_db_id]);
+$pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$user_db_id]);
 check_premium_expiry($pdo, $user_db_id);
 refresh_user_session($pdo, $user_db_id);
 session_regenerate_id(true);

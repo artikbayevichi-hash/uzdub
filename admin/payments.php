@@ -24,11 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payment_action'])) {
                 $expires = date('Y-m-d H:i:s', strtotime('+' . $days . ' days'));
 
                 $pdo->prepare("UPDATE users SET is_premium=1, premium_expires_at=? WHERE id=?")->execute([$expires, $payment['user_id']]);
-                $pdo->prepare("UPDATE premium_payments SET status='approved', expires_at=? WHERE id=?")->execute([$expires, $pid]);
+                $pdo->prepare("UPDATE premium_payments SET status='approved', expires_at=?, screenshot=NULL WHERE id=?")->execute([$expires, $pid]);
                 $message = "✅ To'lov tasdiqlandi va Premium yoqildi!";
             }
         } elseif ($action === 'reject') {
-            $pdo->prepare("UPDATE premium_payments SET status='rejected' WHERE id=?")->execute([$pid]);
+            $pdo->prepare("UPDATE premium_payments SET status='rejected', screenshot=NULL WHERE id=?")->execute([$pid]);
             $message = "❌ To'lov rad etildi.";
         }
     }
@@ -55,8 +55,9 @@ foreach ($payments as $p) if ($p['status'] === 'pending') $pending_count++;
         <td><?php echo number_format($p['amount'], 0, '.', ' '); ?> so'm</td>
         <td>
             <?php if ($p['screenshot']): ?>
-            <a href="../uploads/screenshots/<?php echo e($p['screenshot']); ?>" target="_blank">
-                <img src="../uploads/screenshots/<?php echo e($p['screenshot']); ?>" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
+            <?php $shot = (strpos($p['screenshot'], 'http://') === 0 || strpos($p['screenshot'], 'https://') === 0) ? $p['screenshot'] : ('../uploads/screenshots/' . $p['screenshot']); ?>
+            <a href="#" onclick="openShot('<?php echo e($shot); ?>');return false;" title="Katta ko'rish">
+                <img src="<?php echo e($shot); ?>" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
             </a>
             <?php else: ?>
             <span style="color:var(--text-muted);">Admin berdi</span>
@@ -94,3 +95,10 @@ foreach ($payments as $p) if ($p['status'] === 'pending') $pending_count++;
 </div>
 
 <?php include __DIR__ . '/includes/admin_footer.php'; ?>
+
+<div id="shotModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:9999;text-align:center;padding:30px;cursor:zoom-out;" onclick="this.style.display='none';">
+    <img id="shotImg" src="" style="max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 0 30px rgba(0,0,0,.6);">
+</div>
+<script>
+function openShot(url){document.getElementById('shotImg').src=url;document.getElementById('shotModal').style.display='block';}
+</script>

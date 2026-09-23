@@ -25,6 +25,7 @@ if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
+require_once __DIR__ . '/../includes/imgbb.php';
 $url = imgbb_upload_cover($file);
 if (!$url) {
     http_response_code(500);

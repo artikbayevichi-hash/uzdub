@@ -32,12 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     $attachment_type = null;
     if (!empty($_FILES['attachment']['name'])) {
         if (!$user['is_premium']) { echo json_encode(['ok' => false, 'msg' => t('image_gif_premium_global')]); exit; }
-        $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        if (!in_array($ext, $allowed)) { echo json_encode(['ok' => false, 'msg' => t('only_image_gif')]); exit; }
-        $attachment = upload_file('attachment', __DIR__ . '/uploads/chat/', $allowed);
+        require_once __DIR__ . '/includes/imgbb.php';
+        $attachment = imgbb_upload_chat($_FILES['attachment']);
         if (!$attachment) { echo json_encode(['ok' => false, 'msg' => t('file_upload_error')]); exit; }
-        $attachment_type = ($ext === 'gif') ? 'gif' : 'image';
+        $attachment_type = 'image';
     }
     if ($txt === '' && !$attachment) { echo json_encode(['ok' => false, 'msg' => t('message_empty')]); exit; }
     if (mb_strlen($txt) > 500) { echo json_encode(['ok' => false, 'msg' => t('message_too_long')]); exit; }
@@ -481,7 +479,7 @@ function renderMsg(msg) {
     }
 
     if (msg.message) body += '<div class="msg-text">' + escHtml(msg.message) + '</div>';
-    if (msg.attachment) body += '<img class="msg-image" src="' + ROOT_URL + '/uploads/chat/' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
+    if (msg.attachment) body += '<img class="msg-image" src="' + escHtml(msg.attachment) + '" onclick="window.open(this.src)">';
 
     var edited = msg.is_edited == 1 ? ' <span class="msg-edited">' + escHtml(T.edited) + '</span>' : '';
 

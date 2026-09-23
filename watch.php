@@ -32,6 +32,16 @@ $item = $stmt->fetch();
 
 if (!$item) { header('Location: index.php'); exit; }
 
+// Foydalanuvchi kontentni ochganini belgilaymiz — shu kontent uchun "YANGI"/"YANGI QISM" yozuvi o'chadi
+if (is_user()) {
+    try {
+        $pdo->prepare("INSERT INTO user_content_new_seen (user_id, content_id, seen_at) VALUES (?,?,NOW()) ON DUPLICATE KEY UPDATE seen_at = NOW()")
+            ->execute([(int)$_SESSION['user_id'], $id]);
+    } catch (PDOException $e) {
+        error_log('watch.php new_seen error: ' . $e->getMessage());
+    }
+}
+
 $page_title = t_title($item);
 $page_desc = t_desc($item);
 $page_image = $item['poster'] ? poster_url($item['poster']) : '';
@@ -124,11 +134,11 @@ if ($episodes) {
 $ep_locked = (bool)$active_episode && !empty($active_episode['is_premium']) && !has_premium_access($pdo);
 $is_locked = ((bool)$item['is_premium'] && !has_premium_access($pdo)) || $ep_locked;
 
-// ===== "Davom eting" — saqlangan pozitsiyani olish (file/telegram turidagi videolar uchun) =====
+// ===== "Davom eting" — saqlangan pozitsiyani olish (file turidagi videolar uchun) =====
 $resume_position = 0;
 $active_video_type = $active_episode ? $active_episode['video_type'] : $item['video_type'];
 $active_video_url = $active_episode ? $active_episode['video_url'] : $item['video_url'];
-if (is_user() && !$is_locked && in_array($active_video_type, ['file', 'telegram'], true)) {
+if (is_user() && !$is_locked && in_array($active_video_type, ['file'], true)) {
     $rp = $pdo->prepare("SELECT position_seconds FROM watch_progress WHERE user_id = ? AND content_id = ? AND episode_id = ?");
     $rp->execute([$_SESSION['user_id'], $id, $active_episode_id]);
     $row = $rp->fetch();
@@ -143,7 +153,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 <style>
 .watch-player-section { position:relative; margin-bottom:24px; }
-.content-id-tag { position:absolute; top:-12px; right:0; background:var(--card-bg); border:1px solid var(--blue-primary); color:var(--blue-glow); font-size:12px; padding:4px 12px; border-radius:20px; font-family:monospace; z-index:60; box-shadow:0 4px 12px rgba(0,0,0,0.6); }
+.content-id-tag { position:absolute; top:12px; right:12px; background:rgba(18,23,35,0.72); border:1px solid rgba(158,166,178,0.5); color:#f5f6fa; font-size:12px; padding:4px 12px; border-radius:20px; font-family:monospace; z-index:60; box-shadow:0 4px 12px rgba(0,0,0,0.6); pointer-events:none; }
 .watch-action-bar { display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
 .watch-btn { display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:8px; border:1px solid rgba(33,150,243,0.3); background:var(--card-bg); color:var(--text-light); cursor:pointer; font-size:14px; font-weight:600; text-decoration:none; transition:0.2s; }
 .watch-btn:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.1); }
@@ -163,25 +173,123 @@ include __DIR__ . '/includes/header.php';
 .premium-lock p { color:var(--text-muted); margin-bottom:20px; font-size:14px; }
 .premium-lock .btn-unlock { display:inline-block; padding:12px 28px; background:linear-gradient(135deg,#f9a825,#ff6f00); color:#fff; border-radius:8px; text-decoration:none; font-weight:700; }
 .episodes-panel { background:var(--card-bg); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-bottom:22px; }
-.episodes-header h3 { font-size:15px; margin:0 0 12px; color:var(--text-light); }
-.episodes-list { display:flex; flex-wrap:wrap; gap:8px; }
+.episodes-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.episodes-header h3 { font-size:15px; margin:0; color:var(--text-light); }
+.episodes-search { flex:0 0 220px; display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:8px; border:1px solid rgba(33,150,243,0.28); background:rgba(33,150,243,0.06); color:var(--text-light); transition:0.2s; }
+.episodes-search:focus-within { border-color:var(--blue-primary); box-shadow:0 0 0 3px rgba(33,150,243,0.15); }
+.episodes-search .ep-search-ico { font-size:14px; opacity:.6; }
+.episodes-search input { flex:1; min-width:0; background:transparent; border:none; outline:none; color:var(--text-light); font-size:13px; }
+.episodes-search input::placeholder { color:var(--text-muted); opacity:.7; }
+.episodes-search .ep-clear { cursor:pointer; opacity:.5; background:none; border:none; color:var(--text-light); font-size:13px; padding:0; line-height:1; }
+.episodes-search .ep-clear:hover { opacity:1; }
+.episodes-list { display:flex; flex-wrap:wrap; gap:8px; max-height:420px; overflow-y:auto; padding:2px; scrollbar-width:thin; }
 .episodes-season { width:100%; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin:6px 0 2px; }
-.episode-chip { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; border:1px solid rgba(33,150,243,0.25); background:rgba(33,150,243,0.05); color:var(--text-light); text-decoration:none; font-size:13px; transition:0.2s; box-sizing:border-box; flex:0 0 calc((100% - 16px) / 3); }
+.episode-chip { display:flex; align-items:center; justify-content:center; aspect-ratio:1; border-radius:8px; border:1px solid rgba(33,150,243,0.25); background:rgba(33,150,243,0.05); color:var(--text-light); text-decoration:none; font-size:13px; transition:0.2s; box-sizing:border-box; flex:0 0 calc((100% - 16px) / 3); }
 @media screen and (min-width: 993px) {
     .episode-chip { flex:0 0 calc((100% - 88px) / 12); }
 }
 .episode-chip:hover { border-color:var(--blue-primary); background:rgba(33,150,243,0.12); }
 .episode-chip.active { background:var(--blue-primary); border-color:var(--blue-primary); }
-.episode-num { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 6px; border-radius:6px; background:rgba(33,150,243,0.15); color:var(--blue-glow); font-weight:700; font-size:12px; }
-.episode-chip.active .episode-num { background:rgba(255,255,255,0.25); color:#fff; }
+.episode-chip.ep-match { border-color:#f9a825; background:rgba(249,168,37,0.18); box-shadow:0 0 0 3px rgba(249,168,37,0.25); }
+.episode-chip .episode-num { color:var(--text-light); padding:0; background:transparent; border-radius:0; font-size:13px; font-weight:600; }
+.episode-chip.active .episode-num { color:#fff; }
 .episode-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media (max-width:640px){ .episodes-search { flex:1 1 100%; } }
+
+/* ===== DETAIL HERO — Premium Cinematic ===== */
+.detail-hero{position:relative;margin:0 0 32px;border-radius:18px;overflow:hidden}
+.detail-hero-bg{position:absolute;inset:-30px;background-size:cover;background-position:center top;filter:blur(36px) brightness(0.22) saturate(1.5);transform:scale(1.15);z-index:0;animation:bgDrift 25s ease-in-out infinite alternate}
+@keyframes bgDrift{0%{transform:scale(1.15) translate(0,0)}100%{transform:scale(1.18) translate(-1.5%,1%)}}
+.detail-hero-overlay{position:absolute;inset:0;z-index:1}
+.detail-hero-overlay::before{content:'';position:absolute;inset:0;background:linear-gradient(110deg,rgba(8,12,20,0.98) 0%,rgba(8,12,20,0.93) 25%,rgba(8,12,20,0.7) 50%,rgba(8,12,20,0.35) 75%,rgba(8,12,20,0.1) 100%)}
+.detail-hero-overlay::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(8,12,20,0.92) 0%,rgba(8,12,20,0.4) 35%,transparent 65%)}
+.detail-hero-content{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:36px;padding:48px 44px 44px;align-items:flex-start;animation:heroSlideUp .8s cubic-bezier(.23,1,.32,1) both}
+@keyframes heroSlideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* Poster — layered glow + reflection + gradient border */
+.detail-hero-poster{flex-shrink:0;position:relative;animation:heroSlideUp .8s cubic-bezier(.23,1,.32,1) .1s both}
+.detail-poster{width:232px;height:348px;object-fit:cover;border-radius:16px;display:block;position:relative;z-index:2;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.06),0 0 100px -24px rgba(33,150,243,0.2);transition:all .5s cubic-bezier(.23,1,.32,1)}
+.detail-poster:hover{transform:scale(1.04) translateY(-8px) perspective(600px) rotateY(-3deg);box-shadow:0 40px 80px rgba(0,0,0,0.9),0 0 0 1px rgba(255,255,255,0.12),0 0 120px -20px rgba(33,150,243,0.3)}
+.detail-hero-poster::after{content:'';position:absolute;top:calc(100% + 6px);left:8%;right:8%;height:50px;background:linear-gradient(to bottom,rgba(33,150,243,0.12),transparent);border-radius:0 0 16px 16px;filter:blur(14px);opacity:.5;z-index:1;pointer-events:none;transition:opacity .5s}
+.detail-hero-poster:hover::after{opacity:.8}
+.detail-hero-poster::before{content:'';position:absolute;inset:-3px;border-radius:19px;background:conic-gradient(from 160deg,rgba(33,150,243,0.35),transparent 30%,transparent 50%,rgba(124,77,255,0.25),transparent 80%);z-index:3;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.detail-hero-poster:hover::before{opacity:1}
+
+/* Info panel */
+.detail-hero-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;padding-top:8px;animation:heroSlideUp .8s cubic-bezier(.23,1,.32,1) .2s both}
+.detail-title{font-size:34px;font-weight:800;color:#fff;margin:0;line-height:1.1;letter-spacing:-.7px;background:linear-gradient(135deg,#fff 0%,#d0e2f4 45%,#8fb8dc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 3px 16px rgba(0,0,0,0.5))}
+
+/* Accent divider */
+.detail-hero-info::after{content:'';display:block;width:56px;height:3px;background:linear-gradient(90deg,var(--blue-primary),var(--blue-glow),rgba(124,77,255,0.6));border-radius:2px;margin-top:2px}
+
+/* Meta badges */
+.detail-meta-row{display:flex;gap:8px;flex-wrap:wrap}
+.detail-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 15px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-muted);border:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(12px);transition:all .3s ease;position:relative;overflow:hidden}
+.detail-badge::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.06),transparent);opacity:0;transition:opacity .3s}
+.detail-badge:hover{border-color:rgba(255,255,255,0.16);transform:translateY(-2px)}
+.detail-badge:hover::before{opacity:1}
+.detail-badge.cat{background:rgba(33,150,243,0.13);color:var(--blue-glow);border-color:rgba(33,150,243,0.28)}
+.detail-badge.cat:hover{background:rgba(33,150,243,0.22);border-color:rgba(33,150,243,0.45);box-shadow:0 6px 24px rgba(33,150,243,0.18)}
+.detail-badge.rating{background:rgba(249,168,37,0.13);color:#f9a825;border-color:rgba(249,168,37,0.28)}
+.detail-badge.rating:hover{background:rgba(249,168,37,0.22);border-color:rgba(249,168,37,0.45);box-shadow:0 6px 24px rgba(249,168,37,0.15)}
+
+/* Genre pills */
+.genre-pills{display:flex;flex-wrap:wrap;gap:8px}
+.genre-pill{display:inline-flex;align-items:center;padding:6px 18px;border-radius:24px;font-size:12px;font-weight:700;border:1px solid;transition:all .3s cubic-bezier(.23,1,.32,1);letter-spacing:.4px}
+.genre-pill:hover{transform:translateY(-3px);filter:brightness(1.15)}
+
+/* Info grid */
+.detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 20px;background:linear-gradient(135deg,rgba(255,255,255,0.045),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.06);border-radius:14px;backdrop-filter:blur(16px);position:relative}
+.detail-info-grid::before{content:'';position:absolute;top:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)}
+.detail-info-item{display:flex;align-items:center;gap:12px;padding:4px 0;transition:transform .25s}
+.detail-info-item:hover{transform:translateX(4px)}
+.detail-info-icon{font-size:18px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(33,150,243,0.14),rgba(33,150,243,0.04));border:1px solid rgba(33,150,243,0.1);border-radius:10px;flex-shrink:0;transition:all .3s}
+.detail-info-item:hover .detail-info-icon{background:linear-gradient(135deg,rgba(33,150,243,0.25),rgba(33,150,243,0.08));transform:scale(1.1) rotate(-3deg);box-shadow:0 4px 16px rgba(33,150,243,0.15)}
+.detail-info-label{display:block;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.detail-info-value{display:block;font-size:14px;color:var(--text-light);font-weight:600;margin-top:3px}
+
+/* Description — quote-style */
+.detail-desc-wrap{flex:0 0 100%;margin-top:-18px;padding:20px 22px;background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015));border:1px solid rgba(255,255,255,0.06);border-radius:14px;position:relative}
+.detail-desc-wrap::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:3px;background:linear-gradient(to bottom,var(--blue-primary),rgba(124,77,255,0.5),rgba(33,150,243,0.3));border-radius:2px}
+.detail-desc{margin:0;font-size:14px;line-height:1.85;color:rgba(154,168,189,0.9);padding-left:14px}
+
+/* Actors */
+.detail-actors{margin-top:4px}
+.detail-actors-title{font-size:12px;color:var(--text-muted);margin:0 0 12px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.detail-actors-list{display:flex;flex-wrap:wrap;gap:10px}
+.detail-actor-chip{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(33,150,243,0.08),rgba(33,150,243,0.02));border:1px solid rgba(33,150,243,0.1);border-radius:28px;padding:6px 18px 6px 6px;transition:all .35s cubic-bezier(.23,1,.32,1);cursor:default;position:relative;overflow:hidden}
+.detail-actor-chip::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(33,150,243,0.18),transparent);opacity:0;transition:opacity .3s}
+.detail-actor-chip:hover{border-color:rgba(33,150,243,0.35);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,0.3),0 0 0 1px rgba(33,150,243,0.08)}
+.detail-actor-chip:hover::before{opacity:1}
+.detail-actor-img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(33,150,243,0.2);position:relative;z-index:1;transition:all .3s}
+.detail-actor-chip:hover .detail-actor-img{border-color:rgba(33,150,243,0.55);transform:scale(1.08)}
+.detail-actor-name{font-size:13px;color:var(--text-light);font-weight:600;position:relative;z-index:1}
+.detail-actor-role{font-size:11px;color:var(--text-muted);position:relative;z-index:1}
+
+@media(max-width:640px){
+    .detail-hero{margin:0 -16px 24px;border-radius:0}
+    .detail-hero-bg{filter:blur(22px) brightness(0.18) saturate(1.3);animation:none}
+    .detail-hero-overlay::before{background:linear-gradient(to bottom,rgba(8,12,20,0.98) 0%,rgba(8,12,20,0.88) 100%)}
+    .detail-hero-overlay::after{background:linear-gradient(to top,rgba(8,12,20,0.88) 0%,transparent 55%)}
+    .detail-hero-content{flex-direction:column;align-items:center;text-align:center;padding:28px 18px 24px;gap:20px}
+    .detail-poster{width:175px;height:264px}
+    .detail-hero-info::after{margin:2px auto 0}
+    .detail-title{font-size:24px}
+    .detail-meta-row{justify-content:center}
+    .genre-pills{justify-content:center}
+    .detail-info-grid{grid-template-columns:1fr}
+    .detail-desc-wrap::before{display:none}
+    .detail-desc{padding-left:0}
+    .detail-desc-wrap{flex:0 0 auto;width:100%;margin-top:0}
+    .detail-actors-list{justify-content:center}
+}
 </style>
 <link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/player.css?v=<?php echo @filemtime(__DIR__ . '/css/player.css') ?: 1; ?>">
 
 <div class="detail-wrap">
 
     <div class="watch-player-section">
-        <span class="content-id-tag">🆔 <?php echo e($item['content_code'] ?? ('ID' . $item['id'])); ?></span>
+        <span class="content-id-tag"><?php echo e($item['content_code'] ?? ('ID' . $item['id'])); ?></span>
         <?php if ($is_locked): ?>
         <div class="premium-lock">
             <div class="lock-bg" style="background-image:url('<?php echo $item['poster'] ? e(poster_url($item['poster'])) : ''; ?>');"></div>
@@ -206,7 +314,7 @@ include __DIR__ . '/includes/header.php';
             $subs_data->execute([$id]);
             $subtitles = $subs_data->fetchAll();
         } catch (PDOException $e) {}
-        echo render_player($active_video_type, $active_video_url, 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? poster_url($item['poster']) : null, [], $intro_start, $intro_end, $resume_position, t_title($item) . ($active_episode ? ' — ' . ($active_episode['title'] ?? ('Qism ' . (int)$active_episode['episode_number'])) : ''), $next_ep);
+        echo render_player($active_video_type, $active_video_url, 'uploads/videos/', $subtitles, 'mainVideo', $item['poster'] ? poster_url($item['poster']) : null, [], $intro_start, $intro_end, $resume_position, t_title($item) . ($active_episode ? ' — ' . (mb_strlen((string)$active_episode['title']) ? $active_episode['title'] : (t('episode_label') . ' ' . (int)$active_episode['episode_number'])) : ''), $next_ep);
         ?>
         <?php endif; ?>
     </div>
@@ -215,20 +323,24 @@ include __DIR__ . '/includes/header.php';
     <div class="episodes-panel">
         <div class="episodes-header">
             <h3><?php echo t('episodes'); ?> (<?php echo count($episodes); ?>)</h3>
+            <div class="episodes-search">
+                <span class="ep-search-ico">&#128269;</span>
+                <input type="text" id="epSearch" placeholder="<?php echo t('episodes_search') !== 'episodes_search' ? t('episodes_search') : 'Qism raqamini yozing...'; ?>" autocomplete="off" inputmode="numeric">
+                <button type="button" class="ep-clear" id="epClear" title="Tozalash" style="display:none;">&#10005;</button>
+            </div>
         </div>
-        <div class="episodes-list">
+        <div class="episodes-list" id="episodesList">
             <?php
             $season = null;
             foreach ($episodes as $ep):
                 if ($ep['season'] !== $season):
                     $season = $ep['season'];
-                    echo '<div class="episodes-season">' . ($season > 1 ? 'Fasl ' . (int)$season : 'Fasl ' . (int)$season) . '</div>';
+                    echo '<div class="episodes-season" data-season="' . (int)$season . '">' . 'Fasl ' . (int)$season . '</div>';
                 endif;
                 $is_active = (int)$ep['id'] === $active_episode_id;
             ?>
-            <a href="watch.php?id=<?php echo $id; ?>&ep=<?php echo $ep['id']; ?>" class="episode-chip <?php echo $is_active ? 'active' : ''; ?>">
+            <a href="watch.php?id=<?php echo $id; ?>&ep=<?php echo $ep['id']; ?>" class="episode-chip <?php echo $is_active ? 'active' : ''; ?>" data-ep="<?php echo (int)$ep['episode_number']; ?>">
                 <span class="episode-num"><?php echo (int)$ep['episode_number']; ?></span>
-                <span class="episode-title"><?php echo e($ep['title'] ?? ('Qism ' . (int)$ep['episode_number'])); ?></span>
             </a>
             <?php endforeach; ?>
         </div>
@@ -250,50 +362,78 @@ include __DIR__ . '/includes/header.php';
         </button>
     </div>
 
-    <div class="detail-header">
-        <img src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
-        <div>
-            <h1><?php echo e(t_title($item)); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">👑 <?php echo t('premium_tag'); ?></span><?php endif; ?></h1>
-            <div class="meta">
-                <?php echo e($item['cat_name']); ?> &middot;
-                <?php echo e($item['release_year']); ?> &middot;
-                &#9733; <?php echo e($item['rating']); ?> &middot;
-                &#128065; <?php echo e($item['views']); ?> <?php echo t('views_count'); ?>
+    <div class="detail-hero">
+        <div class="detail-hero-bg" style="background-image:url('<?php echo $item['poster'] ? e(poster_url($item['poster'])) : ''; ?>');"></div>
+        <div class="detail-hero-overlay"></div>
+        <div class="detail-hero-content">
+            <div class="detail-hero-poster">
+                <img class="detail-poster" src="<?php echo $item['poster'] ? e(poster_url($item['poster'])) : 'https://via.placeholder.com/300x420/121a2b/2196f3?text=' . urlencode(t_title($item)); ?>" alt="<?php echo e(t_title($item)); ?>">
             </div>
+            <div class="detail-hero-info">
+                <h1 class="detail-title"><?php echo e(t_title($item)); ?> <?php if ($item['is_premium']): ?><span class="premium-tag">👑 <?php echo t('premium_tag'); ?></span><?php endif; ?></h1>
 
-            <?php if (!empty($genre_rows)): ?>
-            <div class="genre-pills" style="margin: 10px 0;">
-                <?php foreach ($genre_rows as $g): ?>
-                <span class="genre-pill" style="background:<?php echo e($g['color'] ?? '#7c4dff'); ?>22;border-color:<?php echo e($g['color'] ?? '#7c4dff'); ?>;color:<?php echo e($g['color'] ?? '#7c4dff'); ?>;"><?php echo e($g['name']); ?></span>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
+                <div class="detail-meta-row">
+                    <span class="detail-badge cat"><?php echo e($item['cat_name']); ?></span>
+                    <span class="detail-badge year"><?php echo e($item['release_year']); ?></span>
+                    <span class="detail-badge rating">★ <?php echo e($item['rating']); ?></span>
+                    <span class="detail-badge views">👁 <?php echo number_format((int)$item['views']); ?></span>
+                </div>
 
-            <?php if ($item['studio'] || $item['director'] || $item['duration']): ?>
-            <div class="meta" style="margin-top:8px;">
-                <?php if ($item['studio']): ?>&#127968; <?php echo t('studio'); ?> <?php echo e($item['studio']); ?><br><?php endif; ?>
-                <?php if ($item['director']): ?>&#128100; <?php echo t('director'); ?> <?php echo e($item['director']); ?><br><?php endif; ?>
-                <?php if ($item['duration']): ?>&#9202; <?php echo t('duration'); ?> <?php echo e($item['duration']); ?><br><?php endif; ?>
-                <?php if ($item['status']): ?>&#127922; <?php echo t('status'); ?> <?php echo e(ucfirst($item['status'])); ?><?php endif; ?>
-            </div>
-            <?php endif; ?>
-
-            <p class="desc"><?php echo nl2br(e(t_desc($item))); ?></p>
-
-            <?php if (!empty($actors)): ?>
-            <div style="margin-top:16px;">
-                <h4 style="font-size:14px;color:var(--text-muted);margin-bottom:8px;"><?php echo t('actors'); ?></h4>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                    <?php foreach ($actors as $a): ?>
-                    <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.15);border-radius:8px;padding:4px 10px;font-size:13px;">
-                        <?php if ($a['image']): ?><img src="<?php echo e($a['image']); ?>" alt="" style="width:20px;height:20px;border-radius:50%;object-fit:cover;"><?php endif; ?>
-                        <?php echo e($a['name']); ?>
-                        <?php if ($a['role']): ?><span style="color:var(--text-muted);font-size:11px;">(<?php echo e($a['role']); ?>)</span><?php endif; ?>
-                    </span>
+                <?php if (!empty($genre_rows)): ?>
+                <div class="genre-pills">
+                    <?php foreach ($genre_rows as $g): ?>
+                    <span class="genre-pill" style="background:<?php echo e($g['color'] ?? '#7c4dff'); ?>22;border-color:<?php echo e($g['color'] ?? '#7c4dff'); ?>;color:<?php echo e($g['color'] ?? '#7c4dff'); ?>;"><?php echo e($g['name']); ?></span>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
+
+                <?php if ($item['studio'] || $item['director'] || $item['duration'] || $item['status']): ?>
+                <div class="detail-info-grid">
+                    <?php if ($item['studio']): ?>
+                    <div class="detail-info-item">
+                        <span class="detail-info-icon">🏠</span>
+                        <div><span class="detail-info-label"><?php echo t('studio'); ?></span><span class="detail-info-value"><?php echo e($item['studio']); ?></span></div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($item['director']): ?>
+                    <div class="detail-info-item">
+                        <span class="detail-info-icon">🎬</span>
+                        <div><span class="detail-info-label"><?php echo t('director'); ?></span><span class="detail-info-value"><?php echo e($item['director']); ?></span></div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($item['duration']): ?>
+                    <div class="detail-info-item">
+                        <span class="detail-info-icon">⏲️</span>
+                        <div><span class="detail-info-label"><?php echo t('duration'); ?></span><span class="detail-info-value"><?php echo e($item['duration']); ?></span></div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($item['status']): ?>
+                    <div class="detail-info-item">
+                        <span class="detail-info-icon">🎲</span>
+                        <div><span class="detail-info-label"><?php echo t('status'); ?></span><span class="detail-info-value"><?php echo e(ucfirst($item['status'])); ?></span></div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!empty($actors)): ?>
+                <div class="detail-actors">
+                    <h4 class="detail-actors-title"><?php echo t('actors'); ?></h4>
+                    <div class="detail-actors-list">
+                        <?php foreach ($actors as $a): ?>
+                        <div class="detail-actor-chip">
+                            <?php if ($a['image']): ?><img class="detail-actor-img" src="<?php echo e($a['image']); ?>" alt=""><?php endif; ?>
+                            <span class="detail-actor-name"><?php echo e($a['name']); ?></span>
+                            <?php if ($a['role']): ?><span class="detail-actor-role">(<?php echo e($a['role']); ?>)</span><?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
+            <div class="detail-desc-wrap">
+                <p class="detail-desc"><?php echo nl2br(e(t_desc($item))); ?></p>
+            </div>
         </div>
     </div>
 
@@ -652,7 +792,7 @@ function toggleFav(contentId) {
     setInterval(pollCommentReactions, 5000);
 })();
 </script>
-<?php if (is_user() && !$is_locked && in_array($active_video_type, ['file', 'telegram'], true)): ?>
+<?php if (is_user() && !$is_locked && in_array($active_video_type, ['file'], true)): ?>
 <script>
 (function () {
     var video = document.querySelector('.watch-player-section video');
@@ -708,6 +848,51 @@ function toggleFav(contentId) {
         }
     }
     setTimeout(tryScroll, 800);
+})();
+</script>
+
+<script>
+(function() {
+    var input = document.getElementById('epSearch');
+    var list = document.getElementById('episodesList');
+    var clearBtn = document.getElementById('epClear');
+    if (!input || !list) return;
+
+    var lastMatch = null;
+
+    function clearMatch() {
+        if (lastMatch) { lastMatch.classList.remove('ep-match'); lastMatch = null; }
+    }
+
+    function doSearch() {
+        var q = input.value.replace(/\D/g, '').trim();
+        clearMatch();
+        clearBtn.style.display = q ? 'inline-block' : 'none';
+        if (!q) {
+            var s = list.querySelector('.episodes-season');
+            if (s) list.scrollTop = 0;
+            return;
+        }
+        var target = null;
+        var chips = list.querySelectorAll('.episode-chip');
+        for (var i = 0; i < chips.length; i++) {
+            if (parseInt(chips[i].getAttribute('data-ep'), 10) === parseInt(q, 10)) {
+                target = chips[i];
+                break;
+            }
+        }
+        if (!target) return;
+        target.classList.add('ep-match');
+        lastMatch = target;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    input.addEventListener('input', doSearch);
+    if (clearBtn) clearBtn.addEventListener('click', function() {
+        input.value = '';
+        doSearch();
+        input.focus();
+    });
 })();
 </script>
 

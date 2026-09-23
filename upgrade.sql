@@ -283,5 +283,26 @@ PREPARE cp_stmt FROM @cp_sql; EXECUTE cp_stmt; DEALLOCATE PREPARE cp_stmt;
 -- =====================================================
 ALTER TABLE episodes ADD COLUMN is_premium TINYINT(1) NOT NULL DEFAULT 0 AFTER intro_end;
 
+-- =====================================================
+-- "YANGI" / "YANGI QISM" belgisi — per-user holati
+-- =====================================================
+SET @columnname_new_since = 'new_since';
+SET @preparedStatementNS = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = @columnname_new_since) > 0,
+  'SELECT ''users.new_since ustuni allaqachon bor'';',
+  'ALTER TABLE users ADD COLUMN new_since DATETIME DEFAULT NULL AFTER last_activity;'
+));
+PREPARE alterIfNotExistsNS FROM @preparedStatementNS;
+EXECUTE alterIfNotExistsNS;
+DEALLOCATE PREPARE alterIfNotExistsNS;
+
+CREATE TABLE IF NOT EXISTS user_content_new_seen (
+    user_id INT NOT NULL,
+    content_id INT NOT NULL,
+    seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, content_id),
+    KEY content_id (content_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 SELECT 'Yangilash muvaffaqiyatli yakunlandi!' AS natija;
 

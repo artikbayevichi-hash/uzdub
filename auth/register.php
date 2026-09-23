@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("INSERT INTO users (user_id, username, email, password) VALUES (?,?,?,?)");
             $stmt->execute([$uid, $username, $email, $hash]);
             $new_id = $pdo->lastInsertId();
-            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$new_id]);
+            $pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$new_id]);
             refresh_user_session($pdo, $new_id);
             session_regenerate_id(true);
             record_user_session($pdo, $new_id);

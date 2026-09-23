@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_login_at DATETIME DEFAULT NULL,
     last_login DATETIME DEFAULT NULL,
     last_activity DATETIME DEFAULT NULL,
+    new_since DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     online_time INT DEFAULT 0,
     is_email_verified TINYINT(1) DEFAULT 1,

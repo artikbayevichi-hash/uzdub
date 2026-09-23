@@ -47,10 +47,10 @@ if (!empty($all_ids)) {
     $ids_arr = array_keys($all_ids);
     $ph = implode(',', array_fill(0, count($ids_arr), '?'));
     try {
-        $ers = $pdo->prepare("SELECT content_id, MIN(episode_number) as min_ep, MAX(episode_number) as max_ep FROM episodes WHERE content_id IN ($ph) GROUP BY content_id");
+        $ers = $pdo->prepare("SELECT content_id, MIN(episode_number) AS min_ep, MAX(episode_number) AS max_ep, MAX(created_at) AS last_ep_created_at FROM episodes WHERE content_id IN ($ph) GROUP BY content_id");
         $ers->execute($ids_arr);
         while ($er = $ers->fetch(PDO::FETCH_ASSOC)) {
-            $ep_ranges[$er['content_id']] = [(int)$er['min_ep'], (int)$er['max_ep']];
+            $ep_ranges[$er['content_id']] = $er;
         }
     } catch (PDOException $e) {}
 }
@@ -134,7 +134,7 @@ if (is_user()):
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($recommendations as $item): ?>
-            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']][1] ?? null]); ?>
+            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']]['max_ep'] ?? null, 'last_ep_created_at' => $ep_ranges[$item['id']]['last_ep_created_at'] ?? null]); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -151,7 +151,7 @@ if (is_user()):
     <div class="row-wrap">
         <div class="row-scroll">
             <?php foreach ($items as $item): ?>
-            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']][1] ?? null]); ?>
+            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']]['max_ep'] ?? null, 'last_ep_created_at' => $ep_ranges[$item['id']]['last_ep_created_at'] ?? null]); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -185,7 +185,8 @@ if (is_user()):
                     'is_continue' => true,
                     'current_episode' => $cur_ep,
                     'total_episodes' => $item['total_episodes'] ?? null,
-                    'aired_episodes' => $ep_ranges[$item['id']][1] ?? null,
+                    'aired_episodes' => $ep_ranges[$item['id']]['max_ep'] ?? null,
+                    'last_ep_created_at' => $ep_ranges[$item['id']]['last_ep_created_at'] ?? null,
                 ]);
             endforeach; ?>
         </div>

@@ -20,32 +20,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
     if (!validate_csrf($_POST['csrf_token'] ?? '')) {
         $error = t('token_error');
     } else {
-    $plan = $_POST['plan'] ?? '';
-    if (!isset($plans[$plan])) {
-        $error = t('invalid_plan');
-    } else {
-        $screenshot = upload_file('screenshot', __DIR__ . '/uploads/screenshots/', ['jpg','jpeg','png','webp'], ['image/jpeg','image/png','image/webp']);
-        if (!$screenshot) {
-            $error = t('upload_screenshot');
+        $plan = $_POST['plan'] ?? '';
+        if (!isset($plans[$plan])) {
+            $error = t('invalid_plan');
         } else {
-            $plan_info = $plans[$plan];
-            $expires   = date('Y-m-d H:i:s', strtotime('+' . $plan_info['days'] . ' days'));
+            if (empty($_FILES['screenshot']['tmp_name'])) {
+                $error = t('upload_screenshot');
+            } else {
+                require_once __DIR__ . '/includes/imgbb.php';
+                // Chek rasm ImgBB'ga yuklanadi va 48 soat (172800 soniya) ichida avtomatik o'chadi
+                $screenshot = imgbb_upload_screenshot($_FILES['screenshot']);
+                if (!$screenshot) {
+                    $error = t('upload_screenshot');
+                } else {
+                    $plan_info = $plans[$plan];
+                    $expires   = date('Y-m-d H:i:s', strtotime('+' . $plan_info['days'] . ' days'));
 
-            $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, screenshot, status, expires_at) VALUES (?,?,?,?,?,?)")
-                ->execute([$user['id'], $plan, $plan_info['price'], $screenshot, 'pending', $expires]);
+                    // Chek (rasm) freeimage.host'da — DB'ga to'liq URL saqlanadi
+                    $pdo->prepare("INSERT INTO premium_payments (user_id, plan, amount, screenshot, status, expires_at) VALUES (?,?,?,?,?,?)")
+                        ->execute([$user['id'], $plan, $plan_info['price'], $screenshot, 'pending', $expires]);
 
-            $caption = "💰 <b>" . t('new_premium_request') . "</b>\n"
-                . "👤 " . t('user_label') . " <b>" . $user['username'] . "</b> (ID: " . $user['user_id'] . ")\n"
-                . "📦 " . t('plan_label') . " <b>" . $plan_info['label'] . "</b>\n"
-                . "💵 " . t('amount_label') . " <b>" . number_format($plan_info['price'], 0, '.', ' ') . " " . t('currency') . "</b>\n"
-                . "⏳ " . t('status_label') . " <b>" . t('pending_approval') . "</b>\n"
-                . "👉 " . t('admin_approve');
+                    $caption = "💰 <b>" . t('new_premium_request') . "</b>\n"
+                        . "👤 " . t('user_label') . " <b>" . $user['username'] . "</b> (ID: " . $user['user_id'] . ")\n"
+                        . "📦 " . t('plan_label') . " <b>" . $plan_info['label'] . "</b>\n"
+                        . "💵 " . t('amount_label') . " <b>" . number_format($plan_info['price'], 0, '.', ' ') . " " . t('currency') . "</b>\n"
+                        . "⏳ " . t('status_label') . " <b>" . t('pending_approval') . "</b>\n"
+                        . "👉 " . t('admin_approve');
 
-            $photo_path = __DIR__ . '/uploads/screenshots/' . $screenshot;
-            tg_send_photo($photo_path, $caption);
-            $msg = t('request_received');
+                    // Telegram'ga rasmni yuborish uchun vaqtinchalik yuklab olamiz
+                    tg_send_remote_photo($screenshot, $caption);
+                    $msg = t('request_received');
+                }
+            }
         }
-    }
     }
 }
 

@@ -22,7 +22,7 @@ $ep_ranges = [];
 if (!empty($items)) {
     $ids = array_column($items, 'id');
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $ep_stmt = $pdo->prepare("SELECT content_id, MIN(episode_number) AS first_ep, MAX(episode_number) AS last_ep, COUNT(*) AS ep_count FROM episodes WHERE content_id IN ($placeholders) GROUP BY content_id");
+    $ep_stmt = $pdo->prepare("SELECT content_id, MIN(episode_number) AS first_ep, MAX(episode_number) AS last_ep, COUNT(*) AS ep_count, MAX(created_at) AS last_ep_created_at FROM episodes WHERE content_id IN ($placeholders) GROUP BY content_id");
     $ep_stmt->execute($ids);
     while ($er = $ep_stmt->fetch(PDO::FETCH_ASSOC)) {
         $ep_ranges[$er['content_id']] = $er;
@@ -139,6 +139,7 @@ include __DIR__ . '/includes/header.php';
             'last_ep'       => $er['last_ep'] ?? null,
             'total_episodes'=> $er['ep_count'] ?? null,
             'aired_episodes'=> $er['last_ep'] ?? null,
+            'last_ep_created_at' => $er['last_ep_created_at'] ?? null,
             'is_favorite'   => isset($favs[$id]),
         ]);
     endforeach; ?>

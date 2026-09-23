@@ -4,11 +4,11 @@
  *
  * Ishlatish (terminaldan):
  *   php setup-webhooks.php status     — har bir botning joriy holati
- *   php setup-webhooks.php webhook    — 2FA va Admin botlar uchun webhook yoqish
+ *   php setup-webhooks.php webhook    — 2FA bot uchun webhook yoqish
  *                                      (public hosting URL kerak, .env dagi SITE_URL dan olinadi)
  *   php setup-webhooks.php poll       — barcha webhook'larni o'chirish (localhost/XAMPP, poll rejimi)
  *
- * Tokenlar .env faylidan olinadi: TG_2FA_BOT_TOKEN, TG_ADMIN_BOT_TOKEN
+ * Tokenlar .env faylidan olinadi: TG_2FA_BOT_TOKEN
  */
 
 require_once __DIR__ . '/config/env.php';
@@ -23,7 +23,6 @@ $site_url = rtrim((string)env('SITE_URL', 'http://localhost/uzdub'), '/');
 // bot => [token-key, webhook url (yoki null = send/poll rejimi)]
 $bots = [
     '2FA bot'  => ['TG_2FA_BOT_TOKEN', $site_url . '/api/telegram-webhook.php'],
-    'Admin bot' => ['TG_ADMIN_BOT_TOKEN', $site_url . '/api/adminbot-webhook.php'],
     'Asosiy bot' => ['TG_BOT_TOKEN', null],   // sendMessage uchun, webhook kerak emas
     'VK bot'   => ['TG_VK_BOT_TOKEN', null],  // hozircha ishlatilmayapti
 ];

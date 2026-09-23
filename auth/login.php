@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && $code_ok) {
             unset($_SESSION['2fa_pending_id'], $_SESSION['2fa_totp_secret'], $_SESSION['2fa_pending_email'], $_SESSION['2fa_show_totp']);
             login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
-            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+            $pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
             check_premium_expiry($pdo, $user['id']);
             refresh_user_session($pdo, $user['id']);
             session_regenerate_id(true);
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                         }
                     } else {
-                        $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+                        $pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
                         check_premium_expiry($pdo, $user['id']);
                         refresh_user_session($pdo, $user['id']);
                         session_regenerate_id(true);

@@ -237,7 +237,7 @@ try {
             }
 
             login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
-            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+            $pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
             check_premium_expiry($pdo, $user['id']);
             refresh_user_session($pdo, $user['id']);
             session_regenerate_id(true);
@@ -272,7 +272,7 @@ try {
                 json_error('2FA sozlanmagan');
             }
             login_clear_attempts($pdo, 'user:' . client_ip() . ':' . mb_strtolower($user['username']));
-            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
+            $pdo->prepare("UPDATE users SET new_since = last_login_at, last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
             check_premium_expiry($pdo, $user['id']);
             refresh_user_session($pdo, $user['id']);
             session_regenerate_id(true);
@@ -356,7 +356,7 @@ try {
             $content['avg_rating'] = $avgStmt->fetchColumn();
 
             $epStmt = $pdo->prepare("SELECT id, season, episode_number, title, thumbnail, video_type, video_url,
-                                            video_url_1080p, video_url_720p, telegram_file_id, embed_code,
+                                            video_url_1080p, video_url_720p, embed_code,
                                             duration, intro_start, intro_end
                                      FROM episodes WHERE content_id = ? ORDER BY season, episode_number");
             $epStmt->execute([$id]);
@@ -404,7 +404,6 @@ try {
                     $ep['video_url'] = null;
                     $ep['video_url_1080p'] = null;
                     $ep['video_url_720p'] = null;
-                    $ep['telegram_file_id'] = null;
                     $ep['embed_code'] = null;
                 }
                 unset($ep);
@@ -806,20 +805,11 @@ try {
         case 'upload_avatar':
             require_auth();
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_error('Method not allowed');
-            if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) json_error('Rasm yuklashda xatolik');
-            $allowed = ['image/jpeg', 'image/png', 'image/webp'];
-            $allowed_ext = ['jpg', 'jpeg', 'png', 'webp'];
-            if (!in_array($_FILES['avatar']['type'], $allowed)) json_error('Faqat JPG, PNG, WebP');
-            if ($_FILES['avatar']['size'] > 2 * 1024 * 1024) json_error('Rasm 2MB dan kichik bo\'lishi kerak');
-            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowed_ext)) json_error('Noto\'g\'ri fayl kengaytmasi');
-            $img = @getimagesize($_FILES['avatar']['tmp_name']);
-            if ($img === false) json_error('Fayl haqiqiy rasm emas');
-            $fname = 'avatar_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
-            $dest = __DIR__ . '/../uploads/avatars/' . $fname;
-            if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $dest)) json_error('Faylni saqlashda xatolik');
-            $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute([$fname, $_SESSION['user_id']]);
-            json_ok(['avatar' => $fname]);
+            require_once __DIR__ . '/../includes/imgbb.php';
+            $av = imgbb_upload_avatar($_FILES['avatar'] ?? []);
+            if (!$av) json_error('Rasm yuklashda xatolik');
+            $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute([$av, $_SESSION['user_id']]);
+            json_ok(['avatar' => $av]);
 
         case 'send_otp':
             require_auth();
@@ -1248,11 +1238,11 @@ try {
             // Mobil ilova uchun video'ni o'ynaladigan manbaga yechish.
             // Saytdagi render_clean_video_if_possible() bilan bir xil mantiq:
             //   VK     -> mp4 (stream.php proksi zaxira bilan)
-            //   RuTube -> HLS (stream.php hls proksi orqali)
-            //   Rumble -> CDN HLS (stream.php hls proksi orqali)
-            //   Odysee -> mp4 (stream.php proksi orqali, referer server tomonda)
+            //   RuTube -> HLS (bizning serverdan bezosita)
+            //   Rumble -> CDN HLS (to'g'ridan-to'g'ri, referrer o'chirilgan)
+            //   Odysee -> mp4 (to'g'ridan-to'g'ri CDN, referer server tomonda)
             //   YouTube / OK -> WebView embed
-            //   Telegram / lokal fayl / oddiy mp4 -> bevosita
+            //   Lokal fayl / oddiy mp4 -> bevosita
             //
             // stream.php login talab qiladi, lekin ilovaning native pleyeri cookie
             // yuborolmaydi — shuning uchun proksi URL'larga qisqa muddatli imzolangan
@@ -1276,24 +1266,7 @@ try {
 
             $url = $video_url;
 
-            // Telegram bot fayli (proksi — login talab)
-            if (strpos($url, 'tg:') === 0) {
-                if ($stream_token === '') json_error('login_required');
-                $path = ltrim(substr($url, 3), '/');
-                if ($path === '') json_error('Video topilmadi');
-                json_ok(['type' => 'video', 'url' => $sp . '?tg=' . rawurlencode($path) . $tokQ]);
-            }
-
             $video_type = strtolower(trim($_GET['type'] ?? ''));
-
-            // Telegram'dan olingan http(s) havolalar — server proksi orqali (login talab).
-            // Lokal yuklab oluvchi server (127.0.0.1:8000/dl/...) emulyatordan
-            // ko'rinmaydi, lekin server o'zi ularga kirisha oladi
-            // (loopback ruxsati .env da ALLOW_LOOPBACK_STREAM=true).
-            if ($video_type === 'telegram' && preg_match('#^https?://#i', $url)) {
-                if ($stream_token === '') json_error('login_required');
-                json_ok(['type' => 'video', 'url' => $sp . '?url=' . rawurlencode($url) . $tokQ]);
-            }
 
             // iframe bloki ichida src bormi
             if (preg_match('#<iframe[^>]+src\s*=\s*["\']([^"\']+)["\']#i', $url, $m)) {
@@ -1358,6 +1331,16 @@ try {
                     json_ok(['type' => 'embed', 'url' => 'https://www.youtube.com/embed/' . $m[1] . '?autoplay=1&rel=0']);
                 }
                 json_error('Video topilmadi');
+            }
+
+            // Uqload — HLS (stream.php orqali proksi, login talab)
+            if (uqload_parse_url($url)) {
+                if ($stream_token === '') json_error('login_required');
+                $res = uqload_resolve($url);
+                if ($res && !empty($res['url'])) {
+                    json_ok(['type' => 'hls', 'url' => $sp . '/master.m3u8?url=' . rawurlencode($res['url']) . '&hls=1' . $tokQ]);
+                }
+                json_error("Video hali tayyor emas. Birozdan so'ng qayta urinib ko'ring.");
             }
 
             // OK.ru — WebView embed
