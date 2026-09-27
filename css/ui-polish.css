@@ -304,7 +304,6 @@ body.site-multfilm .logo-sub.ls-site { color: var(--acc2); }
   background: linear-gradient(90deg, var(--acc, #2196f3), transparent);
   margin-top: 2px;
 }
-.kataloglar-btn.active { color: var(--acc2, #4fc3f7); font-weight: 700; }
 
 body.site-kino .hero-content .hero-tag,
 body.site-anime .hero-content .hero-tag,
