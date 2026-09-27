@@ -151,10 +151,8 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                 <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=kino">🎬 <?php echo t('chat_kino'); ?></a>
                 <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=anime">🎌 <?php echo t('chat_anime'); ?></a>
                 <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=multfilm">🎞️ <?php echo t('chat_multfilm'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/voice.php" class="ai-open-widget" onclick="return openAIVoiceWidget(this);" style="color:#4f8cff;border-top:1px solid #223052;margin-top:4px;padding-top:8px;">🤖 UZDUB AI — ovozli suhbat</a>
             </div>
         </li>
-        <li class="mobile-hide voice-ai-nav"><a href="<?php echo ROOT_URL; ?>/voice.php" class="ai-open-widget <?php echo (basename($_SERVER['PHP_SELF']) == 'voice.php') ? 'active' : ''; ?>" onclick="return openAIVoiceWidget(this);">🤖 AI</a></li>
         <?php if (is_user()): ?>
         <li><a href="<?php echo ROOT_URL; ?>/inbox.php">📨 <?php echo t('messages'); ?></a></li>
         <li><a href="<?php echo ROOT_URL; ?>/premium.php" style="color:#f9a825;">👑 <?php echo t('premium'); ?></a></li>
@@ -168,20 +166,6 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             </div>
         </li>
     </ul>
-    <script>
-      /* 🤖 AI tugmasi — widget oynasi mavjud bo'lsa (Premium) uni ochadi,
-         aks holda voice.php sahifasiga o'tadi. */
-      window.openAIVoiceWidget = function (link) {
-        var fab = document.getElementById('aic-fab');
-        var btn = document.getElementById('aic-fab') || document.querySelector('.aic-fab');
-        if (btn && !btn.classList.contains('aic-fab-premium-only')) {
-          if (event && event.preventDefault) event.preventDefault();
-          btn.click();
-          return false;
-        }
-        return true; /* widget yo'q — oddiy havola ishlayveradi */
-      };
-    </script>
     <div class="header-right">
         <?php if (is_user()): ?>
         <div class="notif-bell-wrap" id="notifBellWrap">
