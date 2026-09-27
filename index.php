@@ -14,7 +14,7 @@ if (is_user()) {
         $cw = $pdo->prepare(
             "SELECT c.*, wp.position_seconds, wp.duration_seconds, wp.episode_id
              FROM watch_progress wp
-             JOIN content c ON c.id = wp.content_id
+             JOIN content c ON wp.content_id = c.id
              JOIN (SELECT MAX(id) mid FROM watch_progress WHERE user_id = ? AND is_completed = 0 AND (duration_seconds <= 0 OR duration_seconds - position_seconds > 600) GROUP BY content_id) lastw ON lastw.mid = wp.id
              ORDER BY wp.updated_at DESC
              LIMIT 12"

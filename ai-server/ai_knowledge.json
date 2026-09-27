@@ -1,0 +1,5050 @@
+[
+ {
+  "title": "rossiya",
+  "content": "Rossiya — dunyodagi eng katta davlat, shimolda joylashgan. Poytaxti — Moskva. O'zbekiston bilan qo'shni."
+ },
+ {
+  "title": "hindiston",
+  "content": "Hindiston — Osiyodagi aholisi eng ko'p davlatlardan biri. Poytaxti — Nyu-Dehli. Bollar (kino) olami shu yerda!"
+ },
+ {
+  "title": "xitoy",
+  "content": "Xitoy — dunyodagi eng ko'p aholili davlat. Poytaxti — Pekin. Zamonaviy texnologiyalar va qadimiy madaniyat mamlakati."
+ },
+ {
+  "title": "aqsh",
+  "content": "AQSH — Shimoliy Amerikadagi qudratli davlat. Poytaxti — Vashington. Gollivud aynan shu yerda!"
+ },
+ {
+  "title": "yaponiya",
+  "content": "Yaponiya — Osiyodagi texnologik rivojlangan davlat. Poytaxti — Tokio. Anime olamining vatani!"
+ },
+ {
+  "title": "koreya",
+  "content": "Janubiy Koreya — Osiyodagi rivojlangan davlat. Poytaxti — Seul. K-drama va K-pop olami shu yerda."
+ },
+ {
+  "title": "fransiya",
+  "content": "Fransiya — Yevropadagi go'zal davlat. Poytaxti — Parij. Kino san'ati kashf etilgan joylardan biri."
+ },
+ {
+  "title": "italiya",
+  "content": "Italiya — Yevropadagi tarixiy davlat. Poytaxti — Rim. Italiya kinosi — dunyoga mashhur."
+ },
+ {
+  "title": "buyuk britaniya",
+  "content": "Buyuk Britaniya — Yevropadagi orol davlat. Poytaxti — London. Bu yerda mashhur kinofilmlar suratga olinadi."
+ },
+ {
+  "title": "germaniya",
+  "content": "Germaniya — Yevropaning markazidagi rivojlangan davlat. Poytaxti — Berlin. Ajoyib kinofestivallar o'tkaziladi."
+ },
+ {
+  "title": "turkiya",
+  "content": "Turkiya — Osiyo va Yevropa kesishgan joydagi davlat. Poytaxti — Ankara. Turk seriallari butun dunyoda mashhur!"
+ },
+ {
+  "title": "misr",
+  "content": "Misr — Afrika va Osiyo kesishgan qadimiy davlat. Poytaxti — Qohira. Piramidalari bilan mashhur."
+ },
+ {
+  "title": "g'arbiy yevropa",
+  "content": "Yevropa — Osiyo bilan qo'shni qit'a. Ko'plab rivojlangan davlatlar shu yerda joylashgan."
+ },
+ {
+  "title": "qozogiston",
+  "content": "Qozog'iston — Markaziy Osiyodagi davlat, O'zbekistonning shimoliy qo'shnisi. Poytaxti — Ostona."
+ },
+ {
+  "title": "qirgiziston",
+  "content": "Qirg'iziston — Markaziy Osiyodagi tog'li davlat. Poytaxti — Bishkek. Issiqko'l shu yerda."
+ },
+ {
+  "title": "tojikiston",
+  "content": "Tojikiston — Markaziy Osiyodagi tog'li davlat. Poytaxti — Dushanbe. O'zbekiston bilan qo'shni."
+ },
+ {
+  "title": "turkmaniston",
+  "content": "Turkmaniston — Markaziy Osiyodagi davlat. Poytaxti — Ashxobod. Kaspiy dengizi atrofida joylashgan."
+ },
+ {
+  "title": "afg'oniston",
+  "content": "Afg'oniston — Osiyodagi tog'li davlat. Poytaxti — Kobul. O'zbekistonning janubiy qo'shnisi."
+ },
+ {
+  "title": "eron",
+  "content": "Eron — Osiyodagi tarixiy davlat. Poytaxti — Tehron. Qadimiy madaniyat mamlakati."
+ },
+ {
+  "title": "pakiston",
+  "content": "Pokiston — Osiyodagi davlat. Poytaxti — Islomobod. Hindiston bilan qo'shni."
+ },
+ {
+  "title": "arabiston",
+  "content": "Saudiya Arabistoni — Arabiston yarim orolidagi davlat. Poytaxti — Ar-Riyod. Hajo va umra shu yerda o'tkaziladi."
+ },
+ {
+  "title": "birlashgan arab amirliklari",
+  "content": "BAA — Birlashgan Arab Amirliklari, Osiyodagi rivojlangan davlat. Dubay shahri bilan mashhur."
+ },
+ {
+  "title": "isroil",
+  "content": "Isroil — Osiyodagi davlat. Poytaxti — Quddus. Texnologiyalari bilan mashhur."
+ },
+ {
+  "title": "gretsiya",
+  "content": "Gretsiya — Yevropadagi qadimiy davlat. Poytaxti — Afina. Olimpiada o'yinlari shu yerda boshlangan."
+ },
+ {
+  "title": "ispaniya",
+  "content": "Ispaniya — Yevropadagi davlat. Poytaxti — Madrid. Flamenko raqslari va futboli mashhur."
+ },
+ {
+  "title": "portugaliya",
+  "content": "Portugaliya — Yevropadagi davlat. Poytaxti — Lissabon. Buyuk dengizchi sayyohlar mamlakati."
+ },
+ {
+  "title": "niderlandiya",
+  "content": "Niderlandiya — Yevropadagi davlat, Gollandiya deb ham ataladi. Poytaxti — Amsterdam."
+ },
+ {
+  "title": "belgiya",
+  "content": "Belgiya — Yevropadagi kichik davlat. Poytaxti — Bryussel. Yevropa Ittifoqi markazi shu yerda."
+ },
+ {
+  "title": "shveytsariya",
+  "content": "Shveytsariya — Yevropadagi tog'li davlat. Poytaxti — Bern. Banklari va soati mashhur."
+ },
+ {
+  "title": "avstriya",
+  "content": "Avstriya — Yevropadagi davlat. Poytaxti — Vena. Ajoyib musiqa mamlakati."
+ },
+ {
+  "title": "shvetsiya",
+  "content": "Shvetsiya — Shimoliy Yevropadagi davlat. Poytaxti — Stokgolm. Nobel mukofoti shu yerda beriladi."
+ },
+ {
+  "title": "norvegiya",
+  "content": "Norvegiya — Shimoliy Yevropadagi davlat. Poytaxti — Oslo. Fiordlari bilan mashhur."
+ },
+ {
+  "title": "daniya",
+  "content": "Daniya — Shimoliy Yevropadagi davlat. Poytaxti — Kopengagen."
+ },
+ {
+  "title": "finlyandiya",
+  "content": "Finlyandiya — Shimoliy Yevropadagi davlat. Poytaxti — Xelsinki. Saunalar vatani."
+ },
+ {
+  "title": "polsha",
+  "content": "Polsha — Yevropadagi davlat. Poytaxti — Varshava."
+ },
+ {
+  "title": "chexiya",
+  "content": "Chexiya — Yevropadagi davlat. Poytaxti — Praga. Go'zal me'morchiligi bilan mashhur."
+ },
+ {
+  "title": "ruminiya",
+  "content": "Ruminiya — Yevropadagi davlat. Poytaxti — Buxarest."
+ },
+ {
+  "title": "bolgariya",
+  "content": "Bolgariya — Yevropadagi davlat. Poytaxti — Sofiya."
+ },
+ {
+  "title": "serbiya",
+  "content": "Serbiya — Bolqon yarim orolidagi davlat. Poytaxti — Belgrad."
+ },
+ {
+  "title": "ukraina",
+  "content": "Ukraina — Sharqiy Yevropadagi davlat. Poytaxti — Kiyev."
+ },
+ {
+  "title": "belarus",
+  "content": "Belarus — Sharqiy Yevropadagi davlat. Poytaxti — Minsk."
+ },
+ {
+  "title": "gruziya",
+  "content": "Gruziya — Kavkazdagi davlat. Poytaxti — Tbilisi. Sharobchilik mamlakati."
+ },
+ {
+  "title": "armaniston",
+  "content": "Armaniston — Kavkazdagi davlat. Poytaxti — Yerevan."
+ },
+ {
+  "title": "ozarbayjon",
+  "content": "Ozarbayjon — Kavkazdagi davlat. Poytaxti — Boku. Neft qazib olishda mashhur."
+ },
+ {
+  "title": "kanada",
+  "content": "Kanada — Shimoliy Amerikadagi rivojlangan davlat. Poytaxti — Ottava."
+ },
+ {
+  "title": "meksika",
+  "content": "Meksika — Shimoliy Amerikadagi davlat. Poytaxti — Mexiko shahri. Qadimiy sivilizatsiyalar makoni."
+ },
+ {
+  "title": "braziliya",
+  "content": "Braziliya — Janubiy Amerikadagi eng katta davlat. Poytaxti — Braziliya. Karnaval va futbol mamlakati!"
+ },
+ {
+  "title": "argentina",
+  "content": "Argentina — Janubiy Amerikadagi davlat. Poytaxti — Buenos-Ayres. Tango raqsi shu yerda tug'ilgan."
+ },
+ {
+  "title": "chili",
+  "content": "Chili — Janubiy Amerikadagi davlat. Poytaxti — Santyago."
+ },
+ {
+  "title": "peru",
+  "content": "Peru — Janubiy Amerikadagi davlat. Poytaxti — Lima. Machu-Pikchu shu yerda."
+ },
+ {
+  "title": "venesuela",
+  "content": "Venesuela — Janubiy Amerikadagi davlat. Poytaxti — Karakas."
+ },
+ {
+  "title": "kolumbiya",
+  "content": "Kolumbiya — Janubiy Amerikadagi davlat. Poytaxti — Bogota. Kofesi mashhur."
+ },
+ {
+  "title": "australiya",
+  "content": "Avstraliya — qit'a bo'lgan yagona davlat. Poytaxti — Kanberra. Kenguru va koala shu yerda!"
+ },
+ {
+  "title": "yangi zelandiya",
+  "content": "Yangi Zelandiya — Tinch okeandagi davlat. Poytaxti — Vellington. Tabiati misli ko'rilmagan go'zal."
+ },
+ {
+  "title": "indoneziya",
+  "content": "Indoneziya — Osiyodagi orollar davlati. Poytaxti — Jakarta. Bali oroli bilan mashhur."
+ },
+ {
+  "title": "tailand",
+  "content": "Tailand — Osiyodagi davlat. Poytaxti — Bangkok. Plajlari bilan mashhur."
+ },
+ {
+  "title": "vietnam",
+  "content": "Vyetnam — Osiyodagi davlat. Poytaxti — Xanoy."
+ },
+ {
+  "title": "malayziya",
+  "content": "Malayziya — Osiyodagi davlat. Poytaxti — Kuala-Lumpur."
+ },
+ {
+  "title": "singapur",
+  "content": "Singapur — Osiyodagi kichik, ammo juda rivojlangan davlat. Kellang shahri bilan mashhur."
+ },
+ {
+  "title": "filippin",
+  "content": "Filippin — Osiyodagi orollar davlati. Poytaxti — Manila."
+ },
+ {
+  "title": "birma",
+  "content": "Myanma (Birma) — Osiyodagi davlat. Poytaxti — Naypyidov."
+ },
+ {
+  "title": "niqrobiya",
+  "content": "Nigeriya — Afrikadagi aholisi eng ko'p davlat. Poytaxti — Abuja."
+ },
+ {
+  "title": "efiopiya",
+  "content": "Efiopiya — Afrikadagi davlat. Poytaxti — Addis-Abeba."
+ },
+ {
+  "title": "keniya",
+  "content": "Keniya — Afrikadagi davlat. Poytaxti — Nayrobi. Safarilar mamlakati."
+ },
+ {
+  "title": "jazo'r",
+  "content": "Jazoir — Afrikadagi davlat. Poytaxti — Jazoir shahri. Sahroi Kabirning katta qismi shu yerda."
+ },
+ {
+  "title": "marokash",
+  "content": "Marokash — Afrikadagi davlat. Poytaxti — Rabot."
+ },
+ {
+  "title": "tunis",
+  "content": "Tunis — Afrikadagi davlat. Poytaxti — Tunis shahri."
+ },
+ {
+  "title": "janubiy afrika",
+  "content": "Janubiy Afrika Respublikasi — Afrikaning janubidagi davlat. Poytaxtlari — Pretoriya, Keyptaun."
+ },
+ {
+  "title": "mavrikiy",
+  "content": "Mavrikiy — Hind okeanidagi orol davlat. Sayyohlar sevadigan joy."
+ },
+ {
+  "title": "london",
+  "content": "London — Buyuk Britaniyaning poytaxti. Big Ben va Temza daryosi bilan mashhur."
+ },
+ {
+  "title": "parij",
+  "content": "Parij — Fransiyaning poytaxti, «nurlar shahri». Eyfel minorasi shu yerda joylashgan."
+ },
+ {
+  "title": "nyu-york",
+  "content": "Nyu-York — AQSHning eng katta shahri. Statuya Ozodlik, «katta olma» deb ataladi."
+ },
+ {
+  "title": "tokio",
+  "content": "Tokio — Yaponiyaning poytaxti, dunyodagi eng katta metropoliyalardan biri."
+ },
+ {
+  "title": "seul",
+  "content": "Seul — Janubiy Koreyaning poytaxti. Zamonaviy texnologiyalar shahri."
+ },
+ {
+  "title": "pekin",
+  "content": "Pekin — Xitoyning poytaxti. Qadimiy va zamonaviy uyg'unlashgan shahar."
+ },
+ {
+  "title": "moskva",
+  "content": "Moskva — Rossiyaning poytaxti. Qizil maydon va Kreml shu yerda."
+ },
+ {
+  "title": "dubay",
+  "content": "Dubay — BAA'dagi shahar. Dunyodagi eng baland bino — Burj Xalifa shu yerda!"
+ },
+ {
+  "title": "istanbul",
+  "content": "Istanbul — Turkiyadagi eng katta shahar. Ikki qit'ani bog'laydi: Osiyo va Yevropa."
+ },
+ {
+  "title": "berlin",
+  "content": "Berlin — Germaniyaning poytaxti. Berlindagi devor tarixi bilan mashhur."
+ },
+ {
+  "title": "rim",
+  "content": "Rim — Italiyaning poytaxti, «abadiy shahar». Kolizey shu yerda."
+ },
+ {
+  "title": "madrid",
+  "content": "Madrid — Ispaniyaning poytaxti. Futbol va muzeylari bilan mashhur."
+ },
+ {
+  "title": "barcelona",
+  "content": "Barselona — Ispaniyadagi go'zal shahar. Arxitektura asarlari bilan mashhur."
+ },
+ {
+  "title": "vena",
+  "content": "Vena — Avstriyaning poytaxti, musiqachilar shahri."
+ },
+ {
+  "title": "praga",
+  "content": "Praga — Chexiyaning poytaxti. Qadimiy qal'alari bilan mashhur."
+ },
+ {
+  "title": "amsterdam",
+  "content": "Amsterdam — Niderlandiyaning poytaxti. Kanallari bilan mashhur."
+ },
+ {
+  "title": "stokgolm",
+  "content": "Stokgolm — Shvetsiyaning poytaxti. Ko'p orollardan iborat shahar."
+ },
+ {
+  "title": "kopengagen",
+  "content": "Kopengagen — Daniyaning poytaxti."
+ },
+ {
+  "title": "oslo",
+  "content": "Oslo — Norvegiyaning poytaxti."
+ },
+ {
+  "title": "xelsinki",
+  "content": "Xelsinki — Finlyandiyaning poytaxti."
+ },
+ {
+  "title": "varshava",
+  "content": "Varshava — Polshaning poytaxti."
+ },
+ {
+  "title": "kiyev",
+  "content": "Kiyev — Ukrainaning poytaxti."
+ },
+ {
+  "title": "minsk",
+  "content": "Minsk — Belarusning poytaxti."
+ },
+ {
+  "title": "boku",
+  "content": "Boku — Ozarbayjonning poytaxti. Kaspiy dengizi sohilida joylashgan."
+ },
+ {
+  "title": "tbilisi",
+  "content": "Tbilisi — Gruziyaning poytaxti. Go'zal tog'lar orasida."
+ },
+ {
+  "title": "erevan",
+  "content": "Yerevan — Armanistonning poytaxti. Aravot tog'ining etagida."
+ },
+ {
+  "title": "qohira",
+  "content": "Qohira — Misrning poytaxti. Piramidalarga yaqin joyda."
+ },
+ {
+  "title": "keyptaun",
+  "content": "Keyptaun — Janubiy Afrikadagi go'zal shahar. Table Mountain bilan mashhur."
+ },
+ {
+  "title": "rio",
+  "content": "Rio-de-Janeyro — Braziliyadagi shahar. Karnavali va Xrist figurasi bilan mashhur."
+ },
+ {
+  "title": "los-angeles",
+  "content": "Los-Anjeles — AQSHdagi shahar. Gollivud va kinostudiylar shu yerda!"
+ },
+ {
+  "title": "sietl",
+  "content": "Sietl — AQSHdagi shahar. Qahva madaniyati bilan mashhur."
+ },
+ {
+  "title": "andijon",
+  "content": "Andijon — O'zbekistonning Farg'ona vodiysidagi shahri. Bobur shu yerda tug'ilgan."
+ },
+ {
+  "title": "namangan",
+  "content": "Namangan — O'zbekistonning Farg'ona vodiysidagi shahri. «Yoshlar shahri» deb ataladi."
+ },
+ {
+  "title": "farg'ona",
+  "content": "Farg'ona — O'zbekistonning sharqidagi shahar, vodiyni markazi."
+ },
+ {
+  "title": "qo'qon",
+  "content": "Qo'qon — Farg'ona vodiysidagi tarixiy shahar. Qo'qon xonligi poytaxti bo'lgan."
+ },
+ {
+  "title": "nukus",
+  "content": "Nukus — Qoraqalpog'istonning poytaxti. Savitskiy muzeyi shu yerda joylashgan."
+ },
+ {
+  "title": "urganch",
+  "content": "Urganch — Xorazm viloyatining markazi."
+ },
+ {
+  "title": "termiz",
+  "content": "Termiz — O'zbekistonning janubidagi shahar, Afg'oniston bilan chegaradosh."
+ },
+ {
+  "title": "jizzax",
+  "content": "Jizzax — O'zbekistonning markaziy shahri."
+ },
+ {
+  "title": "guliston",
+  "content": "Guliston — Sirdaryo viloyatining markazi."
+ },
+ {
+  "title": "qarshi",
+  "content": "Qarshi — Qashqadaryo viloyatining markazi."
+ },
+ {
+  "title": "denov",
+  "content": "Denov — Surxondaryo viloyatidagi shahar."
+ },
+ {
+  "title": "navoiy",
+  "content": "Navoiy — O'zbekistondagi zamonaviy shahar, sanoat markazi."
+ },
+ {
+  "title": "chirchiq",
+  "content": "Chirchiq — Toshkent viloyatidagi shahar, kimyo sanoati bilan mashhur."
+ },
+ {
+  "title": "angren",
+  "content": "Angren — Toshkent viloyatidagi konchilar shahri."
+ },
+ {
+  "title": "olmaliq",
+  "content": "Olmaliq — Toshkent viloyatidagi shahar, mis konlari bilan mashhur."
+ },
+ {
+  "title": "buxoro viloyati",
+  "content": "Buxoro — O'zbekistonning qadimiy shahri, Buyuk ipak yo'lidagi markazlardan biri."
+ },
+ {
+  "title": "xiva shahri",
+  "content": "Xiva — Xorazmdagi qadimiy shahar, Ichan-qal'a — YuNESKO merosi."
+ },
+ {
+  "title": "shahrisabz",
+  "content": "Shahrisabz — Amir Temur tug'ilgan shahar. Oqsaroy shu yerda."
+ },
+ {
+  "title": "zomin",
+  "content": "Zomin — Jizzax viloyatidagi tog'li shaharcha, sanatoriyalari bilan mashhur."
+ },
+ {
+  "title": "chortoq",
+  "content": "Chortoq — Namangan viloyatidagi shaharcha, mineral suvlari bilan mashhur."
+ },
+ {
+  "title": "sirdaryo",
+  "content": "Sirdaryo — O'zbekistondagi daryo va viloyat. Uzunligi bo'yicha O'rta Osiyoda yetakchi."
+ },
+ {
+  "title": "amudaryo",
+  "content": "Amudaryo — O'zbekistonning janubidagi buyuk daryo. Orolga quyilgan."
+ },
+ {
+  "title": "zarafshon",
+  "content": "Zarafshon — O'zbekistondagi daryo, «oltin sochuvchi» degan ma'noni anglatadi."
+ },
+ {
+  "title": "qizilqum",
+  "content": "Qizilqum — O'zbekistondagi katta cho'l. «Qizil qum» degani."
+ },
+ {
+  "title": "qoraqalpog'iston",
+  "content": "Qoraqalpog'iston — O'zbekiston tarkibidagi avtonom respublika. Orol dengizi shu yerda."
+ },
+ {
+  "title": "orol dengizi",
+  "content": "Orol dengizi — O'zbekiston va Qozog'iston oralig'idagi berk ko'l. Yaqin tarixda kichraygani bilan mashhur."
+ },
+ {
+  "title": "chortoq suvi",
+  "content": "Chortoq mineral suvi — Namangandagi shifo buloqlaridan olinadi."
+ },
+ {
+  "title": "registon",
+  "content": "Registon — Samarqanddagi mashhur maydon, uchta madrasa bilan o'ralgan."
+ },
+ {
+  "title": "ipak yo'li",
+  "content": "Buyuk ipak yo'li — qadimda Xitoydan Yevropagacha bo'lgan savdo yo'li. O'zbekiston uning markazida edi."
+ },
+ {
+  "title": "qit'a",
+  "content": "Qit'a — Yerning katta quruqlik massivi. Dunyoda 6 qit'a bor: Osiyo, Afrika, Yevropa, Amerika, Avstraliya va Antarktida."
+ },
+ {
+  "title": "poytaxt nima",
+  "content": "Poytaxt — davlatning boshqaruv markazi bo'lgan shahri."
+ },
+ {
+  "title": "chegara",
+  "content": "Chegara — ikki davlat orasidagi chegara chizig'i."
+ },
+ {
+  "title": "markaziy osiyo",
+  "content": "Markaziy Osiyo — O'zbekiston, Qozog'iston, Qirg'iziston, Tojikiston, Turkmaniston joylashgan mintaqa."
+ },
+ {
+  "title": "toshkent shahri",
+  "content": "Toshkent — O'zbekistonning poytaxti va eng katta shahri. «Toshkent — shahar» degani."
+ },
+ {
+  "title": "kuch",
+  "content": "Kuch — jismga ta'sir etib, uning tezligini o'zgartira oladigan fizik kattalik. Nyutonlarda o'lchanadi."
+ },
+ {
+  "title": "tezlik",
+  "content": "Tezlik — jismning vaqt birligida bosib o'tgan masofasi. km/soat yoki m/s da o'lchanadi."
+ },
+ {
+  "title": "masofa",
+  "content": "Masofa — ikki nuqta orasidagi uzunlik. Kilometr, metr kabi birliklarda o'lchanadi."
+ },
+ {
+  "title": "vaqt",
+  "content": "Vaqt — voqealarning ketma-ketligini o'lchaydigan fizik kattalik. Oddiy hayotda sekund, minut, soat ishlatamiz."
+ },
+ {
+  "title": "energiya",
+  "content": "Energiya — ish bajarish qobiliyati. Kinetik, potensial, issiqlik, elektr energiyasi bor."
+ },
+ {
+  "title": "massa",
+  "content": "Massa — jismdagi modda miqdori. Kilogrammlarda o'lchanadi."
+ },
+ {
+  "title": "og'irlik",
+  "content": "Og'irlik — Yerning jismga tortish kuchi. Nyutonda o'lchanadi, massadan farq qiladi."
+ },
+ {
+  "title": "zichlik",
+  "content": "Zichlik — moddaning hajm birligidagi massasi. Suv zichligi 1 g/sm³."
+ },
+ {
+  "title": "bosim",
+  "content": "Bosim — yuzaga ta'sir qiladigan kuch. Paskallarda o'lchanadi. Pastki qatlamlarda bosim katta."
+ },
+ {
+  "title": "harorat",
+  "content": "Harorat — jismning issiq-sovuqligini ko'rsatadigan kattalik. Daraajalarda o'lchanadi."
+ },
+ {
+  "title": "issiqlik",
+  "content": "Issiqlik — energiyaning bir jismdan ikkinchisiga o'tish shakli. Quyoshdan Yerga keladi."
+ },
+ {
+  "title": "tovush",
+  "content": "Tovush — havo yoki boshqa muhitda tarqaladigan tebranish. Tezligi havoda ~340 m/s."
+ },
+ {
+  "title": "yorug'lik tezligi",
+  "content": "Yorug'lik tezligi — sekundiga ~300 000 km. Koinotdagi eng katta tezlik."
+ },
+ {
+  "title": "magnit",
+  "content": "Magnit — temir kabi metallarni o'ziga tortadigan jism. Kompaslar magnit asosida ishlaydi."
+ },
+ {
+  "title": "magnit maydoni",
+  "content": "Magnit maydoni — magnit atrofidagi ta'sir zonasi. Yerning ham o'z magnit maydoni bor."
+ },
+ {
+  "title": "elektr toki",
+  "content": "Elektr toki — zaryadlangan zarrachalarning tartibli harakati. Amperda o'lchanadi."
+ },
+ {
+  "title": "kuchlanish",
+  "content": "Kuchlanish — elektr zanjirda zaryadlarni harakatlantiradigan bosim. Voltlarda o'lchanadi."
+ },
+ {
+  "title": "qarshilik",
+  "content": "Qarshilik — elektr tokiga ko'rsatiladigan to'siq. Omda o'lchanadi."
+ },
+ {
+  "title": "quvvat",
+  "content": "Quvvat — vaqt birligida bajarilgan ish. Vattlarda o'lchanadi."
+ },
+ {
+  "title": "suyuqlik",
+  "content": "Suyuqlik — oquvchan holatidagi modda. Suv, sut, yog' — suyuqliklar."
+ },
+ {
+  "title": "muz",
+  "content": "Muz — suvning muzlagan qattiq holati. 0°C da muzlaydi."
+ },
+ {
+  "title": "bug'",
+  "content": "Bug' — suvning gaz holati. Qaynaganda suv bug'ga aylanadi."
+ },
+ {
+  "title": "qaynash",
+  "content": "Qaynash — suyuqlikning butun hajmida bug'lanishi. Suv 100°C da qaynaydi."
+ },
+ {
+  "title": "erish",
+  "content": "Erish — qattiq moddaning suyuqlikka aylanishi. Muz 0°C da eriydi."
+ },
+ {
+  "title": "difuziya",
+  "content": "Difuziya — moddalarning o'z-o'zidan aralashishi. Choy damlaganda shakar shunday tarqaladi."
+ },
+ {
+  "title": "inertsiya",
+  "content": "Inersiya — jismning o'z harakat holatini saqlash xususiyati. Avtobus tormozlaganda oldinga siljishimiz shu tufayli."
+ },
+ {
+  "title": "friksiya",
+  "content": "Ishqalanish kuchi — jismlar sirpanishiga qarshilik qiladigan kuch."
+ },
+ {
+  "title": "tortishish",
+  "content": "Tortishish kuchi — jismlarning bir-birini o'ziga tortishi. Yer bizni shu kuch bilan ushlab turadi."
+ },
+ {
+  "title": "kosmik tezlik",
+  "content": "Kosmik tezlik — jismning Yer orbitasiga chiqishi uchun kerakli tezlik (~7,9 km/s)."
+ },
+ {
+  "title": "atom",
+  "content": "Atom — materiyaning eng kichik zarrasi. Yadro va elektronlardan iborat."
+ },
+ {
+  "title": "kimyo nima",
+  "content": "Kimyo — moddalar tarkibi, xossalari va o'zgarishlarini o'rganadigan fan."
+ },
+ {
+  "title": "molekula",
+  "content": "Molekula — moddaning kimyoviy xossalarini saqlovchi eng kichik zarrasi."
+ },
+ {
+  "title": "element",
+  "content": "Kimyoviy element — bir xil atomlardan tashkil topgan modda. Vodorod, kislorod, temir — elementlar."
+ },
+ {
+  "title": "vodorod",
+  "content": "Vodorod — eng yengil kimyoviy element. Belgisi H. Quyosh asosan vodoroddan iborat."
+ },
+ {
+  "title": "kislorod",
+  "content": "Kislorod — nafas olish uchun zarur gaz. Belgisi O. Havoning ~21 foizi kislorod."
+ },
+ {
+  "title": "azot",
+  "content": "Azot — havoning ~78 foizini tashkil etadigan gaz. Belgisi N."
+ },
+ {
+  "title": "uglerod",
+  "content": "Uglerod — hayotning asosi. Olmos va grafit uning shakllari. Belgisi C."
+ },
+ {
+  "title": "temir",
+  "content": "Temir — metall, belgisi Fe. Qurilish va texnikada juda ko'p ishlatiladi."
+ },
+ {
+  "title": "oltin",
+  "content": "Oltin — qimmatbaho metall, belgisi Au. Zargarlik va elektronikada ishlatiladi."
+ },
+ {
+  "title": "kumush",
+  "content": "Kumush — yaltiroq qimmatbaho metall, belgisi Ag. Zargarlikda ishlatiladi."
+ },
+ {
+  "title": "mis",
+  "content": "Mis — qizg'ish metall, belgisi Cu. Elektr simlari uchun juda yaxshi."
+ },
+ {
+  "title": "alyuminiy",
+  "content": "Alyuminiy — yengil kumushrang metall, belgisi Al. Samolyot va idishlarda ishlatiladi."
+ },
+ {
+  "title": "suv formulasi",
+  "content": "Suvning kimyoviy formulasi — H2O: ikkita vodorod va bitta kislorod atomi."
+ },
+ {
+  "title": "tuz",
+  "content": "Tuz — natriy xlorid (NaCl). Oshxona tuzi oziq-ovqatda ishlatiladi."
+ },
+ {
+  "title": "shakar",
+  "content": "Shakar — kimyoviy nomi saxaroza. Shirin ta'm beradigan modda."
+ },
+ {
+  "title": "o'g'it",
+  "content": "O'g'it — o'simliklarni oziqlantirish uchun tuproqqa qo'shiladigan modda. Azotli, fosforli turlari bor."
+ },
+ {
+  "title": "kislota",
+  "content": "Kislota — vodorod tutgan kimyoviy modda. Limon sharbati tarkibida limon kislotasi bor."
+ },
+ {
+  "title": "asos",
+  "content": "Asos (ishqor) — kislota bilan reaksiyaga kirishadigan modda. Sovun tarkibida asos bor."
+ },
+ {
+  "title": "neytrallash",
+  "content": "Neytrallash — kislota va asosning bir-birini betaraf qilishi natijasida tuz va suv hosil bo'lishi."
+ },
+ {
+  "title": "reaksiya",
+  "content": "Kimyoviy reaksiya — moddalarning o'zaro ta'siri natijasida yangi moddalar hosil bo'lishi."
+ },
+ {
+  "title": "zang",
+  "content": "Zang — temirning kislorod va suv ta'sirida qizarishi. Aslida sekin kimyoviy reaksiya."
+ },
+ {
+  "title": "olov",
+  "content": "Olov — yonish jarayonida issiqlik va yorug'lik chiqaradigan jarayon. Yonish uchun kislorod kerak."
+ },
+ {
+  "title": "gaz",
+  "content": "Gaz — erkin harakatlanadigan zarrachalardan iborat modda holati. Havo — gazlar aralashmasi."
+ },
+ {
+  "title": "plastmassa",
+  "content": "Plastmassa — sun'iy yaratilgan polimer material. Yengil va mustahkam."
+ },
+ {
+  "title": "shisha",
+  "content": "Shisha — qumdan qizdirib eritib tayyorlanadigan shaffof material."
+ },
+ {
+  "title": "beton",
+  "content": "Beton — sement, qum va suv aralashmasidan tayyorlanadigan qurilish materiali."
+ },
+ {
+  "title": "neft",
+  "content": "Neft — yer ostidan olinadigan yonilg'i. Benzinning asosi."
+ },
+ {
+  "title": "gaz tabiiy",
+  "content": "Tabiiy gaz — yer ostidan olinadigan yonuvchi gaz. Uyda pishirishda ishlatiladi."
+ },
+ {
+  "title": "ko'mir",
+  "content": "Ko'mir — yer ostidan olinadigan qattiq yonilg'i. O'tmishda poyezdlar ko'mirda yurgan."
+ },
+ {
+  "title": "olmos",
+  "content": "Olmos — eng qattiq tabiiy mineral. Ugleroddan tashkil topgan."
+ },
+ {
+  "title": "algebra",
+  "content": "Algebra — matematikaning sonlar va belgilar bilan ishlaydigan bo'limi. Tenglamalar shu yerda o'rganiladi."
+ },
+ {
+  "title": "geometriya",
+  "content": "Geometriya — shakllar, nuqta, chiziq va ularning xossalarini o'rganadigan fan."
+ },
+ {
+  "title": "tenglama",
+  "content": "Tenglama — noma'lum sonni topish masalasi. Masalan: x + 5 = 10, x = 5."
+ },
+ {
+  "title": "kasr",
+  "content": "Kasr — sonning bir qismini ifodalaydi. Masalan, 1/2 — yarim."
+ },
+ {
+  "title": "foiz",
+  "content": "Foiz — yuzdan bir ulush, % belgisi bilan yoziladi. 50% = yarmi."
+ },
+ {
+  "title": "kvadrat",
+  "content": "Kvadrat — to'rt tomoni teng bo'lgan to'rtburchak."
+ },
+ {
+  "title": "uchburchak",
+  "content": "Uchburchak — uch tomoni va uchta burchagi bo'lgan shakl."
+ },
+ {
+  "title": "aylana",
+  "content": "Aylana — markazdan teng uzoqlikdagi nuqtalar to'plami. Radius — markazdan aylanagacha masofa."
+ },
+ {
+  "title": "diametr",
+  "content": "Diametr — aylananing markazidan o'tuvchi eng uzun to'g'ri chiziq. Radiusning 2 barobari."
+ },
+ {
+  "title": "pi soni",
+  "content": "Pi (π) — aylana uzunligining diametriga nisbati. Taxminan 3,14159..."
+ },
+ {
+  "title": "burchak",
+  "content": "Burchak — ikki to'g'ri chiziq orasidagi ochilish. Daraaja (°) bilan o'lchanadi."
+ },
+ {
+  "title": "to'g'ri burchak",
+  "content": "To'g'ri burchak — 90° ga teng burchak. Kvadrat burchaklari shunday."
+ },
+ {
+  "title": "sonlar",
+  "content": "Sonlar — hisoblash uchun ishlatiladigan belgilar. Natural, butun, kasr sonlar bor."
+ },
+ {
+  "title": "ko'paytma",
+  "content": "Ko'paytma — ikki sonning ko'paytirish natijasi. Masalan: 3×4 = 12."
+ },
+ {
+  "title": "bo'linma",
+  "content": "Bo'linma — bo'lish amalining natijasi. Masalan: 12:4 = 3."
+ },
+ {
+  "title": "musbat son",
+  "content": "Musbat son — noldan katta son. Masalan, 1, 2, 3..."
+ },
+ {
+  "title": "manfiy son",
+  "content": "Manfiy son — noldan kichik son, minus belgisi bilan. Masalan, -5."
+ },
+ {
+  "title": "daraja",
+  "content": "Daraja — sonning o'z-o'ziga ko'paytirilishi. Masalan, 2³ = 8."
+ },
+ {
+  "title": "kvadrat ildiz",
+  "content": "Kvadrat ildiz — qaysi sonning kvadrati berilgan songa tengligini topadi. √9 = 3."
+ },
+ {
+  "title": "taqqoslash",
+  "content": "Taqqoslash — sonlarni katta-kichikligini aniqlash. > va < belgilari ishlatiladi."
+ },
+ {
+  "title": "koinot",
+  "content": "Koinot — hamma narsa: yulduzlar, sayyoralar, galaktikalar va bo'shliq. Cheksiz keng!"
+ },
+ {
+  "title": "galaktika",
+  "content": "Galaktika — milliardlab yulduzlardan iborat ulkan tizim. Bizning galaktika — Somon yo'li."
+ },
+ {
+  "title": "somon yo'li",
+  "content": "Somon yo'li — Quyosh joylashgan galaktika. Kechasi osmonda oq yo'l bo'lib ko'rinadi."
+ },
+ {
+  "title": "quyosh tizimi",
+  "content": "Quyosh tizimi — Quyosh va uning atrofida aylanadigan 8 sayyora va boshqa jismlar."
+ },
+ {
+  "title": "merkuriy",
+  "content": "Merkuriy — Quyoshga eng yaqin sayyora, eng kichik sayyora."
+ },
+ {
+  "title": "venera",
+  "content": "Venera — Quyoshdan ikkinchi sayyora. Eng issiq sayyora, bulutlar bilan qoplangan."
+ },
+ {
+  "title": "yer",
+  "content": "Yer — biz yashaydigan sayyora. Quyoshdan uchinchi sayyora, hayot bor yagona ma'lum joy."
+ },
+ {
+  "title": "mars",
+  "content": "Mars — «qizil sayyora». Ilmiy-fantastik filmlarning sevimli mavzusi!"
+ },
+ {
+  "title": "yupiter",
+  "content": "Yupiter — Quyosh tizimidagi eng katta sayyora. Katta qizil dog'i bilan mashhur."
+ },
+ {
+  "title": "satum",
+  "content": "Saturn — halqalari bilan mashhur sayyora. Uning halqalari muz va toshlardan iborat."
+ },
+ {
+  "title": "uran",
+  "content": "Uran — Quyoshdan yettinchi sayyora. «Muzli gigant» deb ataladi."
+ },
+ {
+  "title": "neptun",
+  "content": "Neptun — Quyoshdan eng uzoq sayyora. Kuchli shamollari bilan mashhur."
+ },
+ {
+  "title": "oy nima",
+  "content": "Oy — Yerning tabiiy yo'ldoshi. Tun osmonida ko'rinadi, Yer atrofida aylanadi."
+ },
+ {
+  "title": "yulduz nima",
+  "content": "Yulduz — o'z-o'zidan yorug'lik chiqaradigan ulkan gaz shari. Quyosh — yulduz."
+ },
+ {
+  "title": "qora tuynuk",
+  "content": "Qora tuynuk — tortishish kuchi shu qadar kuchliki, hatto yorug'lik ham qochib chiqa olmaydigan kosmik jism."
+ },
+ {
+  "title": "kometa",
+  "content": "Kometa — muz va changdan iborat kosmik jism, Quyoshga yaqinlashganda dum hosil qiladi."
+ },
+ {
+  "title": "meteor",
+  "content": "Meteor — atmosferaga kirganda yonadigan kosmik jism. «Uchar yulduz» deb ham ataladi."
+ },
+ {
+  "title": "raketa",
+  "content": "Raketa — kosmosga uchish uchun mo'ljallangan transport vositasi."
+ },
+ {
+  "title": "sputnik",
+  "content": "Sputnik (sun'iy yo'ldosh) — Yer orbitasida aylanadigan inson yaratgan apparat. Aloqa, GPS ishlatadi."
+ },
+ {
+  "title": "kosmonavt",
+  "content": "Kosmonavt (astronavt) — kosmosga uchgan inson. Birinchi kosmonavt — Yuriy Gagarin."
+ },
+ {
+  "title": "apollo",
+  "content": "Apollon dasturi — AQSHning Oyga odam qo'ndirish dasturi. 1969-yilda ilk marta muvaffaq bo'lgan."
+ },
+ {
+  "title": "neytronga",
+  "content": "Neytron yulduz — juda zich yulduz. Qoshiq hajmidagi moddasi tonnalab og'irlik qiladi."
+ },
+ {
+  "title": "iqlim",
+  "content": "Iqlim — bir hududda uzoq yillar davomidagi ob-havo holati. Issiq, sovuq, quruq, nam turlari bor."
+ },
+ {
+  "title": "yomg'ir",
+  "content": "Yomg'ir — bulutlardan tomchilar bo'lib yog'adigan suv. O'simliklar uchun zarur."
+ },
+ {
+  "title": "qor",
+  "content": "Qor — muzlagan suv kristallaridan yog'adigan yog'in. Har bir qor gulining shakli noyob."
+ },
+ {
+  "title": "shamol",
+  "content": "Shamol — havoning harakatlanishi. Kuchli shamol tornadoga aylanishi mumkin."
+ },
+ {
+  "title": "elektr chaqmoq",
+  "content": "Chaqmoq — momaqaldiroq paytida osmonda hosil bo'ladigan elektr uchquni. Juda kuchli."
+ },
+ {
+  "title": "kamalak",
+  "content": "Kamalak — yomg'irdan keyin quyosh nuri suv tomchilarida sinishi natijasida paydo bo'ladigan rang-barang yoy."
+ },
+ {
+  "title": "tuproq",
+  "content": "Tuproq — o'simliklar o'sadigan yer qatlami. O'g'it bilan boyitiladi."
+ },
+ {
+  "title": "cho'l",
+  "content": "Cho'l — yomg'ir juda kam yog'adigan quruq hudud. Qizilqum — O'zbekistondagi cho'l."
+ },
+ {
+  "title": "o'rmon",
+  "content": "O'rmon — ko'p daraxtlar o'sadigan maydon. Yer o'pkasi deb ataladi."
+ },
+ {
+  "title": "sahro",
+  "content": "Sahro — juda katta qumli cho'l. Sahroi Kabir — Afrikadagi eng katta sahro."
+ },
+ {
+  "title": "vodiy",
+  "content": "Vodiy — tog'lar orasidagi pastlik. Farg'ona vodiysi — eng go'zal vodiy."
+ },
+ {
+  "title": "tog' tizmasi",
+  "content": "Tog' tizmasi — ketma-ket joylashgan tog'lar zanjiri."
+ },
+ {
+  "title": "qor cho'qqisi",
+  "content": "Cho'qqi — tog'ning eng baland nuqtasi."
+ },
+ {
+  "title": "sharshara",
+  "content": "Sharshara — balandlikdan tik tushadigan suv. Go'zal manzara!"
+ },
+ {
+  "title": "buloq",
+  "content": "Buloq — yer ostidan er yuzasiga chiqadigan suv manbai."
+ },
+ {
+  "title": "suv ombori",
+  "content": "Suv ombori — suv yig'ish uchun qurilgan sun'iy katta hovuz. Chorvoq — bunday ombor."
+ },
+ {
+  "title": "ekvator",
+  "content": "Ekvator — Yerning o'rtasidan o'tuvchi xayoliy chiziq. Eng issiq hududlar uning atrofida."
+ },
+ {
+  "title": "qutb",
+  "content": "Qutb — Yerning eng shimoliy (shimoliy qutb) va eng janubiy (janubiy qutb) nuqtalari. U yerda hamisha sovuq."
+ },
+ {
+  "title": "materik",
+  "content": "Materik — katta quruqlik massivi. Osiyo eng katta materik."
+ },
+ {
+  "title": "orol",
+  "content": "Orol — hamma tomondan suv bilan o'ralgan quruqlik. Maldiv orollari mashhur."
+ },
+ {
+  "title": "sher",
+  "content": "Sher — «hayvonlar qiroli». Kuchli, jasur. Afrika savannalarida yashaydi."
+ },
+ {
+  "title": "yo'lbars",
+  "content": "Yo'lbars — yo'l-yo'l chiziqli yirik mushuk. Osiyo o'rmonlarida yashaydi."
+ },
+ {
+  "title": "bo'ri",
+  "content": "Bo'ri — bo'ron va o'rmonlarda yashaydigan yirtqich. Oqil va sodiq hayvon."
+ },
+ {
+  "title": "tulki",
+  "content": "Tulki — ayyor va chaqqon hayvon. To'q sariq dumi bilan mashhur."
+ },
+ {
+  "title": "ayiq",
+  "content": "Ayiq — katta va kuchli hayvon. Qishda uyqusiga kiradi."
+ },
+ {
+  "title": "quyon",
+  "content": "Quyon — uzun quloqli, tez yuguradigan kichik hayvon. Sabzini yaxshi ko'radi."
+ },
+ {
+  "title": "kiyik",
+  "content": "Kiyik — o'rmonlarda yashaydigan go'zal, tez yuguradigan hayvon. Shoxlari bor."
+ },
+ {
+  "title": "sug'ur",
+  "content": "Sug'ur — dashtda yashaydigan kemiruvchi. Chuqur in qazib yashaydi."
+ },
+ {
+  "title": "kirpi",
+  "content": "Kirpi — tikangan kichik hayvon. Xavf sezganda dumaloq bo'lib olishadi."
+ },
+ {
+  "title": "sichqon",
+  "content": "Sichqon — kichkina kemiruvchi. Filmlarda multfilm qahramoni sifatida mashhur!"
+ },
+ {
+  "title": "kalamush",
+  "content": "Kalamush — aqlli kemiruvchi. Laboratoriyalarda o'rganiladi."
+ },
+ {
+  "title": "yara",
+  "content": "Yarasa — tunda uchadigan sutemizuvchi. Ekolokatsiya bilan yo'l topadi."
+ },
+ {
+  "title": "delfin",
+  "content": "Delfin — aqlli dengiz hayvoni. Odamlar bilan do'stlashib o'ynaydi."
+ },
+ {
+  "title": "kit",
+  "content": "Kit — eng katta hayvon. Uzunligi 30 metrgacha yetishi mumkin."
+ },
+ {
+  "title": "akula",
+  "content": "Akula — dengizdagi yirtqich baliq. Film qahramoni sifatida ham mashhur."
+ },
+ {
+  "title": "sepiya",
+  "content": "Sekizoyoq (osminog) — 8 ta qo'li bo'lgan aqlli dengiz hayvoni. Rangini o'zgartira oladi."
+ },
+ {
+  "title": "meduza",
+  "content": "Meduza — shaffof, jelatinsimon dengiz hayvoni."
+ },
+ {
+  "title": "krab",
+  "content": "Qisqichbaqa — dengiz va qirg'oqda yashaydigan qattiq qurolli hayvon."
+ },
+ {
+  "title": "toshbaqa",
+  "content": "Toshbaqa — qobig'i bilan mashhur, juda uzoq yashaydigan hayvon."
+ },
+ {
+  "title": "ilon",
+  "content": "Ilon — oyoqsiz sudraluvchi. Ba'zilari zaharli bo'lishi mumkin."
+ },
+ {
+  "title": "kaltakesak",
+  "content": "Kaltakesak — to'rtta oyoqli mayda sudraluvchi. Issiq joylarda yashaydi."
+ },
+ {
+  "title": "timsoh",
+  "content": "Timsoh — suvda yashaydigan yirik yirtqich sudraluvchi."
+ },
+ {
+  "title": "qurbaqa",
+  "content": "Qurbaqa — suv va quruqlikda yashaydigan amfibiya. Voyaga yetishda metamorfoz o'tkazadi."
+ },
+ {
+  "title": "burgut",
+  "content": "Burgut — juda kuchli va uzoqni ko'radigan yirtqich qush."
+ },
+ {
+  "title": "lochin",
+  "content": "Lochin — tez uchadigan yirtqich qush."
+ },
+ {
+  "title": "boyo'g'li",
+  "content": "Boyo'g'li — tunda faol, aqlli qush. Boshini 270° ga bura oladi."
+ },
+ {
+  "title": "bulbul",
+  "content": "Bulbul — go'zal sayraydigan qush. Bahor qushlari orasida eng mashhuri."
+ },
+ {
+  "title": "to'ti",
+  "content": "To'ti — odam ovozini taqlid qila oladigan rang-barang qush."
+ },
+ {
+  "title": "pingvin",
+  "content": "Pingvin — ucha olmaydigan, lekin a'lo suzuvchi qush. Sovuq joylarda yashaydi."
+ },
+ {
+  "title": "tuyaqush",
+  "content": "Tuyaqush — dunyodagi eng katta qush. Yuguradi, uchmaydi."
+ },
+ {
+  "title": "tovuq",
+  "content": "Tovuq — xonaki qush. Tuxum va go'shti uchun boqiladi."
+ },
+ {
+  "title": "ot",
+  "content": "Ot — insonning eng sodiq yordamchilaridan biri. Poygada ham ishlatiladi."
+ },
+ {
+  "title": "sigir",
+  "content": "Sigir — sut beradigan xonaki hayvon. Sutdan pishloq, qaymoq tayyorlanadi."
+ },
+ {
+  "title": "qo'y",
+  "content": "Qo'y — juni va go'shti uchun boqiladigan xonaki hayvon."
+ },
+ {
+  "title": "echki",
+  "content": "Echki — chaqqon xonaki hayvon. Suti foydali."
+ },
+ {
+  "title": "tuya",
+  "content": "Tuya — cho'lda yashaydigan «sahro kemasi». Uzoq vaqt suvsiz yura oladi."
+ },
+ {
+  "title": "eshak",
+  "content": "Eshak — chidamli yuk tashuvchi hayvon."
+ },
+ {
+  "title": "it",
+  "content": "It — insonning eng sodiq do'sti. Qo'riqlash, ov va yordam uchun xizmat qiladi."
+ },
+ {
+  "title": "mushuk",
+  "content": "Mushuk — uy hayvoni. Silliq va chaqqon, sichqonlarni ovlaydi."
+ },
+ {
+  "title": "panda",
+  "content": "Panda — bambuk bilan oziqlanadigan ayiq turi. Xitoyning ramzi."
+ },
+ {
+  "title": "koala",
+  "content": "Koala — Avstraliyadagi mayin hayvon. Evkalipt barglarini yeydi."
+ },
+ {
+  "title": "kanguru",
+  "content": "Kenguru — Avstraliya ramzi, sumkali hayvon. Sakrab yuradi."
+ },
+ {
+  "title": "zirafa",
+  "content": "Jirafa — eng uzun bo'yli hayvon. Uzoq bo'yni bilan mashhur."
+ },
+ {
+  "title": "fil",
+  "content": "Fil — eng katta quruqlik hayvoni. Xotirasi juda yaxshi."
+ },
+ {
+  "title": "karkidon",
+  "content": "Karkidon — shoxli yirik hayvon. Janubiy Osiyo va Afrikada yashaydi."
+ },
+ {
+  "title": "begemot",
+  "content": "Begemot — katta og'izli yirik hayvon. Daryolarda yashaydi."
+ },
+ {
+  "title": "maymun",
+  "content": "Maymun — odamga o'xshash, epchil hayvon. O'rmonlarda yashaydi."
+ },
+ {
+  "title": "gavhar bobo",
+  "content": "Arslonlar guruhi — poda deb ataladi. Sherlar oila bo'lib yashaydi."
+ },
+ {
+  "title": "kurka",
+  "content": "Kurka — katta xonaki qush, go'shti uchun boqiladi."
+ },
+ {
+  "title": "g'oz",
+  "content": "G'oz — suvda yashashni yaxshi ko'radigan parranda."
+ },
+ {
+  "title": "o'rdak",
+  "content": "O'rdak — suzuvchi parranda. Ko'llarda yashaydi."
+ },
+ {
+  "title": "daraxt",
+  "content": "Daraxt — ko'p yillik yirik o'simlik. Ildizi, tanasi, shoxlari bor. Havoni tozalaydi."
+ },
+ {
+  "title": "gul",
+  "content": "Gul — o'simlikning go'zal, rangli qismi. Hasharotlarni o'ziga jalb qiladi."
+ },
+ {
+  "title": "atirgul",
+  "content": "Atirgul — go'zallik va sevgi ramzi bo'lgan xushbo'y gul."
+ },
+ {
+  "title": "lola",
+  "content": "Lola — bahorda ochiladigan go'zal gul. O'zbekistonning ramzi!"
+ },
+ {
+  "title": "paxta",
+  "content": "Paxta — O'zbekistonning «oq oltini». Kiyim tayyorlash uchun ishlatiladi."
+ },
+ {
+  "title": "bug'doy",
+  "content": "Bug'doy — nondan tayyorlanadigan asosiy don. Non — hayot asosi!"
+ },
+ {
+  "title": "sholi",
+  "content": "Sholi — guruch olinadigan don. Palovning asosiy masallig'i."
+ },
+ {
+  "title": "makkajo'xori",
+  "content": "Makkajo'xori — sariq donli o'simlik. Popkorn shundan tayyorlanadi!"
+ },
+ {
+  "title": "olma",
+  "content": "Olma — eng keng tarqalgan meva. «Kuniga bitta olma — shifokor kerakmas» deyishadi."
+ },
+ {
+  "title": "anor",
+  "content": "Anor — qizil donli foydali meva. O'zbekistonning ramzlaridan biri."
+ },
+ {
+  "title": "uzum",
+  "content": "Uzum — shirin dastalarda o'sadigan meva. Mayiz va sharob undan tayyorlanadi."
+ },
+ {
+  "title": "qovun",
+  "content": "Qovun — yozda pishadigan shirin xandon meva. Xorazm qovunlari mashhur!"
+ },
+ {
+  "title": "tarvuz",
+  "content": "Tarvuz — yozning eng sevimli mevasi. Ichki qismi qizil va suvli."
+ },
+ {
+  "title": "o'rik",
+  "content": "O'rik — o'rtasi qattiq bo'lgan shirin meva. Quritilgani — qurum."
+ },
+ {
+  "title": "gilos",
+  "content": "Gilos — mayda, shirin qizil meva."
+ },
+ {
+  "title": "behi",
+  "content": "Behi — xushbo'y, qattiq meva. Murabbo tayyorlanadi."
+ },
+ {
+  "title": "nok",
+  "content": "Nok — shirin, pastga tomon kengaygan meva."
+ },
+ {
+  "title": "bodom",
+  "content": "Bodom — yong'oq turi. Mazali va foydali."
+ },
+ {
+  "title": "pista",
+  "content": "Pista — O'zbekistonda yetishtiriladigan qimmatbaho yong'oq."
+ },
+ {
+  "title": "yong'oq",
+  "content": "Yong'oq — miya faoliyati uchun foydali yong'oq turi."
+ },
+ {
+  "title": "chigit",
+  "content": "Chigit — paxta doni. Yog' olinadi."
+ },
+ {
+  "title": "sabzi",
+  "content": "Sabzi — to'q sariq ildizmeva. Palovning asosiy qismi."
+ },
+ {
+  "title": "piyoz",
+  "content": "Piyoz — har qanday taomga solinadigan sabzavot. Ko'z yosh keltiradi!"
+ },
+ {
+  "title": "kartoshka",
+  "content": "Kartoshka — dunyoda eng ko'p iste'mol qilinadigan sabzavotlardan biri."
+ },
+ {
+  "title": "pomidor",
+  "content": "Pomidor — qizil mevali sabzavot. Sos va salatlarda ishlatiladi."
+ },
+ {
+  "title": "bodring",
+  "content": "Bodring — yashil, suvli sabzavot. Salatlarda ishlatiladi."
+ },
+ {
+  "title": "qalampir",
+  "content": "Qalampir — achchiq yoki shirin bo'ladigan sabzavot."
+ },
+ {
+  "title": "karam",
+  "content": "Karam — boshoqli sabzavot. Solanka va salatda ishlatiladi."
+ },
+ {
+  "title": "choy o'simligi",
+  "content": "Choy o'simligi — barglaridan choy tayyorlanadi. O'zbekistonda choy — mehmondo'stlik ramzi!"
+ },
+ {
+  "title": "lavlagi",
+  "content": "Lavlagi — qizil ildizmeva. Shakar olinishi ham mumkin."
+ },
+ {
+  "title": "yurak",
+  "content": "Yurak — qonni butun tanaga haydaydigan mushak organ. Bir daqiqada ~70 marta uradi."
+ },
+ {
+  "title": "miya",
+  "content": "Miya — tanani boshqaradigan organ. O'ylash, eslash, his qilish shu yerda."
+ },
+ {
+  "title": "qon",
+  "content": "Qon — kislorod va ozuqa moddalarni tanaga tarqatadigan suyuqlik."
+ },
+ {
+  "title": "o'pka",
+  "content": "O'pka — nafas olish organi. Havodan kislorod oladi."
+ },
+ {
+  "title": "jigarrang",
+  "content": "Jigar — tanani tozalaydigan qimmatbaho organ. Kimyoviy «zavod»."
+ },
+ {
+  "title": "oshqozon",
+  "content": "Oshqozon — ovqatni hazm qilishni boshlaydigan organ."
+ },
+ {
+  "title": "tish",
+  "content": "Tish — ovqatni chaynash uchun zarur. Kuniga 2 marta yuvish kerak!"
+ },
+ {
+  "title": "teri",
+  "content": "Teri — tananing eng katta organi. Himoya qatlami."
+ },
+ {
+  "title": "immunitet",
+  "content": "Immunitet — tananing kasalliklarga qarshi himoya tizimi. Vitaminlar uni kuchaytiradi."
+ },
+ {
+  "title": "gripp",
+  "content": "Gripp — viruslar keltirib chiqaradigan kasallik. Ko'p suyuqlik ichish tavsiya etiladi."
+ },
+ {
+  "title": "temperatura",
+  "content": "Tana harorati — sog'lom odamda ~36,6°C. 37°C dan oshsa — isitma."
+ },
+ {
+  "title": "dori",
+  "content": "Dori — kasallikni davolashda ishlatiladigan modda. Faqat shifokor ko'rsatmasi bilan!"
+ },
+ {
+  "title": "vaksina",
+  "content": "Vaksina — tanani kasallikka qarshi o'rgatadigan emlash. Kasallikdan himoya qiladi."
+ },
+ {
+  "title": "shifokor",
+  "content": "Shifokor — kasallarni davolaydigan mutaxassis. Har doim yordamga tayyor!"
+ },
+ {
+  "title": "tibbiyot",
+  "content": "Tibbiyot — inson salomatligini o'rganadigan va davolaydigan fan."
+ },
+ {
+  "title": "sog'lom ovqatlanish",
+  "content": "Sog'lom ovqatlanish — meva, sabzavot va to'yimli taomlarni muntazam iste'mol qilish. Salomatlik garovi!"
+ },
+ {
+  "title": "osh",
+  "content": "Palov (osh) — guruch, sabzi va go'shtdan tayyorlanadigan O'zbekistonning asosiy taomi."
+ },
+ {
+  "title": "manti",
+  "content": "Manti — bug'da pishiriladigan go'shtli xamir taom."
+ },
+ {
+  "title": "chuchvara",
+  "content": "Chuchvara — mayda qaynatilgan xamir va go'shtli taom."
+ },
+ {
+  "title": "somsa",
+  "content": "Somsa — tandirda pishiriladigan go'shtli pirog."
+ },
+ {
+  "title": "shashlik",
+  "content": "Shashlik — ko'mirda pishiriladigan go'sht kabobi. Sayr qilishda sevimli taom!"
+ },
+ {
+  "title": "lag'mon",
+  "content": "Lag'mon — uzun xamir va go'shtli uyg'ur taomi."
+ },
+ {
+  "title": "mastava",
+  "content": "Mastava — guruch va sabzavotli sho'rva."
+ },
+ {
+  "title": "sho'rva",
+  "content": "Sho'rva — go'sht va sabzavotlar qaynatilgan suyuq taom."
+ },
+ {
+  "title": "qaynatma",
+  "content": "Qaynatma — go'sht qaynatmasidan tayyorlanadigan to'yimli sho'rva."
+ },
+ {
+  "title": "somsa tarixi",
+  "content": "Somsa — Sharqda qadimdan tayyorlanadigan taom. Tandirda pishiriladi."
+ },
+ {
+  "title": "kabob",
+  "content": "Kabob — go'shtdan tayyorlanadigan taomlar oilasi. Uskara kabobi Soltanlarda mashhur."
+ },
+ {
+  "title": "non",
+  "content": "Non — asosiy oziq-ovqat. O'zbekistonda non — muqaddas!"
+ },
+ {
+  "title": "patir",
+  "content": "Patir — yog'da pishiriladigan yumshoq non."
+ },
+ {
+  "title": "lochira",
+  "content": "Lochira — maxsus xamirdan tayyorlanadigan yupqa non."
+ },
+ {
+  "title": "guruch",
+  "content": "Guruch — sholidan olinadigan don. Palovning asosi."
+ },
+ {
+  "title": "sut",
+  "content": "Sut — sigirdan olinadigan foydali ichimlik. Kaltsiyga boy."
+ },
+ {
+  "title": "qatiq",
+  "content": "Qatiq — sutdan tayyorlanadigan fermentlangan ichimlik. Ovqat hazmiga yordam beradi."
+ },
+ {
+  "title": "suzma",
+  "content": "Suzma — qatiqdan tayyorlanadigan quyuq sut mahsuloti."
+ },
+ {
+  "title": "qaymoq",
+  "content": "Qaymoq — sutning yog'li qatlami. Choy bilan mazali!"
+ },
+ {
+  "title": "sariyog'",
+  "content": "Sariyog' — sutdan tayyorlanadigan yog'. Non bilan yeyiladi."
+ },
+ {
+  "title": "pishloq",
+  "content": "Pishloq — sutdan tayyorlanadigan qattiq mahsulot."
+ },
+ {
+  "title": "asal",
+  "content": "Asal — asalarilar tayyorlaydigan shirin va shifobaxsh mahsulot."
+ },
+ {
+  "title": "murabbo",
+  "content": "Murabbo — mevalardan shakar bilan tayyorlanadigan qiyom."
+ },
+ {
+  "title": "choy ichish",
+  "content": "Choy — O'zbekistonda mehmondo'stlik ramzi. Choysiz suhbat bo'lmaydi!"
+ },
+ {
+  "title": "qahva",
+  "content": "Qahva — tonuvchi ichimlik. Ko'p ichish yurakka zarar bo'lishi mumkin."
+ },
+ {
+  "title": "limonad",
+  "content": "Limonad — gazlangan shirin ichimlik."
+ },
+ {
+  "title": "sharbat",
+  "content": "Sharbat — mevalardan tayyorlanadigan tabiiy ichimlik."
+ },
+ {
+  "title": "muzqaymoq",
+  "content": "Muzqaymoq — sovuq shirin desert. Yozning sevimli taomi!"
+ },
+ {
+  "title": "xolva",
+  "content": "Xolva — kunjut va shakardan tayyorlanadigan shiriniy."
+ },
+ {
+  "title": "sumalak",
+  "content": "Sumalak — Navro'zda bug'doy unib chiqarib tayyorlanadigan shirin taom."
+ },
+ {
+  "title": "novvoy",
+  "content": "Novvoy — non yopadigan usta. Non — xalqimizning oq oltini."
+ },
+ {
+  "title": "protsessor",
+  "content": "Protsessor — kompyuterning «miyasi». Barcha hisob-kitoblarni bajaradi."
+ },
+ {
+  "title": "xotira",
+  "content": "Operativ xotira (RAM) — kompyuter ishlayotganda ma'lumotni vaqtincha saqlaydi."
+ },
+ {
+  "title": "qattiq disk",
+  "content": "Qattiq disk (HDD/SSD) — fayllar doimiy saqlanadigan xotira."
+ },
+ {
+  "title": "videokarta",
+  "content": "Videokarta — ekranda tasvirni chizadigan qurilma. O'yinlar uchun juda muhim."
+ },
+ {
+  "title": "monitor",
+  "content": "Monitor — kompyuter natijalarini ko'rsatadigan ekran."
+ },
+ {
+  "title": "klaviatura",
+  "content": "Klaviatura — matn kiritish qurilmasi."
+ },
+ {
+  "title": "sichqoncha",
+  "content": "Sichqoncha (maus) — kursorni boshqaradigan qurilma."
+ },
+ {
+  "title": "printer",
+  "content": "Printer — hujjatlarni qog'ozga bosib chiqaradigan qurilma."
+ },
+ {
+  "title": "skaner",
+  "content": "Skaner — qog'ozdagi rasm/matnni kompyuterga o'tkazadi."
+ },
+ {
+  "title": "noutbuk",
+  "content": "Noutbuk — ko'chma kompyuter. Har qayerda ishlash mumkin."
+ },
+ {
+  "title": "planshet",
+  "content": "Planshet — sensorli ekranli ko'chma qurilma."
+ },
+ {
+  "title": "smartfon",
+  "content": "Smartfon — zamonaviy telefon. Internet, kamera, ilovalar — hammasi ichida."
+ },
+ {
+  "title": "mikrofon",
+  "content": "Mikrofon — ovozni qabul qilib, elektr signaliga aylantiradi."
+ },
+ {
+  "title": "kolonka",
+  "content": "Kolonka (sabvufer) — ovozni kuchaytirib chiqaradigan qurilma."
+ },
+ {
+  "title": "naushnik",
+  "content": "Naushnik — quloqqa taqiladigan karnay. Ovozni faqat siz eshitasiz."
+ },
+ {
+  "title": "kamera",
+  "content": "Kamera — surat va video olish qurilmasi. Telefondagi kameralar juda rivojlangan."
+ },
+ {
+  "title": "batareya",
+  "content": "Batareya — qurilmani elektr bilan ta'minlaydigan energiya manbai."
+ },
+ {
+  "title": "zaryadka",
+  "content": "Zaryadka (quvvatlagich) — batareyani to'ldirish qurilmasi."
+ },
+ {
+  "title": "bluetooth",
+  "content": "Bluetooth — qurilmalar orasida simsiz ma'lumot uzatish texnologiyasi."
+ },
+ {
+  "title": "usb",
+  "content": "USB — qurilmalarni ulash porti. Fleşka shu orqali ulanadi."
+ },
+ {
+  "title": "fleşka",
+  "content": "Fleshka (USB xotira) — ma'lumotni ko'tarib yurish uchun kichik xotira qurilmasi."
+ },
+ {
+  "title": "sim kartasi",
+  "content": "SIM-karta — telefonga raqam va aloqa beradigan kichik karta."
+ },
+ {
+  "title": "rozetka",
+  "content": "Rozetka — elektr qurilmalarni ulash uchun devordagi ulagich."
+ },
+ {
+  "title": "konditsioner",
+  "content": "Konditsioner — xonani istitadigan yoki sovitadigan qurilma."
+ },
+ {
+  "title": "mikroto'lqinli pech",
+  "content": "Mikroto'lqinli pech — ovqatni tez isitadigan qurilma."
+ },
+ {
+  "title": "dasturlash",
+  "content": "Dasturlash — kompyuterga vazifalarni bajarishni o'rgatish. Kod yozish san'ati."
+ },
+ {
+  "title": "algoritm",
+  "content": "Algoritm — masalani yechish uchun ketma-ket qadamlar rejasi."
+ },
+ {
+  "title": "kod",
+  "content": "Kod — dasturlash tili qoidalari bilan yozilgan buyruqlar to'plami."
+ },
+ {
+  "title": "dasturchi",
+  "content": "Dasturchi — dastur yozadigan mutaxassis. Kompyuterning «tarjimoni»."
+ },
+ {
+  "title": "javascript",
+  "content": "JavaScript — brauzerlarda ishlaydigan dasturlash tili. Veb-saytlar jonlanishi shu tilda."
+ },
+ {
+  "title": "html",
+  "content": "HTML — veb-sahifa tuzilishini yozadigan belgilash tili."
+ },
+ {
+  "title": "css",
+  "content": "CSS — veb-sahifaning ko'rinishini (rang, o'lcham) bezaydigan texnologiya."
+ },
+ {
+  "title": "php",
+  "content": "PHP — server tomonda ishlaydigan dasturlash tili. Ko'p saytlar shu tilda yozilgan."
+ },
+ {
+  "title": "sql",
+  "content": "SQL — ma'lumotlar bazasi bilan ishlash tili. So'rovlar shu tilda yoziladi."
+ },
+ {
+  "title": "java",
+  "content": "Java — kuchli dasturlash tili. Android ilovalar ko'pincha shu tilda yoziladi."
+ },
+ {
+  "title": "c++",
+  "content": "C++ — tez ishlaydigan dasturlash tili. O'yinlar va tizimlar shu tilda."
+ },
+ {
+  "title": "c#",
+  "content": "C# — Microsoftning dasturlash tili. O'yin va Windows ilovalarida ishlatiladi."
+ },
+ {
+  "title": "go",
+  "content": "Go — Google yaratgan sodda va tez dasturlash tili."
+ },
+ {
+  "title": "rust",
+  "content": "Rust — xavfsiz va tez dasturlash tili. Zamonaviy tizimlarda ishlatiladi."
+ },
+ {
+  "title": "git",
+  "content": "Git — kod versiyalarini boshqarish tizimi. Dasturchilarning eng muhim vositasi."
+ },
+ {
+  "title": "github",
+  "content": "GitHub — kodlarni saqlash va hamkorlikda ishlash platformasi."
+ },
+ {
+  "title": "framework",
+  "content": "Framework — dasturchiga tayyor asos beradigan vositalar to'plami. Django, Laravel — misollar."
+ },
+ {
+  "title": "django",
+  "content": "Django — Python uchun veb-framework. Tez va xavfsiz saytlar yasashga yordam beradi."
+ },
+ {
+  "title": "flask",
+  "content": "Flask — Python uchun kichik va sodda veb-framework."
+ },
+ {
+  "title": "react",
+  "content": "React — foydalanuvchi interfeysini qurish uchun JavaScript kutubxonasi."
+ },
+ {
+  "title": "api so'rovi",
+  "content": "API so'rovi — dastur boshqa dasturga so'rov yuborib javob oladi."
+ },
+ {
+  "title": "backend",
+  "content": "Backend — saytning server tomondagi qismi. Ma'lumotlar shu yerda ishlanadi."
+ },
+ {
+  "title": "frontend",
+  "content": "Frontend — foydalanuvchi ko'radigan sayt qismi. Dizayn va interfeys."
+ },
+ {
+  "title": "fullstack",
+  "content": "Fullstack — ham backend, ham frontend biladigan dasturchi."
+ },
+ {
+  "title": "debugging",
+  "content": "Debugging — dasturdagi xatolarni (bug) topish va tuzatish."
+ },
+ {
+  "title": "bug",
+  "content": "Bug — dasturdagi xato. «Kompyuterda qurt bor» degan hikoyadan kelib chiqqan."
+ },
+ {
+  "title": "kompilyator",
+  "content": "Kompilyator — kodni kompyuter tushunadigan tilga o'giradigan dastur."
+ },
+ {
+  "title": "open source",
+  "content": "Ochiq kod (open source) — kodi hammaga ochiq dastur. Python, Linux — misol."
+ },
+ {
+  "title": "litsenziya",
+  "content": "Litsenziya — dasturdan foydalanish qoidalari."
+ },
+ {
+  "title": "terminal",
+  "content": "Terminal — buyruqlar yozib kompyuterni boshqarish oynasi."
+ },
+ {
+  "title": "mashina o'rganishi",
+  "content": "Mashina o'rganishi — kompyuterning misollardan o'rganib, xulosa chiqarish usuli."
+ },
+ {
+  "title": "chugur o'rganish",
+  "content": "Chuqur o'rganish — ko'p qatlamli neyron tarmoqlar bilan o'rganish. Rasmlar, ovozlarni tushunishda kuchli."
+ },
+ {
+  "title": "katta til modeli",
+  "content": "Katta til modeli — milliardlab parametrli, matn yaratadigan AI modeli. ChatGPT mana shunday model."
+ },
+ {
+  "title": "generativ ai",
+  "content": "Generativ AI — yangi matn, rasm yoki ovoz yaratadigan sun'iy intellekt."
+ },
+ {
+  "title": "chatgpt",
+  "content": "ChatGPT — OpenAI yaratgan mashhur suhbat boti. Savollarga inson kabi javob beradi."
+ },
+ {
+  "title": "gpt",
+  "content": "GPT — Generative Pre-trained Transformer. OpenAI model oilasi."
+ },
+ {
+  "title": "prompt",
+  "content": "Prompt — AI ga beriladigan ko'rsatma yoki so'rov."
+ },
+ {
+  "title": "token",
+  "content": "Token — AI matnni bo'ladigan kichik bo'lak. Model matnni tokenlar bilan ishlaydi."
+ },
+ {
+  "title": "obot",
+  "content": "Bot — avtomatik ishlaydigan dastur. Telegram botlari mashhur."
+ },
+ {
+  "title": "asistent",
+  "content": "Yordamchi dastur (assistent) — odamga ishlarida yordam beradigan dastur. Masalan, men!"
+ },
+ {
+  "title": "taqlid o'rganish",
+  "content": "Reinforcement learning — AIga mukofot va jazo orqali o'rgatish. Robotlar shu usulda o'rganadi."
+ },
+ {
+  "title": "natur til",
+  "content": "Tabiiy tilni qayta ishlash (NLP) — kompyuterning inson tilini tushunish texnologiyasi."
+ },
+ {
+  "title": "ovozli yordamchi",
+  "content": "Ovozli yordamchi — ovoz buyruqlarini bajaradigan dastur. Siri, Alisa — misol."
+ },
+ {
+  "title": "superkompyuter",
+  "content": "Superkompyuter — juda kuchli kompyuter. AI modellarini o'qitishda ishlatiladi."
+ },
+ {
+  "title": "neyron",
+  "content": "Neyron — miyadagi nerv hujayrasi. Neyron tarmoq unga o'xshab qurilgan."
+ },
+ {
+  "title": "algoritm nima",
+  "content": "Algoritm — muammoni yechish uchun qadamlar ketma-ketligi. Retseptga o'xshaydi."
+ },
+ {
+  "title": "internet tarixi",
+  "content": "Internet — butun dunyo kompyuterlarini bog'laydigan tarmoq. Dastlab harbiy maqsadda yaratilgan."
+ },
+ {
+  "title": "veb",
+  "content": "Veb — internetdagi sahifalar tizimi. WWW — butun dunyo vebi."
+ },
+ {
+  "title": "veb-sahifa",
+  "content": "Veb-sahifa — brauzerda ochiladigan hujjat. Sayt — bir nechta sahifadan iborat."
+ },
+ {
+  "title": "sahifa manzili",
+  "content": "URL — veb-manzil. Masalan, https://example.com."
+ },
+ {
+  "title": "http",
+  "content": "HTTP — veb-sahifalarni uzatish protokoli. HTTPS — shifrlangan xavfsiz versiyasi."
+ },
+ {
+  "title": "domen",
+  "content": "Domen — sayt nomi, masalan uz.uz. Oson eslab qolish uchun yaratilgan."
+ },
+ {
+  "title": "dns",
+  "content": "DNS — domen nomlarini IP-manzilga aylantiradigan tizim."
+ },
+ {
+  "title": "ip manzil",
+  "content": "IP-manzil — har bir qurilmaning internetdagi noyob manzili."
+ },
+ {
+  "title": "browser",
+  "content": "Brauzer — veb-sahifalarni ko'rish dasturi. Chrome, Firefox, Safari — misol."
+ },
+ {
+  "title": "qidiruv tizimi",
+  "content": "Qidiruv tizimi — internetda ma'lumot topish vositasi. Google, Yandex — misol."
+ },
+ {
+  "title": "google",
+  "content": "Google — dunyodagi eng mashhur qidiruv tizimi."
+ },
+ {
+  "title": "yandex",
+  "content": "Yandex — rus tilidagi mashhur qidiruv tizimi."
+ },
+ {
+  "title": "elektron pochta",
+  "content": "E-mail (elektron pochta) — internet orqali xat yuborish tizimi."
+ },
+ {
+  "title": "spam",
+  "content": "Spam — kiruvchi keraksiz xatlar."
+ },
+ {
+  "title": "virus",
+  "content": "Virus — kompyuterga zarar yetkazadigan dastur. Himoya uchun antivirus kerak."
+ },
+ {
+  "title": "antivirus",
+  "content": "Antivirus — kompyuterni viruslardan himoya qiladigan dastur."
+ },
+ {
+  "title": "haker",
+  "content": "Haker — tizimlarga kirishda mohir mutaxassis. Yaxshi va yomon hakamlar bor."
+ },
+ {
+  "title": "dastur yangilanishi",
+  "content": "Yangilanish (update) — dasturning yangi, tuzatilgan versiyasi."
+ },
+ {
+  "title": "bulut",
+  "content": "Bulutli xotira — ma'lumotni internetda saqlash. Google Drive — misol."
+ },
+ {
+  "title": "bahodir",
+  "content": "Ijtimoiy tarmoq — odamlar bog'lanadigan platforma. Instagram, Telegram — misol."
+ },
+ {
+  "title": "telegram",
+  "content": "Telegram — mashhur messenger ilova. Kanallar va botlar bilan mashhur."
+ },
+ {
+  "title": "instagram",
+  "content": "Instagram — surat va video ulashish ijtimoiy tarmog'i."
+ },
+ {
+  "title": "youtube",
+  "content": "YouTube — video tomosha qilish va joylash platformasi. Videolar olami!"
+ },
+ {
+  "title": "tiktok",
+  "content": "TikTok — qisqa videolar platformasi. Hozir juda mashhur."
+ },
+ {
+  "title": "blog",
+  "content": "Blog — odam o'z fikrlarini yozadigan veb-sahifa."
+ },
+ {
+  "title": "vlog",
+  "content": "Vlog — blog yuritishning video shakli."
+ },
+ {
+  "title": "striming",
+  "content": "Striming — jonli efir orqali video ko'rsatish."
+ },
+ {
+  "title": "onlayn",
+  "content": "Onlayn — internetga ulangan holatda. «Onlayn dars» — internet orqali dars."
+ },
+ {
+  "title": "oflayn",
+  "content": "Oflayn — internetga ulanmagan holat."
+ },
+ {
+  "title": "cloud gaming",
+  "content": "Bulutli o'yinlar — internet orqali kuchli kompyuterda o'ynash."
+ },
+ {
+  "title": "botnet",
+  "content": "Botnet — virus bilan boshqariladigan kompyuterlar tarmog'i."
+ },
+ {
+  "title": "fishing",
+  "content": "Fishing — soxta saytlar orqali parol o'g'irlash usuli. Ehtiyot bo'ling!"
+ },
+ {
+  "title": "kinematograf",
+  "content": "Kinematograf — harakatlanuvchi tasvirlar san'ati. «Kino» so'zi shundan kelgan."
+ },
+ {
+  "title": "gollivud",
+  "content": "Gollivud — Los-Anjelesdagi mashhur kino markazi. Dunyodagi eng mashhur kinostudiylar shu yerda."
+ },
+ {
+  "title": "bollywood",
+  "content": "Bollywood — Hindistonning kino sanoati. Har yili eng ko'p film suratga olinadi!"
+ },
+ {
+  "title": "nimkino",
+  "content": "Nimkino (short film) — qisqa metrajli film. 40 daqiqagacha davom etadi."
+ },
+ {
+  "title": "dokumental",
+  "content": "Dokumental film — real voqealarga asoslangan film."
+ },
+ {
+  "title": "multfilm nima",
+  "content": "Multfilm — bolalar va kattalar uchun jonlantirilgan film."
+ },
+ {
+  "title": "treyler",
+  "content": "Treyler — filmning oldindan ko'rsatiladigan qisqa namoyishi."
+ },
+ {
+  "title": "poster",
+  "content": "Poster — filmning reklama plakati."
+ },
+ {
+  "title": "kasting",
+  "content": "Kasting — filmlarga aktyor saralash jarayoni."
+ },
+ {
+  "title": "sahna",
+  "content": "Sahna — film suratga olinadigan joy yoki pyesa ko'rsatiladigan maydon."
+ },
+ {
+  "title": "kadr",
+  "content": "Kadr — kino yoki videoning bitta surati."
+ },
+ {
+  "title": "montaj",
+  "content": "Montaj — film kadrlarini ketma-ketlikda yopishtirish jarayoni."
+ },
+ {
+  "title": "ovoz effekti",
+  "content": "Ovoz effekti — filmga qo'shiladigan sun'iy tovushlar."
+ },
+ {
+  "title": "grif",
+  "content": "Special effects (SFX) — alohida kino effektlari. Portlashlar, sehrlar shu orqali yaratiladi."
+ },
+ {
+  "title": "goboy qahramon",
+  "content": "Bosh qahramon — hikoya asosiy uning atrofida quriladigan obraz."
+ },
+ {
+  "title": "antagonist",
+  "content": "Antagonist — hikoyadagi asosiy raqib yoki yovuz obraz."
+ },
+ {
+  "title": "dublaj qilish",
+  "content": "Dublyaj — filmini boshqa tilga ovozlashtirish."
+ },
+ {
+  "title": "sinkron",
+  "content": "Sinkron tarjima — ko'p tilli filmlarda ovozni birga uzatish."
+ },
+ {
+  "title": "kino nagradi",
+  "content": "Oskar — AQSH kino akademiyasining eng nufuzli film mukofoti."
+ },
+ {
+  "title": "kan gulm",
+  "content": "Kan festivali — Fransiyadagi nufuzli kino festivali. «Oltin palma» shu yerda beriladi."
+ },
+ {
+  "title": "berlinale",
+  "content": "Berlinale — Berlindagi mashhur kino festivali."
+ },
+ {
+  "title": "venetsiya festivali",
+  "content": "Venetsiya kino festivali — dunyodagi eng qadimiy kino festivali."
+ },
+ {
+  "title": "serial",
+  "content": "Serial — ko'p qismdan iborat kino asar. Har qism alohida davom etadi."
+ },
+ {
+  "title": "efir",
+  "content": "Efir — telekanal orqali jonli yoki yozib ko'rsatish."
+ },
+ {
+  "title": "qisqa video",
+  "content": "Qisqa video — bir necha daqiqalik video kontent. TikTok va Reels olami."
+ },
+ {
+  "title": "anime janrlari",
+  "content": "Anime janrlari — shonen (bolalar uchun), seinen (kattalar uchun), shojo (qizlar uchun) kabilar."
+ },
+ {
+  "title": "shonen",
+  "content": "Shonen — yoshlar uchun mo'ljallangan anime turi. Naruto, Dragon Ball — mashhur misollar."
+ },
+ {
+  "title": "seinen",
+  "content": "Seinen — kattalar uchun jiddiy anime turi."
+ },
+ {
+  "title": "manga",
+  "content": "Manga — yapon qora-oq komiksi. Ko'p anime mangadan olingan."
+ },
+ {
+  "title": "muxlis",
+  "content": "Muxlis — filmlar, sport yoki san'atni yaxshi ko'radigan ishqiboz."
+ },
+ {
+  "title": "repo",
+  "content": "Remeyk — eski filmining yangi versiyasi."
+ },
+ {
+  "title": "prequel",
+  "content": "Prikvel — asl filmdan oldingi voqealarni ko'rsatadigan film."
+ },
+ {
+  "title": "sikvel",
+  "content": "Sikvel — davomiy film (2-qism)."
+ },
+ {
+  "title": "franchayz",
+  "content": "Franchayz — bir olamga tegishli filmlar seriyasi. Marvel — misol."
+ },
+ {
+  "title": "kino matn",
+  "content": "Film ssenariysi — film suratga olinadigan matn."
+ },
+ {
+  "title": "san'at",
+  "content": "San'at — go'zallik yaratish faoliyati. Rasm, musiqa, kino, teatr — san'at turlari."
+ },
+ {
+  "title": "rasm",
+  "content": "Rasm — bo'yoq yoki qalam bilan chizilgan surat."
+ },
+ {
+  "title": "rang",
+  "content": "Rang — yorug'likning ko'zga ko'rinadigan xususiyati. Qizil, ko'k, sariq — asosiy ranglar."
+ },
+ {
+  "title": "muzey",
+  "content": "Muzey — tarixiy va san'at asarlari saqlanadigan joy."
+ },
+ {
+  "title": "teatr",
+  "content": "Teatr — sahnada jonli o'ynaladigan san'at turi."
+ },
+ {
+  "title": "sirk",
+  "content": "Sirk — ajoyib chiqishlar ko'rsatiladigan o'yin-kulgi joyi."
+ },
+ {
+  "title": "haykaltaroshlik",
+  "content": "Haykaltaroshlik — tosh, loy va boshqa materiallardan shakl yasash san'ati."
+ },
+ {
+  "title": "arxiv",
+  "content": "Arxitektura — bino va inshootlarni loyihalash san'ati."
+ },
+ {
+  "title": "fotografiya",
+  "content": "Fotografiya — suratga olish san'ati. «Yorug'lik bilan chizish»."
+ },
+ {
+  "title": "qo'shiq",
+  "content": "Qo'shiq — kuylash uchun mo'ljallangan musiqa asari."
+ },
+ {
+  "title": "asta",
+  "content": "Kamalak ranglari — qizil, to'q sariq, sariq, yashil, ko'k, havorang. Yomg'irdan keyin ko'rinadi."
+ },
+ {
+  "title": "musiqa",
+  "content": "Musiqa — ohang va ritm bilan ifodalanadigan san'at. Insonga ta'sir qilish kuchi bor!"
+ },
+ {
+  "title": "ritm",
+  "content": "Ritm — musiqadagi teng vaqt oralig'idagi urishlar."
+ },
+ {
+  "title": "ohang",
+  "content": "Ohang (melo diya) — musiqaning asosiy kuylash qismi."
+ },
+ {
+  "title": "guitar",
+  "content": "Gitara — 6 torli cholg'u asbobi. Rok musiqa ramzi."
+ },
+ {
+  "title": "pianino",
+  "content": "Pianino — klavishli cholg'u. Ko'p ming yillik musiqalar shu asbobda yozilgan."
+ },
+ {
+  "title": "doira",
+  "content": "Doira — o'zbek va sharq musiqasida ishlatiladigan urma cholg'u."
+ },
+ {
+  "title": "rubob",
+  "content": "Rubob — o'zbek xalq cholg'usi. «Cholg'ular shohi» deb ataladi."
+ },
+ {
+  "title": "dutor",
+  "content": "Dutor — o'zbekning ikki torli xalq cholg'usi."
+ },
+ {
+  "title": "nay",
+  "content": "Nay — yog'och yoki qamishdan yasalgan puflab chalinadigan cholg'u."
+ },
+ {
+  "title": "skripka",
+  "content": "Skripka — torli-kamonli cholg'u. Orkestrning asosi."
+ },
+ {
+  "title": "baraban",
+  "content": "Baraban — urib chalinadigan cholg'u. Ritm beradi."
+ },
+ {
+  "title": "saksafon",
+  "content": "Saksafon — puflab chalinadigan yog'och cholg'u. Jazz musiqasi ramzi."
+ },
+ {
+  "title": "opera",
+  "content": "Opera — qo'shiq va drama uyg'unlashgan sahna san'ati."
+ },
+ {
+  "title": "balet",
+  "content": "Balet — raqs orqali hikoya qiladigan sahna san'ati."
+ },
+ {
+  "title": "jazz",
+  "content": "Jazz — AQSHda tug'ilgan musiqiy uslub. Bepul improvizatsiya bilan mashhur."
+ },
+ {
+  "title": "rok",
+  "content": "Rok — kuchli gitara va barabanli musiqa uslubi."
+ },
+ {
+  "title": "pop musiqasi",
+  "content": "Pop musiqa — xit va oson quloqqa yaqin ommaviy musiqa."
+ },
+ {
+  "title": "rep",
+  "content": "Rep — qofiyalangan tez matn aytish uslubi."
+ },
+ {
+  "title": "sport",
+  "content": "Sport — jismoniy mashqlar va musobaqalar. Salomatlik garovi!"
+ },
+ {
+  "title": "olimpiada",
+  "content": "Olimpiada o'yinlari — dunyodagi eng katta sport musobaqasi. Har 4 yilda o'tkaziladi."
+ },
+ {
+  "title": "futbol jamoasi",
+  "content": "Futbol — 11 tadan iborat ikki jamoa o'ynaydigan eng mashhur sport turi."
+ },
+ {
+  "title": "basketbol",
+  "content": "Basketbol — savatga to'p tashlash o'yini. Har jamoada 5 o'yinchi."
+ },
+ {
+  "title": "voleybol",
+  "content": "Voleybol — to'r orqali to'p uzatish o'yini. Har jamoada 6 o'yinchi."
+ },
+ {
+  "title": "tennis",
+  "content": "Tennis — raketa bilan to'p urish o'yini."
+ },
+ {
+  "title": "bokschilik",
+  "content": "Boks — qo'l bilan urish sporti. Jismoniy tayyorgarlik talab qiladi."
+ },
+ {
+  "title": "dzyudo",
+  "content": "Dzyudo — Yaponiyadan kelgan kurash san'ati."
+ },
+ {
+  "title": "karate",
+  "content": "Karate — Yaponiyadan kelgan himoya sporti."
+ },
+ {
+  "title": "suzish",
+  "content": "Suzish — suvda harakatlanish sporti. Butun tana mushaklarini mustahkamlaydi."
+ },
+ {
+  "title": "yugurish",
+  "content": "Yugurish — eng oddiy va foydali sport turi. Ertalabki yugurish — tetiklik manbai!"
+ },
+ {
+  "title": "velosport",
+  "content": "Velosport — velosipedda musobaqa qilish."
+ },
+ {
+  "title": "shaxmat o'yini",
+  "content": "Shaxmat — 64 katakli doskada o'ynaladigan fikr sporti. «Aql o'yini»."
+ },
+ {
+  "title": "shashka",
+  "content": "Shashka — oddiy qoidalarli doska o'yini. Fikrlashni rivojlantiradi."
+ },
+ {
+  "title": "ko'tara",
+  "content": "Og'ir atletika — og'irliklarni ko'tarish sporti."
+ },
+ {
+  "title": "uchkur",
+  "content": "Uchqur — shamol ta'sirida harakatlanadigan suv sporti. Jismoniy tayyorgarlikni oshiradi."
+ },
+ {
+  "title": "stol tennisi",
+  "content": "Stol tennisi — stol ustida raketa bilan o'ynaladigan tezkor o'yin."
+ },
+ {
+  "title": "badminton",
+  "content": "Badminton — qushcha (volan) bilan o'ynaladigan o'yin."
+ },
+ {
+  "title": "kurash musobaqasi",
+  "content": "Kurash — o'zbek xalqining qadimiy sporti. Dunyoda tan olingan!"
+ },
+ {
+  "title": "chim",
+  "content": "Chim ustidagi futbol — «sport qiroli» deb ataladi."
+ },
+ {
+  "title": "marafon",
+  "content": "Marafon — 42 km 195 m masofaga yugurish musobaqasi."
+ },
+ {
+  "title": "tarix",
+  "content": "Tarix — o'tmish voqealarini o'rganadigan fan. U o'tmishdan saboq beradi."
+ },
+ {
+  "title": "davr",
+  "content": "Davr — tarixning bir qismi. Qadimgi, o'rta va yangi davrlar bor."
+ },
+ {
+  "title": "sivilizatsiya",
+  "content": "Sivilizatsiya — rivojlangan jamiyat. Misr, Rim, Xitoy — qadimiy sivilizatsiyalar."
+ },
+ {
+  "title": "imperiya",
+  "content": "Imperiya — ko'p xalqlarni birlashtirgan qudratli davlat."
+ },
+ {
+  "title": "pyraimda",
+  "content": "Piramidalar — Misrda qurilgan ulkan qabriston inshootlari. Dunyoning yetti mo'jizasidan biri."
+ },
+ {
+  "title": "rim imperiyasi",
+  "content": "Rim imperiyasi — qadimiy dunyoning qudratli davlati. Yevropa madaniyatiga katta ta'sir ko'rsatgan."
+ },
+ {
+  "title": "turon",
+  "content": "Buyuk ipak yo'li bo'ylab qadimda Turon — Markaziy Osiyoda yashagan xalqlarning umumiy nomi."
+ },
+ {
+  "title": "kushon",
+  "content": "Kushonlar — qadimda Markaziy Osiyoda yashagan buyuk davlat."
+ },
+ {
+  "title": "xuroson",
+  "content": "Xuroson — qadimda Buyuk ipak yo'lidagi tarixiy viloyat."
+ },
+ {
+  "title": "sog'd",
+  "content": "So'g'd — qadimda O'zbekiston hududidagi boy savdo mamlakati. Samarqand uning markazi edi."
+ },
+ {
+  "title": "amir temur",
+  "content": "Amir Temur — buyuk sarkarda va davlat arbobi (1336—1405). Samarqandni dunyo markaziga aylantirgan."
+ },
+ {
+  "title": "temuriylar",
+  "content": "Temuriylar — Amir Temur avlodlari. Ularning davrida ilm-fan va san'at gullab-yashnagan."
+ },
+ {
+  "title": "ulug'bek",
+  "content": "Mirzo Ulug'bek — buyuk astronom va hukmdor (1394—1449). Rasadxonasi bilan mashhur."
+ },
+ {
+  "title": "alisher navoiy",
+  "content": "Alisher Navoiy — buyuk shoir va mutafakkir (1441—1501). O'zbek adabiyotining asoschisi."
+ },
+ {
+  "title": "bobur",
+  "content": "Zahiriddin Muhammad Bobur — buyuk shoir, sarkarda va Boburiy saltanatining asoschisi (1483—1530)."
+ },
+ {
+  "title": "avitsenna",
+  "content": "Ibn Sino (Avitsenna) — buyuk tabib va faylasuf (980—1037). «Tib qonunlari» kitobi bilan mashhur."
+ },
+ {
+  "title": "al xorazmiy",
+  "content": "Al-Xorazmiy — algebra asoschisi (780—850). «Algoritm» so'zi uning nomidan kelgan!"
+ },
+ {
+  "title": "beruniy",
+  "content": "Abu Rayhon Beruniy — buyuk olim va qomusiy bilimdon (973—1048)."
+ },
+ {
+  "title": "farg'oniylar",
+  "content": "Al-Farg'oniy — buyuk astronom (798—865). Yerning diametrini aniq hisoblagan."
+ },
+ {
+  "title": "imom buxoriy",
+  "content": "Imom Buxoriy — hadis ilmi sultoni (810—870). «Al-Jome' as-Sahih» asari bilan mashhur."
+ },
+ {
+  "title": "at termiziy",
+  "content": "Imom Termiziy — buyuk muhaddis olim."
+ },
+ {
+  "title": "buxoro ilm",
+  "content": "Buxoro — qadimda «ilmlar shahri» deb atalgan. Ko'plab olimlarning vatani."
+ },
+ {
+  "title": "madrasa",
+  "content": "Madrasa — qadimiy musulmon o'quv dargohi. Registon madrasalari mashhur."
+ },
+ {
+  "title": "xonlardavri",
+  "content": "Xonliklar — 16—19-asrlarda O'zbekistonda bo'lgan Buxoro, Xiva va Qo'qon xonliklari."
+ },
+ {
+  "title": "jadidlar",
+  "content": "Jadidlar — 20-asr boshlarida ma'rifat uchun kurashgan o'zbek ziyolilari."
+ },
+ {
+  "title": "mustaqillik",
+  "content": "O'zbekiston mustaqilligi — 1991-yil 1-sentabrda e'lon qilingan. O'shandan beri 1-sentabr — Mustaqillik kuni!"
+ },
+ {
+  "title": "konstitutsiya",
+  "content": "Konstitutsiya — davlatning asosiy qonuni. O'zbekiston Konstitutsiyasi 1992-yilda qabul qilingan."
+ },
+ {
+  "title": "bayroq",
+  "content": "O'zbekiston bayrog'i — ko'k, oq va yashil ranglardan. 12 yulduz va yarim oy tasvirlangan."
+ },
+ {
+  "title": "gerb",
+  "content": "Gerb — davlatning belgisi. O'zbekiston gerbida Xumo qushi va quyosh tasvirlangan."
+ },
+ {
+  "title": "madhiya",
+  "content": "Madhiya — davlatning tantanali qo'shig'i. Har mamlakatda alohida bo'ladi."
+ },
+ {
+  "title": "iqtisodiyot",
+  "content": "Iqtisodiyot — boylik ishlab chiqarish, taqsimlash va iste'mol qilish tizimi."
+ },
+ {
+  "title": "pul",
+  "content": "Pul — tovarlar o'lchovi bo'lgan vosita. O'zbekistonda so'm ishlatiladi."
+ },
+ {
+  "title": "so'm",
+  "content": "So'm — O'zbekiston milliy valyutasi."
+ },
+ {
+  "title": "bank",
+  "content": "Bank — pul saqlash, kredit berish va to'lov qilish muassasasi."
+ },
+ {
+  "title": "kredit",
+  "content": "Kredit — bankdan qarzga pul olish va foiz bilan qaytarish."
+ },
+ {
+  "title": "depozit",
+  "content": "Depozit — bankda saqlash uchun qo'yilgan pul, foiz oladi."
+ },
+ {
+  "title": "soliq",
+  "content": "Soliq — davlatga to'lanadigan majburiy to'lov."
+ },
+ {
+  "title": "bozor iqtisodiyoti",
+  "content": "Bozor — tovarlar sotiladigan joy. Bozor iqtisodiyoti — talab va taklif asosidagi tizim."
+ },
+ {
+  "title": "narx",
+  "content": "Narx — tovarning qancha turishini ko'rsatadigan miqdor."
+ },
+ {
+  "title": "chegirma",
+  "content": "Chegirma (skidka) — narxning pasaytirilgan holati. Xarid qilish uchun yaxshi fursat!"
+ },
+ {
+  "title": "biznes",
+  "content": "Biznes — foyda olish uchun faoliyat yuritish. Tadbirkorlik ham deyiladi."
+ },
+ {
+  "title": "tadbirkor",
+  "content": "Tadbirkor — biznes yurituvchi, tavakkal qiladigan odam. Iqtisodiyot dvigateli."
+ },
+ {
+  "title": "startap",
+  "content": "Startap — yangi g'oya asosida boshlangan biznes loyihasi."
+ },
+ {
+  "title": "investitsiya",
+  "content": "Investitsiya — kelajakda foyda olish uchun qo'yilgan mablag'."
+ },
+ {
+  "title": "foyda",
+  "content": "Foyda — daromaddan xarajatlar chiqarilganda qolgan qism."
+ },
+ {
+  "title": "zarar",
+  "content": "Zarar — xarajatlar daromaddan oshib ketgandagi holat."
+ },
+ {
+  "title": "daromad",
+  "content": "Daromad — sotishdan tushgan pul miqdori."
+ },
+ {
+  "title": "import",
+  "content": "Import — chetdan tovar olib kelish."
+ },
+ {
+  "title": "eksport",
+  "content": "Eksport — mahalliy tovarni chetga sotish."
+ },
+ {
+  "title": "valyuta",
+  "content": "Valyuta — xorijiy pul birligi. Dollar, evro — valyutalar."
+ },
+ {
+  "title": "dollar",
+  "content": "Dollar — AQSH valyutasi. Dunyo bozorida asosiy valyuta."
+ },
+ {
+  "title": "evro",
+  "content": "Evro — Yevropa Ittifoqining yagona valyutasi."
+ },
+ {
+  "title": "inflation",
+  "content": "Inflyatsiya — narxlarning oshib borishi. Pulning qadrsizlanishi."
+ },
+ {
+  "title": "byudjet",
+  "content": "Byudjet — daromad va xarajatlarning rejasi. Davlat va oila byudjeti bor."
+ },
+ {
+  "title": "maosh",
+  "content": "Maosh — ish uchun to'lanadigan haq."
+ },
+ {
+  "title": "ishsizlik",
+  "content": "Ishsizlik — ishi yo'q odamlar holati. Davlat unga qarshi kurashadi."
+ },
+ {
+  "title": "kashf",
+  "content": "Mahsulot — sotiladigan tovar yoki xizmat."
+ },
+ {
+  "title": "reklama",
+  "content": "Reklama — mahsulotni tanitish usuli. «Reklama — savdo dvigateli»."
+ },
+ {
+  "title": "savdo",
+  "content": "Savdo — tovar va xizmatlarni almashtirish jarayoni."
+ },
+ {
+  "title": "tender",
+  "content": "Tender — davlat xaridlari bo'yicha tanlov."
+ },
+ {
+  "title": "urf-odat",
+  "content": "Urf-odat — xalqning an'anaviy qadriyatlari. Har xalqning o'ziga xos urf-odatlari bor."
+ },
+ {
+  "title": "navro'z",
+  "content": "Navro'z — bahor kirib kelishi bayrami (21-mart). Yangi yil boshlanishi deb hisoblanadi."
+ },
+ {
+  "title": "hayit",
+  "content": "Hayit — musulmonlarning bayramlari: Ramazon hayiti va Qurbon hayiti."
+ },
+ {
+  "title": "mehmondo'stlik",
+  "content": "Mehmondo'stlik — o'zbek xalqining eng go'zal fazilatlari. Mehmon — aziz!"
+ },
+ {
+  "title": "choyxona",
+  "content": "Choyxona — odamlar choy ichib, suhbatlashadigan joy. O'zbek madaniyatining bir qismi."
+ },
+ {
+  "title": "dasturxon",
+  "content": "Dasturxon — yozilgan mato ustidagi taom maydoni. O'zbekistonda to'kin dasturxon — orzu!"
+ },
+ {
+  "title": "to'y",
+  "content": "To'y — nikoh va boshqa tantanalar. O'zbek to'ylari katta va quvnoq o'tadi."
+ },
+ {
+  "title": "beshik to'yi",
+  "content": "Beshik to'yi — yangi tug'ilgan chaqaloq sharafiga o'tkaziladigan marosim."
+ },
+ {
+  "title": "sumalak tayyorlash",
+  "content": "Sumalak — Navro'zda qishloqlarda tonggacha tayyorlanadigan shirin taom."
+ },
+ {
+  "title": "halq o'yinlari",
+  "content": "Milliy o'yinlar — kurash, uloq, qiz quvish kabi o'zbek xalq o'yinlari."
+ },
+ {
+  "title": "asrlar merosi",
+  "content": "Merоs — ajdodlardan qolgan qadriyatlar va boyliklar."
+ },
+ {
+  "title": "mahalla",
+  "content": "Mahalla — o'zbek jamiyatining asosiy bo'g'ini. Hamjihatlik ramzi."
+ },
+ {
+  "title": "ota-ona",
+  "content": "Ota-ona — farzand tarbiyasi uchun eng mas'ul insonlar. Ularga hurmat — farzlik burchi."
+ },
+ {
+  "title": "ustoz",
+  "content": "Ustoz — bilim va hunar o'rgatuvchi shaxs. «Ustoz — otadan ulug'» deganlar."
+ },
+ {
+  "title": "do'stlik",
+  "content": "Do'stlik — inson hayotidagi eng qimmatli fazilat. Do'st qiyinchilikda sinovdan o'tadi."
+ },
+ {
+  "title": "halollik",
+  "content": "Halollik — rostgo'ylik va to'g'rilik. Xalqimizning eng yuksak fazilati."
+ },
+ {
+  "title": "sabr",
+  "content": "Sabr — og'ir vaziyatlarda chidamlilik. «Sabr — zafar» deganlar."
+ },
+ {
+  "title": "olijanoblik",
+  "content": "Saxiy — beruvchan, qo'li ochiq inson. Saxovat — yaxshilik belgisi."
+ },
+ {
+  "title": "baxsh",
+  "content": "Baxshi — xalq qo'shiqlarini ijro etuvchi sozanda. Dostonlarni aytadi."
+ },
+ {
+  "title": "lapar",
+  "content": "Lapar — ikki kishi o'rtasidagi qiziqarli qo'shiq bahsi."
+ },
+ {
+  "title": "yalla",
+  "content": "Yalla — o'zbek xalq musiqasi janri. Raqs bilan ijro etiladi."
+ },
+ {
+  "title": "skazka",
+  "content": "Ertak — bolalar uchun mo'ljallangan sehrli hikoya. Qahramonlar va sehrli narsalar ishtirok etadi."
+ },
+ {
+  "title": "masal",
+  "content": "Masal — saboq beruvchi qisqa hikoya. Qahramonlari ko'pincha hayvonlar."
+ },
+ {
+  "title": "maqol",
+  "content": "Maqol — xalq donoligini ifodalovchi qisqa ibora."
+ },
+ {
+  "title": "doston",
+  "content": "Doston — xalq og'zaki ijodining katta asari. «Alpomish» — o'zbek xalq dostoni."
+ },
+ {
+  "title": "rivoyat",
+  "content": "Rivoyat — ming yillar davomida og'izdan og'izga o'tgan hikoya."
+ },
+ {
+  "title": "aqlli taxta",
+  "content": "Loyiha — reja asosida amalga oshiriladigan ish. Yaxshi loyiha — muvaffaqiyat kaliti."
+ },
+ {
+  "title": "talim",
+  "content": "Ta'lim — bilim va ko'nikma olish jarayoni. Maktab, kollej, universitet — ta'lim bosqichlari."
+ },
+ {
+  "title": "maktab",
+  "content": "Maktab — boshlang'ich va o'rta ta'lim beradigan muassasa. Bilim olamiga eshik!"
+ },
+ {
+  "title": "universitet",
+  "content": "Universitet — oliy ta'lim muassasasi. Universitet bitiruvchilari diplom olishadi."
+ },
+ {
+  "title": "o'qituvchi",
+  "content": "O'qituvchi — bilim o'rgatuvchi kasb egasi. Eng sharafli kasblardan biri."
+ },
+ {
+  "title": "kitob",
+  "content": "Kitob — bilim va hikoyalar manbai. «Kitob — eng yaxshi do'st»."
+ },
+ {
+  "title": "darslik",
+  "content": "Darslik — maktabda o'rganiladigan mavzular yozilgan kitob."
+ },
+ {
+  "title": "imtihon",
+  "content": "Imtihon — bilimni tekshirish jarayoni. Harakat qilsang, albatta muvaffaq bo'lasan!"
+ },
+ {
+  "title": "baholash",
+  "content": "Baholash — o'quvchining bilimini baho bilan o'lchash. 5 — eng yuqori baho!"
+ },
+ {
+  "title": "qobiliyat",
+  "content": "Qobiliyat — har kimning tug'ma iqtidori. Uni rivojlantirish kerak."
+ },
+ {
+  "title": "ilm",
+  "content": "Ilm — bilim va fan. «Ilm — chiroq, jaholat — zulmat»."
+ },
+ {
+  "title": "izlanish",
+  "content": "Tadqiqot — yangi bilim topish uchun izlanish. Olimlar shunday kashfiyot qilishadi."
+ },
+ {
+  "title": "kashfiyot",
+  "content": "Kashfiyot — yangi narsa topish yoki ixtiro qilish. Masalan, elektr lampa."
+ },
+ {
+  "title": "mashg'ulot",
+  "content": "Mashg'ulot — sport yoki fan bo'yicha muntazam shug'ullanish."
+ },
+ {
+  "title": "loy",
+  "content": "Loyiha — reja asosida bajariladigan ish. Dars loyihalari fikrlashni o'rgatadi."
+ },
+ {
+  "title": "o'quv yili",
+  "content": "O'quv yili — 1-sentabrdan yozgacha davom etadigan o'qish davri. 1-sentabr — Bilim kuni!"
+ },
+ {
+  "title": "qalam",
+  "content": "Qalam — yozish vositasi. Mukammal insho qalamdan boshlanadi."
+ },
+ {
+  "title": "daftar",
+  "content": "Daftar — yozuvlar uchun varaqlar to'plami."
+ },
+ {
+  "title": "stol",
+  "content": "Stol — o'qish va ishlash uchun mebel. O'quv stoli — ijod maydoni."
+ },
+ {
+  "title": "sinf",
+  "content": "Sinf — o'quvchilar guruhi va ular o'qiydigan xona."
+ },
+ {
+  "title": "vazifa",
+  "content": "Uy vazifasi — darsda o'tilganni mustahkamlash uchun beriladigan topshiriq."
+ },
+ {
+  "title": "o'zlashtirish",
+  "content": "Zabon — o'qish va yozishni bilish. Savodxon inson — erkin inson."
+ },
+ {
+  "title": "odob",
+  "content": "Odob — jamiyatda yurish-turish qoidalari. Odobli bola — hamma sevadigan bola."
+ },
+ {
+  "title": "mas'uliyat",
+  "content": "Mas'uliyat — o'z ishiga javobgarlikni his qilish. Kattalikning belgisi."
+ },
+ {
+  "title": "kelajak",
+  "content": "Kelajak — insonning orzu va maqsadlari amalga oshadigan zamon. Bugun o'qish — ertaga muvaffaqiyat!"
+ },
+ {
+  "title": "kash",
+  "content": "Kasb — insonning doimiy ishi. Shifokor, o'qituvchi, dasturchi — kasblar."
+ },
+ {
+  "title": "muhandis",
+  "content": "Muhandis — qurilish va texnikani loyihalaydigan mutaxassis."
+ },
+ {
+  "title": "arxitektor",
+  "content": "Arxitektor — binolar loyihasini chizadigan mutaxassis."
+ },
+ {
+  "title": "avtomehanik",
+  "content": "Avtomexanik — avtomobillarni ta'mirlaydigan mutaxassis."
+ },
+ {
+  "title": "tarqatuvchi",
+  "content": "Kuryer — buyurtmalarni yetkazib beruvchi xodim."
+ },
+ {
+  "title": "oziq-ovqat texnologi",
+  "content": "Oshpaz — taom tayyorlash ustasi. Shifokor singari, oshpaz ham xalqga xizmat qiladi."
+ },
+ {
+  "title": "do'konchilar",
+  "content": "Sotuvchi — mahsulot sotadigan xodim. Xaridor — mehmon!"
+ },
+ {
+  "title": "fermer",
+  "content": "Fermer — qishloq xo'jaligi bilan shug'ullanadigan tadbirkor."
+ },
+ {
+  "title": "dehqon",
+  "content": "Dehqon — yerda ekin ekib, hosil yetishtiradigan inson. Xalq boqadi."
+ },
+ {
+  "title": "cho'pon",
+  "content": "Cho'pon — podani boqadigan chorvador."
+ },
+ {
+  "title": "harbiy",
+  "content": "Harbiy — armiyada xizmat qiladigan, Vatanni himoya qiladigan jasur inson."
+ },
+ {
+  "title": "uchuvchi",
+  "content": "Uchuvchi (pilot) — samolyotni boshqaradigan mutaxassis."
+ },
+ {
+  "title": "shofyor",
+  "content": "Haydovchi — transportni boshqaradigan mutaxassis."
+ },
+ {
+  "title": "temiryo'lchi",
+  "content": "Temiryo'lchi — temir yo'l sohasida ishlaydigan xodim."
+ },
+ {
+  "title": "quruvchi",
+  "content": "Quruvchi — bino va inshootlar quradigan ishchi."
+ },
+ {
+  "title": "duradgor",
+  "content": "Duradgor — yog'ochdan buyumlar yasaydigan usta."
+ },
+ {
+  "title": "temirchi",
+  "content": "Temirchi — temirni qizdirib, turli buyumlar yasaydigan usta."
+ },
+ {
+  "title": "zargar",
+  "content": "Zargar — oltin va kumushdan zeb-ziynat yasaydigan usta."
+ },
+ {
+  "title": "kulol",
+  "content": "Kulol — loydan idish-tovoq yasaydigan usta."
+ },
+ {
+  "title": "to'quvchi",
+  "content": "To'quvchi — gazlama to'qish bilan shug'ullanadigan hunarmand."
+ },
+ {
+  "title": "kashtachi",
+  "content": "Kashtachi — ip bilan gullar tikadigan mohir hunarmand."
+ },
+ {
+  "title": "hunarmand",
+  "content": "Hunarmand — qo'l mehnati bilan buyum yasaydigan usta. Hunar — oltinga teng!"
+ },
+ {
+  "title": "santexnik",
+  "content": "Santexnik — suv va isitish tizimlarini ta'mirlaydigan usta."
+ },
+ {
+  "title": "elektrik",
+  "content": "Elektrchi — elektr tarmoqlarini o'rnatadigan va ta'mirlaydigan usta."
+ },
+ {
+  "title": "buxgalter",
+  "content": "Buxgalter — pul hisobini yuritadigan mutaxassis."
+ },
+ {
+  "title": "avtomobil",
+  "content": "Avtomobil — yo'lda yuradigan mashina. O'zbekistonda «Damas», «Cobalt» mashhur."
+ },
+ {
+  "title": "damas",
+  "content": "Damas — O'zbekistonda ishlab chiqariladigan mashhur kichik avtomobil."
+ },
+ {
+  "title": "avtobus",
+  "content": "Avtobus — ko'p odam tashiydigan jamoat transporti."
+ },
+ {
+  "title": "metro",
+  "content": "Metro — yer ostidagi tezyurar poyezd tizimi. Toshkent metrosi juda go'zal!"
+ },
+ {
+  "title": "poyezd",
+  "content": "Poyezd — relsda yuradigan uzun tarkibli transport."
+ },
+ {
+  "title": "samolyot",
+  "content": "Samolyot — havoda uchadigan transport. Tez va qulay."
+ },
+ {
+  "title": "vertolyot",
+  "content": "Vertolyot — tik ko'tarilib tushadigan uchish apparati."
+ },
+ {
+  "title": "kemacha",
+  "content": "Kema — suvda yuradigan katta transport."
+ },
+ {
+  "title": "qayiq",
+  "content": "Qayiq — kichik suv transporti. Eshkak bilan qatnaydi."
+ },
+ {
+  "title": "velosiped",
+  "content": "Velosiped — pedal bilan yuradigan ikki g'ildirakli transport."
+ },
+ {
+  "title": "motosikl",
+  "content": "Mototsikl — ikki g'ildirakli tez transport."
+ },
+ {
+  "title": "skuter",
+  "content": "Skuter — shahar uchun qulay yengil transport."
+ },
+ {
+  "title": "taksi",
+  "content": "Taksi — pullik yo'lovchi tashish xizmati."
+ },
+ {
+  "title": "samolet bileti",
+  "content": "Chipta — transportda yurish huquqini beradigan hujjat."
+ },
+ {
+  "title": "yo'l",
+  "content": "Yo'l — transport harakatlanadigan yo'lak. Yo'l belgilariga e'tibor kerak!"
+ },
+ {
+  "title": "svetofor",
+  "content": "Svetofor — yo'l harakatini boshqaradigan chiroq. Qizil — to'xta!"
+ },
+ {
+  "title": "piyoda",
+  "content": "Piyoda — yo'lda oyoqda yuradigan odam. Piyodalar yo'lakchasi — xavfsiz joy."
+ },
+ {
+  "title": "garaj",
+  "content": "Garaj — avtomobil qo'yiladigan joy."
+ },
+ {
+  "title": "ob havo",
+  "content": "Ob-havo — ma'lum vaqt va joydagi atmosfera holati. Quyoshli, bulutli, yomg'irli bo'ladi."
+ },
+ {
+  "title": "harorat shkalasi",
+  "content": "Termometr — haroratni o'lchaydigan asbob. Uni ko'chada ham ko'rasiz."
+ },
+ {
+  "title": "yosam",
+  "content": "Qurg'oqchilik — uzoq vaqt yomg'ir yog'masdan, yerning qurib qolishi."
+ },
+ {
+  "title": "to'fon",
+  "content": "To'fon — kuchli shamol bilan keladigan bo'ron."
+ },
+ {
+  "title": "suvayruq'",
+  "content": "Suv toshqini — daryo suvining ko'tarilib, atrofni bosishi."
+ },
+ {
+  "title": "yong'in",
+  "content": "Yong'in — nazoratdan chiqqan olov. 101 raqamiga qo'ng'iroq qiling!"
+ },
+ {
+  "title": "tabiat",
+  "content": "Tabiat — bizni o'rab turgan hamma narsa: daraxtlar, hayvonlar, daryolar, tog'lar. Uni asrash kerak!"
+ },
+ {
+  "title": "ekologiya",
+  "content": "Ekologiya — tabiat va inson o'zaro munosabatini o'rganadigan fan."
+ },
+ {
+  "title": "ifloslanish",
+  "content": "Atrof-muhitni ifloslanish — havoning, suvning yoki tuproqning kimyoviy buzilishi."
+ },
+ {
+  "title": "qayta ishlash",
+  "content": "Qayta ishlash (recycling) — chiqindidan yangi mahsulot tayyorlash. Tabiatni asraydi!"
+ },
+ {
+  "title": "adabiyot",
+  "content": "Adabiyot — badiiy asarlar (ertak, she'r, roman) sohasi. Millatning ma'naviy xazinasi."
+ },
+ {
+  "title": "she'r",
+  "content": "She'r — qofiyali, ritmik badiiy asar. She'r — qalb tilidagi musiqadir."
+ },
+ {
+  "title": "roman",
+  "content": "Roman — katta hajmli badiiy asar."
+ },
+ {
+  "title": "hikoya",
+  "content": "Hikoya — qisqa badiiy asar. Bir voqeani bayon qiladi."
+ },
+ {
+  "title": "asar qahramoni",
+  "content": "Qahramon — asardagi bosh obraz. Uning taqdiri kitobxonni qiziqtiradi."
+ },
+ {
+  "title": "mualif",
+  "content": "Muallif — asarni yozgan shaxs. Kitob muqovasida ko'rsatiladi."
+ },
+ {
+  "title": "noshir",
+  "content": "Nashriyot — kitoblarni chop etadigan tashkilot."
+ },
+ {
+  "title": "kutubxona",
+  "content": "Kutubxona — kitoblar saqlanadigan va o'qiladigan joy."
+ },
+ {
+  "title": "ensiklopediya",
+  "content": "Ensiklopediya — hamma sohaga oid ma'lumotlar lug'ati. Bilim xazinasi!"
+ },
+ {
+  "title": "qomus",
+  "content": "Qomus — keng qamrovli bilim to'plami."
+ },
+ {
+  "title": "lug'at",
+  "content": "Lug'at — so'zlar va ularning ma'nolari keltirilgan kitob."
+ },
+ {
+  "title": "tarjimon",
+  "content": "Tarjimon — bir tildan boshqa tilga o'giradigan mutaxassis."
+ },
+ {
+  "title": "ijod",
+  "content": "Ijod — yangi asar yaratish jarayoni. Ijodkor qalbida dunyolar bor!"
+ },
+ {
+  "title": "qiziq fakt",
+  "content": "Qiziq fakt: aravada, xuddi daryo oqimi kabi — har doim o'rganish oqimini davom eting!"
+ },
+ {
+  "title": "suv hayot",
+  "content": "Suv — hayot manbai. Inson tanasining ~70 foizi suvdan iborat."
+ },
+ {
+  "title": "havo miqdori",
+  "content": "Havo — ko'rinmas, lekin juda zarur. Bir nafasda ~0,5 litr havo olamiz."
+ },
+ {
+  "title": "yulduzlar soni",
+  "content": "Koinotdagi yulduzlar soni — Yerdagi qum donalaridan ham ko'p!"
+ },
+ {
+  "title": "inson yuragi",
+  "content": "Inson yuragi bir sutkada ~100 000 marta uradi."
+ },
+ {
+  "title": "miya kuchi",
+  "content": "Inson miyasi ~20 vatt energiya sarflaydi. Kichkina lampochkaga teng!"
+ },
+ {
+  "title": "burun izi",
+  "content": "Barmoq izi kabi, burun izi ham har odamda noyob."
+ },
+ {
+  "title": "arilar",
+  "content": "Asalari bir mavsumda ~2,5 kg asal yig'ishi mumkin. Mehnatkash jonivor!"
+ },
+ {
+  "title": "mushuk uyqu",
+  "content": "Mushuklar kuniga ~14 soat uxlaydi. Ularning «uyqu ustalari» ekani ajabmas!"
+ },
+ {
+  "title": "tinga",
+  "content": "Quloq suhbatlashganda ham ishlashda davom etadi."
+ },
+ {
+  "title": "sayoh",
+  "content": "Charlz Lindberg — 1927-yilda Atlantika okeanini yolg'iz uchib o'tgan birinchi uchuvchi."
+ },
+ {
+  "title": "telefon ixtiro",
+  "content": "Telefonni 1876-yilda Aleksandr Bell ixtiro qilgan."
+ },
+ {
+  "title": "elektr lampa",
+  "content": "Elektr lampasini Tomas Edison ommalashtirgan."
+ },
+ {
+  "title": "velosiped tarixi",
+  "content": "Velosiped 19-asrda mashhur bo'la boshlagan."
+ },
+ {
+  "title": "kinoni ixtiro",
+  "content": "Kino 'Lumyer' aka-ukalar tomonidan 1895-yilda ommaga namoyish etilgan."
+ },
+ {
+  "title": "televizor",
+  "content": "Televizor — 20-asrning buyuk ixtirosi. Bugun har uyda bor!"
+ },
+ {
+  "title": "internet yoshi",
+  "content": "Internet 1990-yillarda butun dunyoga tarqala boshlagan."
+ },
+ {
+  "title": "smartfon yoshi",
+  "content": "Birinchi smartfon 1992-yilda chiqarilgan."
+ },
+ {
+  "title": "evaziga",
+  "content": "Muvaffaqiyat kaliti — doimiy harakat va o'rganish. Bugun boshlanadi!"
+ },
+ {
+  "title": "tabassum",
+  "content": "Tabassum — eng chiroyli til. Barcha tilda tushuniladi!"
+ },
+ {
+  "title": "kompyuter o'yin",
+  "content": "Kompyuter o'yini — kompyuter yoki konsolda o'ynaladigan o'yin. Harakat, strategiya, sport turlari bor."
+ },
+ {
+  "title": "mashen o'yin",
+  "content": "Minecraft — bloklardan dunyo qurish o'yini. Dunyodagi eng mashhur o'yinlardan biri!"
+ },
+ {
+  "title": "roblox",
+  "content": "Roblox — o'z o'yinlaringni yaratish mumkin bo'lgan platforma."
+ },
+ {
+  "title": "futbol o'yini",
+  "content": "FIFA — futbol simulyatori. Dunyo bo'ylab millionlab o'yinchilari bor."
+ },
+ {
+  "title": "bosqinchi o'yin",
+  "content": "Strategiya o'yinlari — reja tuzib, shaharni boshqarish yoki jang qilish o'yinlari."
+ },
+ {
+  "title": "konsol",
+  "content": "Konsol — o'yin o'ynash uchun maxsus qurilma. PlayStation, Xbox — misol."
+ },
+ {
+  "title": "playstation",
+  "content": "PlayStation — Sony'ning mashhur o'yin konsoli."
+ },
+ {
+  "title": "xbox",
+  "content": "Xbox — Microsoft'ning o'yin konsoli."
+ },
+ {
+  "title": "kompyuter o'yini ko'nikma",
+  "content": "O'yin o'ynash — refleks va strategik fikrlashni o'rgatadi. Ammo me'yorida!"
+ },
+ {
+  "title": "esport",
+  "content": "Esport — professional kompyuter o'yinlari musobaqasi. O'yinchilar ham sportchilar kabi!"
+ },
+ {
+  "title": "microsoft",
+  "content": "Microsoft — dunyodagi eng yirik texnologiya kompaniyalaridan. Windows sistemasi shu yerda yaratilgan."
+ },
+ {
+  "title": "apple",
+  "content": "Apple — iPhone, iPad yaratgan mashhur kompaniya."
+ },
+ {
+  "title": "google kompaniya",
+  "content": "Google — qidiruv tizimi bilan mashhur kompaniya. Android ham unga tegishli."
+ },
+ {
+  "title": "amazon",
+  "content": "Amazon — dunyodagi eng yirik onlayn-do'kon."
+ },
+ {
+  "title": "facebook",
+  "content": "Meta (Facebook) — ijtimoiy tarmoqlar kompaniyasi."
+ },
+ {
+  "title": "samsung",
+  "content": "Samsung — telefon va televizor ishlab chiqaradigan Janubiy Koreya kompaniyasi."
+ },
+ {
+  "title": "xiaomi",
+  "content": "Xiaomi — arzon va sifatli telefonlar ishlab chiqaradigan Xitoy kompaniyasi."
+ },
+ {
+  "title": "huawei",
+  "content": "Huawei — Xitoyning yirik texnologiya kompaniyasi."
+ },
+ {
+  "title": "tesla",
+  "content": "Tesla — elektr avtomobillar ishlab chiqaradigan kompaniya."
+ },
+ {
+  "title": "netflix",
+  "content": "Netflix — kino va seriallar ko'rish platformasi. O'z filmlarini ham chiqaradi."
+ },
+ {
+  "title": "disney",
+  "content": "Disney — multfilm va filmlar olami. Mickey Mouse shu yerda tug'ilgan!"
+ },
+ {
+  "title": "yandex taksi",
+  "content": "Yandex Go — O'zbekistonda mashhur taksi va yetkazib berish ilovasi."
+ },
+ {
+  "title": "payme",
+  "content": "Payme — O'zbekistondagi mobil to'lov ilovasi."
+ },
+ {
+  "title": "click",
+  "content": "Click — O'zbekistondagi mashhur to'lov xizmati."
+ },
+ {
+  "title": "minnapolis",
+  "content": "Minneapolis — AQSHdagi shahar."
+ },
+ {
+  "title": "vaşinqton",
+  "content": "Vashington — AQSH poytaxti va shtat. Ayni bir nomli ikkita joy bor."
+ },
+ {
+  "title": "chikago",
+  "content": "Chikago — AQSHdagi yirik shahar. Mexiko ko'li qirg'og'ida joylashgan."
+ },
+ {
+  "title": "san-fransisko",
+  "content": "San-Fransisko — AQSHdagi texnologiya markazi. Silikon vodiy atrofida."
+ },
+ {
+  "title": "silikon vodiy",
+  "content": "Silikon vodiy — AQSHdagi texnologiya kompaniyalari markazi."
+ },
+ {
+  "title": "shankxay",
+  "content": "Shanxay — Xitoyning eng katta shahri."
+ },
+ {
+  "title": "gonkong",
+  "content": "Gonkong — Xitoy tarkibidagi yirik moliya markazi."
+ },
+ {
+  "title": "kyoln",
+  "content": "Kyoln (Köln) — Germaniyadagi qadimiy shahar."
+ },
+ {
+  "title": "munhen",
+  "content": "Myunxen — Germaniyadagi yirik shahar."
+ },
+ {
+  "title": "brynsel",
+  "content": "Bryussel — Belgiya poytaxti. Yevropa Ittifoqining markazi."
+ },
+ {
+  "title": "amstirdam kanali",
+  "content": "Amsterdam kanallari — shaharni kesib o'tuvchi suv yo'llari tarmog'i."
+ },
+ {
+  "title": "olimp o'yinlari tarixi",
+  "content": "Olimpiya o'yinlari — qadimiy Yunonistonda boshlangan. Zamonaviy Olimpiada 1896-yildan o'tkaziladi."
+ },
+ {
+  "title": "qishki olimpiada",
+  "content": "Qishki Olimpiada — chang'i, konkida uchish kabi qishki sport musobaqalari."
+ },
+ {
+  "title": "formula 1",
+  "content": "Formula 1 — dunyodagi eng tez poyga avtomobillari musobaqasi."
+ },
+ {
+  "title": "vrestling",
+  "content": "Professional kurash (vrestling) — sahnalashtirilgan kurash tomoshasi."
+ },
+ {
+  "title": "pingpong",
+  "content": "Ping-pong — stol tennisi o'yininging kundalik nomi."
+ },
+ {
+  "title": "sprint",
+  "content": "Sprint — 100-400 metrga juda tez yugurish."
+ },
+ {
+  "title": "marafon yugurish",
+  "content": "Marafon — 42 km 195 m masofaga yugurish. Eng oqilona «sabr sinovi»."
+ },
+ {
+  "title": "xokkey",
+  "content": "Xokkey — muz ustida xokkey to'pi bilan o'ynaladigan tezkor sport."
+ },
+ {
+  "title": "uchqud",
+  "content": "Dimlama — go'sht va sabzavotlar dimlab pishiriladigan to'yimli taom."
+ },
+ {
+  "title": "shavla",
+  "content": "Shavla — guruch va go'shtdan tayyorlanadigan oddiy, ammo mazali taom."
+ },
+ {
+  "title": "shurpa",
+  "content": "Shurpa — go'shtli quyuq sho'rva."
+ },
+ {
+  "title": "moshxorda",
+  "content": "Moshxo'rida — mosh va guruchdan tayyorlanadigan quyuq sho'rva."
+ },
+ {
+  "title": "ikramchilik",
+  "content": "Ikramchilik — o'zbek dasturxonidagi mehmonga ko'rsatiladigan ehtirom. Mehmon uchun eng yaxshisi!"
+ },
+ {
+  "title": "choy damlash",
+  "content": "Choy damlash — maxsus choydish (choynak)da kamroq suv bilan kuchli choy tayyorlash."
+ },
+ {
+  "title": "patir qilish",
+  "content": "Patir — sarimsoq va yog' bilan pishiriladigan yumshoq o'zbek noni."
+ },
+ {
+  "title": "qazi",
+  "content": "Qazi — ot go'shtidan tayyorlanadigan milliy taom."
+ },
+ {
+  "title": "yoshlar kuni",
+  "content": "Yoshlar kuni — 30-iyunda nishonlanadi."
+ },
+ {
+  "title": "xalqaro qizlar kuni",
+  "content": "Xalqaro qizlar kuni — 11-oktabrda nishonlanadi."
+ },
+ {
+  "title": "o'qituvchi kuni",
+  "content": "O'qituvchi va murabbiylar kuni — 1-oktabrda nishonlanadi."
+ },
+ {
+  "title": "dasturchilar kuni",
+  "content": "Dasturchilar kuni — ba'zi mamlakatlarda 13-sentabr (o'zgaruvchan) kuni."
+ },
+ {
+  "title": "mustaqillik kuni",
+  "content": "Mustaqillik kuni — O'zbekistonda 1-sentabr nishonlanadi."
+ },
+ {
+  "title": "bayram",
+  "content": "Bayram — xalq nishonlaydigan tantanali kun. Quvonch va birlik vaqti!"
+ },
+ {
+  "title": "qutlash",
+  "content": "Tabriklash — bayramda yaqinlarni xursand qilish. Har birimizdan bitta iliq so'z kifoya!"
+ },
+ {
+  "title": "kino",
+  "content": "kino — harakatlanuvchi tasvirlar orqali hikoya aytib beruvchi san'at turi. Qisqasi: ko'chma suratlar + ovoz + hikoya = kino 🎬"
+ },
+ {
+  "title": "film",
+  "content": "film — kino san'atining asari. Janrlarga bo'linadi: komediya, drama, triller, fantastika, sarguzasht va boshqalar."
+ },
+ {
+  "title": "anime",
+  "content": "anime — Yaponiyada yaratilgan multifilm uslubi. O'ziga xos chizmasi, katta ko'zlari va chuqur hikoyalari bilan tanilgan. Yoshu qari hammaga yoqadi! 🎌"
+ },
+ {
+  "title": "multfilm",
+  "content": "multfilm — chizilgan yoki kompyuterda yasalgan personajlar ishtirokidagi animatsion kino. Bolalar uchun ham, kattalar uchun ham zo'r multfilmlar bor!"
+ },
+ {
+  "title": "animatsiya",
+  "content": "animatsiya — jonlantirish san'ati: rasmlar yoki modellar ketma-ket almashib, harakat hissi paydo qiladi. Multfilm va animelarning asosi shu."
+ },
+ {
+  "title": "sun'iy intellekt",
+  "content": "sun'iy intellekt (AI) — mashinaning inson kabi o'rganish, fikrlash va qaror qabul qilish qobiliyati. Men ham shunday tizimman! 🧠"
+ },
+ {
+  "title": "neyron tarmoq",
+  "content": "neyron tarmoq — sun'iy intellektning miya modeli: xuddi miya neyronlaridek bog'langan qatlamlar ma'lumot o'rganadi. Mening niyat tanlovim va reyting bashoratim shu bilan ishlaydi."
+ },
+ {
+  "title": "PyTorch",
+  "content": "PyTorch — Facebook tomonidan yaratilgan ochiq kodli neyron tarmoq kutubxonasi. Men undan foydalanuvchining intentsini aniqlash va film reytingini bashorat qilishda foydalanaman."
+ },
+ {
+  "title": "Python",
+  "content": "Python — oddiy va kuchli dasturlash tili. Men (UZDUB AI) aynan Python'da 0 dan yozilganman! 🐍"
+ },
+ {
+  "title": "chatbot",
+  "content": "chatbot — inson bilan suhbatlashuvchi dastur. Men yordamchi chatbotman: kino, anime, multfilm bo'yicha tavsiya beraman, xotin-qizlar kayfiyatini tushunaman va o'z-o'zimni rivojlantiraman."
+ },
+ {
+  "title": "Ollama",
+  "content": "Ollama — shaxsiy kompyuterda katta til modellarini ishga tushirish platformasi. Saytimiz eski Ollama'ga o'xshab so'rov yuborardi, endi esa javobni MEN beraman!"
+ },
+ {
+  "title": "reyting",
+  "content": "reyting — foydalanuvchilarning baholari asosida kontentning mashhurlik ko'rsatkichi. Men reytingni neyron tarmoq bilan bashorat ham qila olaman!"
+ },
+ {
+  "title": "premium",
+  "content": "premium — UZDUB saytining pullik obunasi: reklamasiz tomosha, exklyuziv kontent va yuqori sifat. Profil bo'limidan ulash mumkin."
+ },
+ {
+  "title": "uzdub",
+  "content": "UZDUB — O'zbek tilidagi kino, anime va multfilm platformasi. Administrator e'lonlar qo'shadi, men esa foydalanuvchilarga tavsiya beraman! 🎬"
+ },
+ {
+  "title": "server",
+  "content": "server — so'rovlarni qabul qilib, javob qaytaradigan dastur. Saytimiz meni Flask serveri orqali chaqiradi (127.0.0.1:11434)."
+ },
+ {
+  "title": "api",
+  "content": "API — dasturlar o'rtasidagi kelishilgan aloqa interfeysi. Sayt my-ga Ollama'ga yuboradigan API so'rovlarini yuboradi, men o'sha formatda javob beraman."
+ },
+ {
+  "title": "ma'lumotlar bazasi",
+  "content": "ma'lumotlar bazasi (DB) — tartiblangan ma'lumotlar ombori. Men MySQL'dagi uzdub bazasidan foydalanaman (ai_knowledge jadvali — mening xotiram)."
+ },
+ {
+  "title": "komediya",
+  "content": "komediya — kulgili janr: hazil, kulgili vaziyatlar va yorqin personajlar. Yaxshi kayfiyat uchun eng zo'r tanlov! 😄"
+ },
+ {
+  "title": "drama",
+  "content": "drama — inson his-tuyg'ulari va hayotiy vaziyatlarni chuqur tasvirlovchi jiddiy janr. Ko'z yoshi va fikr uyg'otadi."
+ },
+ {
+  "title": "triller",
+  "content": "triller — keskin, sirlarga to'la va taranglikni oshiradigan janr. Tomoshabin nafasini ushlab qaraydi! 😱"
+ },
+ {
+  "title": "fantastika",
+  "content": "fantastika — ilmiy-fantastik olamlar, texnologiyalar va kelajak haqidagi janr. Kosmos, robotlar, vaqt sayohati!"
+ },
+ {
+  "title": "sarguzasht",
+  "content": "sarguzasht — qahramonning sarguzashtli sayohati haqidagi janr: xazina izlash, o'rmonlar, janglar va kashfiyotlar! 🗺️"
+ },
+ {
+  "title": "qo'rqinchli",
+  "content": "qo'rqinchli — dahshat va qo'rquv uyg'otuvchi janr (gorror). Jasurlar uchun! Qorong'ida tomosha qilmang... 👻"
+ },
+ {
+  "title": "qorqinchli",
+  "content": "qorqinchli — dahshat va qo'rquv uyg'otuvchi janr (gorror). Jasurlar uchun! Qorong'ida tomosha qilmang... 👻"
+ },
+ {
+  "title": "romantika",
+  "content": "romantika — sevgi va muhabbat haqidagi janr. Yurakka iliq his tuyg'u beradi, juftlar uchun mukammal! 💕"
+ },
+ {
+  "title": "detektiv",
+  "content": "detektiv — jinoyatni ochish va sirni topish haqidagi janr. Aqlli kuzatuvchilar uchun! 🕵️"
+ },
+ {
+  "title": "janr",
+  "content": "janr — asarning turkumi: komediya, drama, triller, fantastika... UZDUB'da janr bo'yicha qidirish mumkin: «komediya kino» diyaversangiz kifoya!"
+ },
+ {
+  "title": "rejissyor",
+  "content": "rejissyor — filmni boshqaruvchi ijodkor: aktyorlar, kamera va hikoya — hammasi uning qo'lida. Filmning «muallifi» deyish mumkin."
+ },
+ {
+  "title": "kino tarixi",
+  "content": "kino tarixi 1895-yilda Lumiere aka-ukalarning birinchi seansidan boshlangan. Dastlab ovozsiz edi, keyin ovoz, rang va kompyuter animatsiyasi paydo bo'ldi!"
+ },
+ {
+  "title": "o'zbekiston",
+  "content": "O'zbekiston — Markaziy Osiyodagi qadimiy davlat. Poytaxti — Toshkent. 12 viloyat bor. Aholisi 36 milliondan ortiq. Samarkand, Buxoro, Xiva — jahon tarixida mashhur shaharlar. 🇺🇿"
+ },
+ {
+  "title": "toshkent",
+  "content": "Toshkent — O'zbekistonning poytaxti va eng katta shahri. Aholisi 3 millionga yaqin. Havoriylik bekati emas, balki ko'kalamzor bog'lar va metro yulduzi bilan mashhur! 🏙️"
+ },
+ {
+  "title": "samarqand",
+  "content": "Samarkand — «Sharq qavasi» deb ataluvchi qadimiy shahar. Registon maydoni, Shahizinda va Ulug'bek rasadxonasi jahonga mashhur. 2750 yildan oshiq tarixga ega! 🏛️"
+ },
+ {
+  "title": "buxoro",
+  "content": "Buxoro — 2500 yillik tarixli shahar, Ipak yo'li markazi. Minorai Kalon, Ark qal'asi va savdo gumbazlari bilan tanilgan."
+ },
+ {
+  "title": "xiva",
+  "content": "Xiva — ochiq osmon ostidagi muzey shahri! Ichon-Qal'a qal'asi UNESCO ro'yxatiga kiritilgan."
+ },
+ {
+  "title": "poytaxt",
+  "content": "Poytaxt — davlatning bosh shahri. O'zbekiston poytaxti — Toshkent. Filmlarda ko'p shaharlar «poytaxt» deb ataladi 🎬"
+ },
+ {
+  "title": "dengiz",
+  "content": "Dengiz — quruqlikdan katta suv maydoni. Yer yuzining 70%ini okean va dengizlar egallaydi. Eng katta dengiz? Kaspiv! 🌊"
+ },
+ {
+  "title": "okean",
+  "content": "Okean — ulkan suv maydoni: Tinch, Atlantika, Hind va Shimoliy Muz okeani. Yer yuzidagi eng katta suv havzalari."
+ },
+ {
+  "title": "tog'",
+  "content": "Tog'lar — Yer qobig'ining ko'tarilgan qismi. O'zbekistonda Hisor, Chotqol va Tyan-Shan tog'lari bor. Eng baland nuqta — Xazrati Sulton (4643 m)! ⛰️"
+ },
+ {
+  "title": "daryo",
+  "content": "Daryo — tabiiy suv oqimi: Amudaryo va Sirdaryo O'zbekistonning ikki buyuk daryosi. «Oq oltin» — paxta shu daryolardan sug'oriladi."
+ },
+ {
+  "title": "gravitatsiya",
+  "content": "Gravitatsiya — jismlarni bir-biriga tortadigan kuch. Olma yerda qolishi ham, Oyning Yer atrofida aylanishi ham shu kuch bilan bog'liq! Nyuton kashf etgan. 🍎"
+ },
+ {
+  "title": "elektr",
+  "content": "Elektr — zaryadlangan zarralar oqimi. Uyimizdagi lampa, kompyuter va kino projektori elektr bilan ishlaydi ⚡"
+ },
+ {
+  "title": "yorug'lik",
+  "content": "Yorug'lik — eng tez narsa: sekundiga 300 000 km! Quyosh nuri Yerga 8 daqiqada yetib keladi."
+ },
+ {
+  "title": "quyosh",
+  "content": "Quyosh — bizning yulduzimiz, o'rtacha yulduz. Yer Quyosh atrofida 365 kunda aylanadi. Quyoshsiz hayot bo'lmas edi ☀️"
+ },
+ {
+  "title": "oy",
+  "content": "Oy — Yerning tabiiy yo'ldoshi. Yerga eng yaqin osmon jismi. Oyga 1969-yilda birinchi odam qadam qo'ygan (Nil Armstrong). 🌙"
+ },
+ {
+  "title": "yulduz",
+  "content": "Yulduz — o'z yorug'ligini chiqaradigan ulkan gaz shar. Osmonda ko'rgan yulduzlar — katta masofadagi quyoshlar! ✨"
+ },
+ {
+  "title": "sayyora",
+  "content": "Sayyora — yulduz atrofida aylanadigan osmon jismi. Quyosh tizimida 8 sayyora bor: Merkuriy, Venera, Yer, Mars, Yupiter, Saturn, Uran, Neptun. 🪐"
+ },
+ {
+  "title": "dinozavr",
+  "content": "Dinozavrlar — 65 million yil avval Yerda yashagan ulkan kaltakesaklar. T-Rex eng mashhuri! Ular haqida juda ko'p filmlar bor 🦖"
+ },
+ {
+  "title": "havo",
+  "content": "Havo — Yerni o'rab turgan gaz qatlami: kislorod, azot va boshqalar. Uning yordamida nafas olamiz va samolyotlar uchadi."
+ },
+ {
+  "title": "internet",
+  "content": "Internet — butun dunyodagi kompyuterlarni bog'laydigan tarmoq. Saytlar, video va AI'lar shu tarmoqda ishlaydi 🌐"
+ },
+ {
+  "title": "kompyuter",
+  "content": "Kompyuter — dasturlar bilan ishlaydigan elektron mashina. Birinchi kompyuterlar xona kattaligida edi, endi esa cho'ntakda! 💻"
+ },
+ {
+  "title": "telefon",
+  "content": "Telefon — ovoz va matn uzatadigan qurilma. «Telefon» grekcha: tele (uzoq) + fon (ovoz). Smartfon esa — cho'ntakdagi kompyuter! 📱"
+ },
+ {
+  "title": "ilova",
+  "content": "Ilova (app) — telefon yoki kompyuter uchun dastur. Telegram, YouTube, o'yinlar — hammasi ilovalar."
+ },
+ {
+  "title": "dastur",
+  "content": "Dastur — kompyuterga nima qilishni buyuradigan ko'rsatmalar majmui. Python, PHP, JavaScript — dasturlash tillari."
+ },
+ {
+  "title": "veb-sayt",
+  "content": "Veb-sayt — internetdagi sahifalar to'plami. UZDUB ham veb-sayt! Saytlar HTML, CSS va PHP bilan quriladi."
+ },
+ {
+  "title": "wifi",
+  "content": "Wi-Fi — internetsiz simsiz ulanish texnologiyasi. Uyda, kafeda va «Poytaxt bayrami» da ham hamma Wi-Fi so'raydi 😄"
+ },
+ {
+  "title": "parol",
+  "content": "Parol — hisobingizni himoya qiluvchi maxfiy so'z. Kuchli parol: 8+ belgi, raqam va belgilar bilan. Hech kimga bermang! 🔐"
+ },
+ {
+  "title": "xavfsizlik",
+  "content": "Internet xavfsizligi — parollar, viruslar va aldashlardan himoya. Noma'lum havolalarni bosmang, parolni sir saqlang!"
+ },
+ {
+  "title": "brauzer",
+  "content": "Brauzer — veb-saytlarni ko'rsatadigan dastur: Chrome, Firefox, Edge, Safari. UZDUB'ni istalgan brauzerda oching!"
+ },
+ {
+  "title": "kinoteatr",
+  "content": "Kinoteatr — katta ekranda film ko'rsatadigan joy. Birinchi kinoteatr 1895-yilda Parijda ochilgan. Popkorn kinoteatrning ajralmas qismi! 🍿"
+ },
+ {
+  "title": "oskar",
+  "content": "Oscar — kinoning eng nufuzli mukofoti. Har yili Gollivudda taqdim etiladi. «Eng yaxshi film» — asosiy nominatsiya! 🏆"
+ },
+ {
+  "title": "premyera",
+  "content": "Premyera — filmning birinchi namoyishi. Yangi filmlar odatda premyeradan keyin platformalarda chiqadi."
+ },
+ {
+  "title": "dublyaj",
+  "content": "Dublyaj — filmni boshqa tilga ovozlashtirish. O'zbekcha dublyajli animelar yoshlar orasida juda ommabop! 🎙️"
+ },
+ {
+  "title": "subtitr",
+  "content": "Subtitr — ekrandagi tarjima matni. Filmni asl tilida subtitr bilan ko'rish tili o'rganishga ham yordam beradi."
+ },
+ {
+  "title": "aktyor",
+  "content": "Aktyor — filmda rol ijro etuvchi san'atkor. Mashhur aktyorlar filmni xalq sevadigan yulduzga aylantiradi. ⭐"
+ },
+ {
+  "title": "prodyuser",
+  "content": "Prodyuser — filmning moliyasi va tashkiliy ishlarini boshqaruvchi shaxs. Rejissyor «filmni yaratadi», prodyuser «uni amalga oshiradi»."
+ },
+ {
+  "title": "ssenariy",
+  "content": "Ssenariy — filmning yozma hikoyasi: dialoglar va sahnlar. Har bir ajoyib film ajoyib ssenariydan boshlanadi! 📝"
+ },
+ {
+  "title": "o'zbek kinosi",
+  "content": "O'zbek kinosi o'ziga xos maktabga ega: «O'tgan kunlar», «Shum bola» kabi filmlar milliy kinoning durdonalari. Hozir yangi o'zbek filmlari ham mashhur!"
+ },
+ {
+  "title": "tizer",
+  "content": "Tizer — filmning qisqa, qiziqarli oldi-treyleri. Tizerlarda asosiy voqea emas, kayfiyat ko'rsatiladi!"
+ },
+ {
+  "title": "uyqu",
+  "content": "Uyqu — salomatlikning asosi! Kattalarga 7-8 soat uyqu kerak. Uyqu vaqtida miya o'rganilganlarni «arxivlaydi» 😴"
+ },
+ {
+  "title": "vitamin",
+  "content": "Vitaminlar — organizm uchun zarur moddalar: A, B, C, D... Sabzavot-mevalar vitaminlarga boy. Vitamin D quyoshdan olinadi! 🥕"
+ },
+ {
+  "title": "futbol",
+  "content": "Futbol — dunyodagi eng ommabop sport. Har 4 yilda jahon chempionati bo'ladi. O'zbekiston termasi ham yirik turnirlarga chiqmoqda! ⚽"
+ },
+ {
+  "title": "kurash",
+  "content": "Kurash — o'zbek milliy sport turi! Yoshi katta va yosh kurashchilar xalqaro chempionatlarda g'olib chiqmoqda. 🤼"
+ },
+ {
+  "title": "shaxmat",
+  "content": "Shaxmat — strategiya o'yini, «aql sporti». 64 katak, 16 har bir tomonda. O'zbekiston shaxmatchilari jahon shaxmatini zabt etmoqda! ♟️"
+ },
+ {
+  "title": "choy",
+  "content": "Choy — o'zbek mehmondo'stligining ramzi! «Choysiz mehmon qolmas». Yashil choy — sharqona, qora choy — yevropacha. 🫖"
+ },
+ {
+  "title": "palov",
+  "content": "Palov — O'zbekistonning milliy taomi. Har hududnning o'z palovi bor: Samarqand, Buxoro, Xorazm palovi... 🍚"
+ },
+ {
+  "title": "pref:u001:kino:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u002:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u003:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u004:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u005:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u006:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u007:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u008:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u009:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u010:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u011:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u012:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u013:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u014:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u015:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u016:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u017:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u018:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u019:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u020:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u021:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u022:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u023:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u024:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u025:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u026:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u027:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u028:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u029:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u030:multfilm:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u031:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u032:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u033:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u034:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u035:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u036:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u037:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u038:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u039:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u040:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u041:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u042:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u043:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u044:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u045:multfilm:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u046:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u047:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u048:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u049:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u050:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u051:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u052:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u053:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u054:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u055:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u056:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u057:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u058:kino:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u059:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u060:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u061:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u062:anime:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u063:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u064:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u065:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u066:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u067:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u068:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u069:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u070:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u071:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u072:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u073:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u074:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u075:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u076:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u077:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u078:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u079:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u080:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u081:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u082:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u083:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u084:multfilm:no",
+  "content": "1"
+ },
+ {
+  "title": "pref:u085:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u086:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u087:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u088:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u089:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u090:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u091:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u092:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u093:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u094:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u095:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u096:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u097:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:u098:anime",
+  "content": "1"
+ },
+ {
+  "title": "pref:u099:multfilm",
+  "content": "1"
+ },
+ {
+  "title": "pref:u100:kino",
+  "content": "1"
+ },
+ {
+  "title": "pref:kino",
+  "content": "12"
+ },
+ {
+  "title": "pref:kino:no",
+  "content": "3"
+ },
+ {
+  "title": "pref:anime:no",
+  "content": "2"
+ },
+ {
+  "title": "pref:multfilm:no",
+  "content": "4"
+ },
+ {
+  "title": "fb:like:42",
+  "content": "4"
+ },
+ {
+  "title": "fb:dislike:42",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:45",
+  "content": "5"
+ },
+ {
+  "title": "fb:dislike:45",
+  "content": "3"
+ },
+ {
+  "title": "fb:like:48",
+  "content": "2"
+ },
+ {
+  "title": "fb:dislike:48",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:49",
+  "content": "6"
+ },
+ {
+  "title": "fb:dislike:49",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:50",
+  "content": "4"
+ },
+ {
+  "title": "fb:dislike:50",
+  "content": "3"
+ },
+ {
+  "title": "fb:like:51",
+  "content": "2"
+ },
+ {
+  "title": "fb:dislike:51",
+  "content": "3"
+ },
+ {
+  "title": "fb:like:52",
+  "content": "3"
+ },
+ {
+  "title": "fb:dislike:52",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:53",
+  "content": "2"
+ },
+ {
+  "title": "fb:dislike:53",
+  "content": "2"
+ },
+ {
+  "title": "fb:like:54",
+  "content": "5"
+ },
+ {
+  "title": "fb:dislike:54",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:56",
+  "content": "3"
+ },
+ {
+  "title": "fb:dislike:56",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:57",
+  "content": "6"
+ },
+ {
+  "title": "fb:dislike:57",
+  "content": "2"
+ },
+ {
+  "title": "fb:like:58",
+  "content": "2"
+ },
+ {
+  "title": "fb:dislike:58",
+  "content": "3"
+ },
+ {
+  "title": "fb:like:59",
+  "content": "2"
+ },
+ {
+  "title": "fb:dislike:59",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:60",
+  "content": "7"
+ },
+ {
+  "title": "fb:dislike:60",
+  "content": "3"
+ },
+ {
+  "title": "fb:like:61",
+  "content": "6"
+ },
+ {
+  "title": "fb:dislike:61",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:62",
+  "content": "6"
+ },
+ {
+  "title": "fb:dislike:62",
+  "content": "3"
+ },
+ {
+  "title": "fb:like:63",
+  "content": "5"
+ },
+ {
+  "title": "fb:dislike:63",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:64",
+  "content": "3"
+ },
+ {
+  "title": "fb:dislike:64",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:65",
+  "content": "6"
+ },
+ {
+  "title": "fb:dislike:65",
+  "content": "1"
+ },
+ {
+  "title": "fb:like:100003",
+  "content": "4"
+ },
+ {
+  "title": "fb:dislike:100003",
+  "content": "2"
+ },
+ {
+  "title": "o'zbekiston poytaxti",
+  "content": "Toshkent — O'zbekistonning poytaxti va eng yirik shahri. Aholisi 2,5 milliondan ortiq!"
+ },
+ {
+  "title": "o'zbekiston aholisi",
+  "content": "O'zbekiston aholisi 36 milliondan ortiq — Markaziy Osiyodagi eng ko'p aholili davlat."
+ },
+ {
+  "title": "o'zbekiston maydoni",
+  "content": "O'zbekiston maydoni 448 978 km². Markaziy Osiyoning markazida joylashgan."
+ },
+ {
+  "title": "o'zbekiston viloyatlari",
+  "content": "O'zbekistonda 12 viloyat va Qoraqalpog'iston Respublikasi bor. Poytaxti — Toshkent shahri."
+ },
+ {
+  "title": "o'zbekiston eng katta shahri",
+  "content": "Toshkent — O'zbekistonning eng katta shahri. Undan keyin Samarqand, Namangan, Andijon va Buxoro keladi."
+ },
+ {
+  "title": "o'zbekiston qo'shnilari",
+  "content": "O'zbekiston 5 davlat bilan chegaradosh: Qozog'iston, Qirg'iziston, Tojikiston, Afg'oniston va Turkmaniston."
+ },
+ {
+  "title": "o'zbekiston eng uzun daryosi",
+  "content": "Sirdaryo — O'zbekiston hududidagi eng uzun daryo (2 212 km). Amudaryo ham yirik daryo."
+ },
+ {
+  "title": "o'zbekiston eng baland nuqtasi",
+  "content": "Hisor tog'laridagi Hazrat Sulton cho'qqisi (4 643 m) — O'zbekistonning eng baland nuqtasi."
+ },
+ {
+  "title": "o'zbekiston tog'lari",
+  "content": "O'zbekistonning asosiy tog'lari: Hisor, Zarafshon, Turkiston va Chatqol tog'lari. Eng balandi — Hazrat Sulton (4 643 m)."
+ },
+ {
+  "title": "o'zbekiston konstitutsiyasi",
+  "content": "Konstitutsiya kuni — 8-dekabr. 1992-yilda O'zbekiston Konstitutsiyasi qabul qilingan."
+ },
+ {
+  "title": "til bayrami",
+  "content": "O'zbek tili bayrami — 21-oktabr. 1989-yilda o'zbek tiliga davlat tili maqomi berilgan."
+ },
+ {
+  "title": "xotira kuni",
+  "content": "Xotira va qadrlash kuni — 9-may. Ikkinchi jahon urushida halok bo'lganlar xotirasi hurmat qilinadi."
+ },
+ {
+  "title": "ichan qal'a",
+  "content": "Ichan-Qal'a — Xiva shahridagi qadimiy shahar-qal'a, UNESCO Jahon merosi ro'yxatiga kiritilgan."
+ },
+ {
+  "title": "buxoro me'morchiligi",
+  "content": "Buxoro — «musulmon Sharqining durdonasi» deb ataladi. Kalon minorasi va Ark qal'asi mashhur."
+ },
+ {
+  "title": "shohi zinda",
+  "content": "Shohi-Zinda — Samarqanddagi qadimiy maqbaralar majmuasi, «tirik podshoh» degan ma'noni anglatadi."
+ },
+ {
+  "title": "gur amir",
+  "content": "Gur-Amir — Samarqanddagi Amir Temur maqbarasi. Buyuk sarkarda shu yerda dafn etilgan."
+ },
+ {
+  "title": "toshkent tarixi",
+  "content": "Toshkent — 2 200 yillik tarixga ega qadimiy shahar. 1966-yilgi zilziladan keyin to'liq qayta qurilgan."
+ },
+ {
+  "title": "toshkent metropoliteni",
+  "content": "Toshkent metropoliteni 1977-yilda ochilgan — Markaziy Osiyodagi birinchi metro!"
+ },
+ {
+  "title": "o'zbek oltini",
+  "content": "O'zbekiston oltin zahiralari bo'yicha dunyoda 4-o'rinda; Muruntau koni eng yirik ochiq oltin konidir."
+ },
+ {
+  "title": "o'zbek milliy taomlari",
+  "content": "O'zbek taomlari: palov, manti, shashlik, lag'mon, somsa, mastava va qozon kabob. Choy esa mehmondo'stlik ramzi."
+ },
+ {
+  "title": "ulug' bek rasadxonasi",
+  "content": "Ulug'bek rasadxonasi — Samarqanddagi 15-asrga oid astronomik rasadxona. O'sha davrning eng ilg'or ilmiy markazi edi."
+ },
+ {
+  "title": "buyuk ipak yo'li",
+  "content": "Buyuk Ipak yo'li — qadimiy savdo yo'li: Xitoydan Yevropagacha. Samarqand, Buxoro va Xiva uning muhim shaharlari edi."
+ },
+ {
+  "title": "xorazm",
+  "content": "Xorazm — O'zbekistonning qadimiy viloyati. Xiva va Urganch shaharlari bor."
+ },
+ {
+  "title": "dunyodagi eng katta davlat",
+  "content": "Rossiya — dunyodagi eng katta davlat, maydoni 17,1 mln km². Undan keyin Kanada va Xitoy keladi."
+ },
+ {
+  "title": "dunyodagi eng kichik davlat",
+  "content": "Vatikan — dunyodagi eng kichik davlat (0,44 km²). Rim shahri ichida joylashgan."
+ },
+ {
+  "title": "dunyodagi eng ko'p aholili davlat",
+  "content": "Hindiston — dunyodagi eng ko'p aholili davlat (1,4 mlrd+). Xitoy ikkinchi o'rinda."
+ },
+ {
+  "title": "fransiya poytaxti",
+  "content": "Parij — Fransiyaning poytaxti va eng yirik shahri. «Nurli shahar» deb ataladi. Eyfel minorasi shu yerda!"
+ },
+ {
+  "title": "rossiya poytaxti",
+  "content": "Moskva — Rossiyaning poytaxti va eng yirik shahri. Kreml va Qizil maydon shu yerda."
+ },
+ {
+  "title": "xitoy poytaxti",
+  "content": "Pekin — Xitoyning poytaxti. Buyuk Xitoy devori va Taqiqlangan shahar (Forbidden City) shu yerda."
+ },
+ {
+  "title": "aqsh poytaxti",
+  "content": "Vashington — AQShning poytaxti. Oq uy va Kongress binosi shu yerda joylashgan."
+ },
+ {
+  "title": "angliya poytaxti",
+  "content": "London — Angliya (Buyuk Britaniya) poytaxti. Big Ben va Temza daryosi mashhur."
+ },
+ {
+  "title": "angliya",
+  "content": "Angliya — Buyuk Britaniya tarkibidagi davlat. Poytaxti London. Big Ben va London ko'prigi mashhur."
+ },
+ {
+  "title": "germaniya poytaxti",
+  "content": "Berlin — Germaniyaning poytaxti. Brandenburg darvozasi mashhur yodgorlik."
+ },
+ {
+  "title": "yaponiya poytaxti",
+  "content": "Tokio — Yaponiyaning poytaxti va dunyodagi eng yirik shahar aglomeratsiyasi."
+ },
+ {
+  "title": "hindiston poytaxti",
+  "content": "Nyu-Dehli — Hindistonning poytaxti. Mumbay eng yirik shahri."
+ },
+ {
+  "title": "qozog'iston poytaxti",
+  "content": "Astana — Qozog'istonning poytaxti. Eng yirik shahri — Olmaota (sobiq poytaxt)."
+ },
+ {
+  "title": "qozog'iston",
+  "content": "Qozog'iston — Markaziy Osiyodagi eng katta davlat. Poytaxti Astana. Bayqo'nur kosmodromi shu yerda."
+ },
+ {
+  "title": "turkiya poytaxti",
+  "content": "Anqara — Turkiyaning poytaxti. Eng yirik shahri — Istanbul."
+ },
+ {
+  "title": "eron poytaxti",
+  "content": "Tehron — Eronning poytaxti va eng yirik shahri."
+ },
+ {
+  "title": "tojikiston poytaxti",
+  "content": "Dushanbe — Tojikistonning poytaxti."
+ },
+ {
+  "title": "qirg'iziston poytaxti",
+  "content": "Bishkek — Qirg'izistonning poytaxti."
+ },
+ {
+  "title": "qirg'iziston",
+  "content": "Qirg'iziston — Markaziy Osiyodagi tog'li davlat. Poytaxti Bishkek. Issiqko'l ko'li mashhur."
+ },
+ {
+  "title": "turkmaniston poytaxti",
+  "content": "Ashxobod — Turkmanistonning poytaxti."
+ },
+ {
+  "title": "afg'oniston poytaxti",
+  "content": "Kobul — Afg'onistonning poytaxti."
+ },
+ {
+  "title": "misr poytaxti",
+  "content": "Qohira — Misrning poytaxti va Afrika'dagi eng yirik shaharlardan. Piramidalar yaqin joyda."
+ },
+ {
+  "title": "ispaniya poytaxti",
+  "content": "Madrid — Ispaniyaning poytaxti. Barselona eng mashhur shaharlaridan."
+ },
+ {
+  "title": "italiya poytaxti",
+  "content": "Rim — Italiyaning poytaxti. Qadimiy imperiyaning yuragi bo'lgan."
+ },
+ {
+  "title": "kanada poytaxti",
+  "content": "Ottava — Kanadaning poytaxti. Toronto eng yirik shahri."
+ },
+ {
+  "title": "avstraliya poytaxti",
+  "content": "Kanberra — Avstraliyaning poytaxti. Sidney eng yirik shahri."
+ },
+ {
+  "title": "avstraliya",
+  "content": "Avstraliya — materik sifatidagi yagona davlat. Poytaxti Kanberra. Kenguru va koala shu yerda!"
+ },
+ {
+  "title": "braziliya poytaxti",
+  "content": "Brasilia — Braziliyaning poytaxti. San-Paulu eng yirik shahri."
+ },
+ {
+  "title": "koreya poytaxti",
+  "content": "Seul — Janubiy Koreyaning poytaxti. K-pop va texnologiyalar markazi!"
+ },
+ {
+  "title": "janubiy koreya",
+  "content": "Janubiy Koreya — Sharqiy Osiyodagi davlat. Poytaxti Seul. Samsung, K-pop va kino sanoati mashhur."
+ },
+ {
+  "title": "shveysariya poytaxti",
+  "content": "Bern — Shveysariyaning poytaxti. Tsyurix eng yirik shahri."
+ },
+ {
+  "title": "shveysariya",
+  "content": "Shveysariya — Alp tog'laridagi davlat. Poytaxti Bern. Soat va shokolad sanoati bilan mashhur."
+ },
+ {
+  "title": "gollandiya poytaxti",
+  "content": "Amsterdam — Gollandiya (Niderlandiya) poytaxti. Lolalar va kanallar shahri."
+ },
+ {
+  "title": "gollandiya",
+  "content": "Gollandiya — Yevropadagi davlat. Poytaxti Amsterdam. Lolalar, shamol tegirmonlari va velosipedlar mashhur."
+ },
+ {
+  "title": "belgiya poytaxti",
+  "content": "Bryussel — Belgiyaning poytaxti, Yevropa Ittifoqi markazi."
+ },
+ {
+  "title": "buxarest",
+  "content": "Buxarest — Ruminiyaning poytaxti va eng yirik shahri."
+ },
+ {
+  "title": "budapesht",
+  "content": "Budapesht — Vengriyaning poytaxti. Duna daryosi ikki qismga bo'ladi."
+ },
+ {
+  "title": "afina",
+  "content": "Afina — Gretsiyaning poytaxti. Qadimgi Olimpiya o'yinlari vatani."
+ },
+ {
+  "title": "dublin",
+  "content": "Dublin — Irlandiyaning poytaxti."
+ },
+ {
+  "title": "dunyo okeanlari",
+  "content": "Dunyoda 5 okean bor: Tinch, Atlantika, Hind, Shimoliy Muz va Janubiy okeanlar."
+ },
+ {
+  "title": "eng katta okean",
+  "content": "Tinch okeani — dunyodagi eng katta okean (165 mln km²), Yer yuzasining uchdan birini egallaydi."
+ },
+ {
+  "title": "eng chuqur joy",
+  "content": "Mariana botig'i (11 034 m) — okeandagi eng chuqur nuqta, Tinch okeanida."
+ },
+ {
+  "title": "eng katta ko'l",
+  "content": "Kaspiy dengizi — dunyodagi eng katta ko'l (371 000 km²). Aslida dengiz emas, ko'l!"
+ },
+ {
+  "title": "eng chuqur ko'l",
+  "content": "Baykal ko'li — dunyodagi eng chuqur ko'l (1 642 m). Sibirda joylashgan."
+ },
+ {
+  "title": "eng uzun daryo",
+  "content": "Nil — dunyodagi eng uzun daryo (6 650 km). Misr orqali oqadi."
+ },
+ {
+  "title": "eng katta daryo",
+  "content": "Amazonka — suv miqdori bo'yicha dunyodagi eng katta daryo. Janubiy Amerikada."
+ },
+ {
+  "title": "volga daryosi",
+  "content": "Volga — Yevropadagi eng uzun daryo (3 530 km). Rossiyada."
+ },
+ {
+  "title": "eng baland tog'",
+  "content": "Everest (Chomolungma) — dunyodagi eng baland cho'qqi, 8 849 m. Himolay tog'larida."
+ },
+ {
+  "title": "eng katta cho'l",
+  "content": "Saxara — dunyodagi eng katta issiq cho'l (9 mln km²). Afrika shimolida."
+ },
+ {
+  "title": "eng sovuq joy",
+  "content": "Oymyakon (Rossiya) — yer yuzidagi eng sovuq aholi punkti: -67,7°C gacha kuzatilgan."
+ },
+ {
+  "title": "eng issiq joy",
+  "content": "Death Valley (AQSh) — eng issiq joylardan: havo harorati +56,7°C gacha ko'tarilgan."
+ },
+ {
+  "title": "materiklar",
+  "content": "Dunyoda 6 materik bor: Yevrosiyo, Afrika, Shimoliy Amerika, Janubiy Amerika, Avstraliya va Antarktida."
+ },
+ {
+  "title": "eng katta materik",
+  "content": "Yevrosiyo — dunyodagi eng katta materik. Yer quruqligining 36% ini egallaydi."
+ },
+ {
+  "title": "eng kichik materik",
+  "content": "Avstraliya — dunyodagi eng kichik va eng quruq materik."
+ },
+ {
+  "title": "nil daryosi",
+  "content": "Nil — Afrikadagi eng uzun daryo (6 650 km). Misr sivilizatsiyasi shu daryo bo'yida o'sgan."
+ },
+ {
+  "title": "amazonka",
+  "content": "Amazonka — Janubiy Amerikadagi eng katta daryo, o'rmon zich joylaridan oqadi."
+ },
+ {
+  "title": "tovush tezligi",
+  "content": "Tovush havoda sekundiga taxminan 343 metr tezlikda tarqaladi (20°C da)."
+ },
+ {
+  "title": "yorug'lik yili",
+  "content": "Yorug'lik yili — yorug'likning bir yilda bosib o'tadigan masofasi: 9,46 trillion km. Kosmosdagi masofalar shu bilan o'lchanadi."
+ },
+ {
+  "title": "quyosh tizimida nechta sayyora",
+  "content": "Quyosh tizimida 8 sayyora bor: Merkuriy, Venera, Yer, Mars, Yupiter, Saturn, Uran va Neptun."
+ },
+ {
+  "title": "eng katta sayyora",
+  "content": "Yupiter — Quyosh tizimidagi eng katta sayyora. Yerdan 1 300 marta katta hajmli."
+ },
+ {
+  "title": "eng kichik sayyora",
+  "content": "Merkuriy — Quyosh tizimidagi eng kichik sayyora."
+ },
+ {
+  "title": "eng issiq sayyora",
+  "content": "Venera — eng issiq sayyora (o'rtacha 465°C). Kuchli issiqxona effekti tufayli."
+ },
+ {
+  "title": "qizil sayyora",
+  "content": "Mars — «Qizil sayyora» deb ataladi, temir oksidi tufayli qizg'ish rangda."
+ },
+ {
+  "title": "yer sayyorasi haqida",
+  "content": "Yer — Quyoshdan uchinchi sayyora, hayot mavjud bo'lgan yagona ma'lum sayyora."
+ },
+ {
+  "title": "oy masofasi",
+  "content": "Oy Yerdan o'rtacha 384 400 km uzoqlikda. Oyga yetib borish taxminan 3 kun."
+ },
+ {
+  "title": "havo tarkibi",
+  "content": "Havoning taxminan 78% azot, 21% kislorod, qolgani boshqa gazlar."
+ },
+ {
+  "title": "oltin belgisi",
+  "content": "Oltinning kimyoviy belgisi — Au (lotincha 'aurum'). Eng qimmatbaho metallardan."
+ },
+ {
+  "title": "temir belgisi",
+  "content": "Temirning kimyoviy belgisi — Fe. Dunyodagi eng ko'p ishlatiladigan metall."
+ },
+ {
+  "title": "fotosintez",
+  "content": "Fotosintez — o'simliklarning quyosh nuri, suv va karbonat angidriddan ozuqa tayyorlash jarayoni. Yon mahsulot — kislorod!"
+ },
+ {
+  "title": "dna",
+  "content": "DNK — tirik organizmlarning irsiy ma'lumotini saqlaydigan molekula. Barcha jonzotlarda bor."
+ },
+ {
+  "title": "inson suyaklari",
+  "content": "Katta odam tanasida 206 ta suyak bor. Chaqaloqda esa 300 ga yaqin bo'ladi."
+ },
+ {
+  "title": "qon hajmi",
+  "content": "Katta odam tanasida o'rtacha 5 litr qon bor."
+ },
+ {
+  "title": "eng katta a'zo",
+  "content": "Teri — inson tanasidagi eng katta a'zo. Yuzasi taxminan 2 m²."
+ },
+ {
+  "title": "p soni",
+  "content": "Pi (π) — aylana uzunligining diametriga nisbati: taxminan 3,14159. Cheksiz son."
+ },
+ {
+  "title": "fibo",
+  "content": "Fibonachchi ketma-ketligi: 0, 1, 1, 2, 3, 5, 8, 13... Har bir son oldingi ikkitasining yig'indisi. Tabiatda ko'p uchraydi!"
+ },
+ {
+  "title": "fizika nima",
+  "content": "Fizika — materiya, energiya, harakat va ularning o'zaro ta'sirini o'rganadigan fan."
+ },
+ {
+  "title": "biologiya nima",
+  "content": "Biologiya — tirik organizmlar va ularning hayotini o'rganadigan fan."
+ },
+ {
+  "title": "astronomiya nima",
+  "content": "Astronomiya — yulduzlar, sayyoralar va butun koinotni o'rganadigan fan."
+ },
+ {
+  "title": "matematika nima",
+  "content": "Matematika — sonlar, shakllar va miqdorlarni o'rganadigan fan. Fanlarning asosi!"
+ },
+ {
+  "title": "bir yilda necha kun",
+  "content": "Yer Quyosh atrofida bir marta aylanadi — 365 kun (kabisa yilida 366)."
+ },
+ {
+  "title": "yer aylanasi",
+  "content": "Yerning ekvator bo'ylab aylanasi — 40 075 km."
+ },
+ {
+  "title": "yer yoshi",
+  "content": "Yerning yoshi taxminan 4,6 milliard yil."
+ },
+ {
+  "title": "koinot yoshi",
+  "content": "Koinotning yoshi taxminan 13,8 milliard yil (Katta portlashdan boshlab)."
+ },
+ {
+  "title": "einstein formulasi",
+  "content": "E = mc² — Eynshteynning mashhur formulasi: energiya = massa × yorug'lik tezligi kvadrati."
+ },
+ {
+  "title": "lazer",
+  "content": "Lazer — fokuslangan yorug'lik nuri. Tibbiyot, texnika va o'lchovlarda ishlatiladi."
+ },
+ {
+  "title": "elektr nima",
+  "content": "Elektr — zaryadlangan zarrachalar oqimi. Bugungi dunyoning asosiy energiya manbai!"
+ },
+ {
+  "title": "vakuum",
+  "content": "Vakuum — hech qanday modda bo'lmagan, bo'sh fazo. Tovush vakuumda tarqalmaydi."
+ },
+ {
+  "title": "mikroskop",
+  "content": "Mikroskop — juda mayda narsalarni kattalashtirib ko'rsatadigan asbob. Hujayralarni o'rganishda muhim."
+ },
+ {
+  "title": "teleskop",
+  "content": "Teleskop — uzoq ob'ektlarni (yulduz, sayyora) yaqinlashtirib ko'rsatadigan asbob."
+ },
+ {
+  "title": "neytron",
+  "content": "Neytron — atom yadrosidagi zaryadsiz zarracha."
+ },
+ {
+  "title": "proton",
+  "content": "Proton — atom yadrosidagi musbat zaryadli zarracha."
+ },
+ {
+  "title": "elektron",
+  "content": "Elektron — atom atrofida aylanadigan manfiy zaryadli juda yengil zarracha."
+ },
+ {
+  "title": "oqsil",
+  "content": "Oqsil (protein) — mushak va to'qimalarning qurilish materiali. Go'sht, tuxum va loviyada ko'p."
+ },
+ {
+  "title": "ikkinchi jahon urushi",
+  "content": "Ikkinchi jahon urushi 1939—1945 yillarda bo'ldi: 60 milliondan ortiq odam halok bo'lgan tarixdagi eng katta urush."
+ },
+ {
+  "title": "birinchi jahon urushi",
+  "content": "Birinchi jahon urushi 1914—1918 yillarda bo'ldi. 17 millionga yaqin odam qurbon bo'lgan."
+ },
+ {
+  "title": "amir temur qachon tug'ilgan",
+  "content": "Amir Temur 1336-yilda Kesh (Shahrisabz) yaqinida tug'ilgan, 1405-yilda vafot etgan."
+ },
+ {
+  "title": "ibn sino",
+  "content": "Abu Ali ibn Sino (Avitsenna, 980—1037) — buyuk tabib va faylasuf. «Tib qonunlari» asari yuz yillar davomida Yevropada darslik bo'lgan."
+ },
+ {
+  "title": "ahmad farg'oniy",
+  "content": "Ahmad al-Farg'oniy (798—865) — buyuk astronom va matematik. Nil daryosining suv sathini o'lchash qurilmasini yaratgan."
+ },
+ {
+  "title": "jaloliddin manguberdi",
+  "content": "Jaloliddin Manguberdi (1199—1231) — Xorazmshohlar sulolasining jasur sarkardasi, mo'g'ul bosqinchilariga qarshi kurashgan."
+ },
+ {
+  "title": "shayboniyxon",
+  "content": "Muhammad Shayboniyxon — 16-asr boshlarida Buxoro xonligi asoschisi."
+ },
+ {
+  "title": "sug'd",
+  "content": "Sug'd — qadimiy Markaziy Osiyo xalqi va hududi. Sug'diy tili Buyuk Ipak yo'li bo'ylab savdo tili edi."
+ },
+ {
+  "title": "misr piramidalari",
+  "content": "Misr piramidalari taxminan 4 500 yil avval qurilgan. Xeops piramidasi eng kattasi (146 m)."
+ },
+ {
+  "title": "kolumb",
+  "content": "Kristofer Kolumb 1492-yilda Amerikani (yevropaliklar uchun) kashf etdi."
+ },
+ {
+  "title": "buyuk xitoy devori",
+  "content": "Buyuk Xitoy devori — 21 000 km uzunlikdagi qadimiy mudofaa inshooti, dunyodagi eng uzun qurilish."
+ },
+ {
+  "title": "ko'hna urganch",
+  "content": "Ko'hna Urganch — Xorazmning qadimiy poytaxti, hozir Turkmanistonda. Qadimiy me'moriy yodgorliklari mashhur."
+ },
+ {
+  "title": "so'nggi xonliklar",
+  "content": "Xiva, Buxoro va Qo'qon xonliklari — 19-asrgacha O'zbekiston hududidagi asosiy davlatlar."
+ },
+ {
+  "title": "ruslar istilosi",
+  "content": "Rossiya imperiyasi O'rta Osiyoni 19-asrning 60—80-yillarida bosib oldi (1865-yilda Toshkent)."
+ },
+ {
+  "title": "sovet davri",
+  "content": "1924-yilda O'zbekiston SSR tashkil topdi. 1991-yil 31-avgustda mustaqillik e'lon qilindi."
+ },
+ {
+  "title": "qo'qon xonligi",
+  "content": "Qo'qon xonligi — 1709—1876 yillarda Farg'ona vodiysida mavjud bo'lgan davlat."
+ },
+ {
+  "title": "albert eynshteyn",
+  "content": "Albert Eynshteyn (1879—1955) — nazariy fizika dahosi, nisbiylik nazariyasi muallifi. Nobel mukofoti sovrindori."
+ },
+ {
+  "title": "nyuton",
+  "content": "Isaak Nyuton (1643—1727) — buyuk fizik va matematik. Tortishish qonuni va klassik mexanika asoschisi."
+ },
+ {
+  "title": "edison",
+  "content": "Tomas Edison (1847—1931) — mashhur ixtirochi: lampochka, fonograf va boshqa 1000+ ixtiro muallifi."
+ },
+ {
+  "title": "leonardo da vinchi",
+  "content": "Leonardo da Vinchi (1452—1519) — Uyg'onish davri dahosi: rassom (Mona Liza), olim va ixtirochi."
+ },
+ {
+  "title": "motsart",
+  "content": "Volfgang Amadey Motsart (1756—1791) — dunyodagi eng buyuk kompozitorlardan. 5 yoshida musiqa yozgan."
+ },
+ {
+  "title": "betxoven",
+  "content": "Lyudvig van Betxoven (1770—1827) — buyuk kompozitor. Kar bo'lganiga qaramay «9-simfoniya»ni yozgan."
+ },
+ {
+  "title": "qodiriy",
+  "content": "Abdulla Qodiriy (1894—1938) — o'zbek romanchiligining asoschisi. «O'tkan kunlar» va «Mehrobdan chayon» asarlari mashhur."
+ },
+ {
+  "title": "cho'lpon",
+  "content": "Cho'lpon (1897—1938) — buyuk o'zbek shoiri va yozuvchisi, o'zbek she'riyatini yangilagan."
+ },
+ {
+  "title": "hamid olimjon",
+  "content": "Hamid Olimjon (1909—1944) — iste'dodli o'zbek shoiri va dramaturgi."
+ },
+ {
+  "title": "g'afur g'ulom",
+  "content": "G'afur G'ulom (1903—1966) — buyuk o'zbek shoiri. «Shum bola» va «Netay» asarlari mashhur."
+ },
+ {
+  "title": "abdulla qahhor",
+  "content": "Abdulla Qahhor (1907—1968) — mashhur o'zbek yozuvchisi: «Qo'shchinor chiroqlari» romani mashhur."
+ },
+ {
+  "title": "erkin vohidov",
+  "content": "Erkin Vohidov (1936—2016) — xalq shoiri. «Yoshlik devoni» va «Ruhlar isyoni» dostonlari mashhur."
+ },
+ {
+  "title": "abdulla oripov",
+  "content": "Abdulla Oripov (1941—2016) — O'zbekiston Respublikasi madhiyasi matnining muallifi, buyuk shoir."
+ },
+ {
+  "title": "muhammad yusuf",
+  "content": "Muhammad Yusuf (1954—2001) — xalq shoiri, «O'zbekiston» she'ri bilan tanilgan."
+ },
+ {
+  "title": "zulfiya",
+  "content": "Zulfiya (1915—1996) — buyuk o'zbek shoirasi, o'zbek ayollar she'riyatining durdonasi."
+ },
+ {
+  "title": "islom karimov",
+  "content": "Islom Karimov (1938—2016) — O'zbekiston Respublikasining birinchi prezidenti (1991—2016)."
+ },
+ {
+  "title": "shavkat mirziyoyev",
+  "content": "Shavkat Mirziyoyev — O'zbekiston Respublikasi Prezidenti (2016-yildan)."
+ },
+ {
+  "title": "boburiylar",
+  "content": "Boburiylar imperiyasi — 1526—1857 yillarda Hindistonda hukmronlik qilgan, Bobur asos solgan sulola."
+ },
+ {
+  "title": "eng tez hayvon",
+  "content": "Gepard — quruqlikdagi eng tez hayvon: soatiga 110 km dan ortiq tezlikda yuguradi!"
+ },
+ {
+  "title": "gepard",
+  "content": "Gepard — mushuklar oilasiga mansub, quruqlikdagi eng tez hayvon (110 km/soatgacha)."
+ },
+ {
+  "title": "eng katta hayvon",
+  "content": "Ko'k kit — dunyodagi eng katta hayvon: uzunligi 30 m gacha, og'irligi 150 tonnagacha!"
+ },
+ {
+  "title": "ko'k kit",
+  "content": "Ko'k kit — yer yuzidagi eng katta jonzot. Og'irligi 30 ta filga teng bo'lishi mumkin."
+ },
+ {
+  "title": "eng katta quruqlik hayvoni",
+  "content": "Fil — quruqlikdagi eng katta hayvon. Afrika fili 6 tonnagacha yetadi."
+ },
+ {
+  "title": "eng baland hayvon",
+  "content": "Jirafa — eng baland hayvon: bo'yni tufayli 5,5 m gacha o'sadi."
+ },
+ {
+  "title": "jirafa",
+  "content": "Jirafa — savannadagi baland bo'yli hayvon (5,5 m gacha), bo'yni 7 ta umurtqadan iborat."
+ },
+ {
+  "title": "t-rex",
+  "content": "Tyrannosaurus Rex — tarixdagi eng mashhur yirtqich dinozavrlardan, uzunligi 12 m gacha bo'lgan."
+ },
+ {
+  "title": "asalarilar",
+  "content": "Asalari — tabiatdagi eng mehnatkash hasharot: bitta asalari bir kunda minglab gullarga boradi."
+ },
+ {
+  "title": "chumoli",
+  "content": "Chumoli — o'z og'irligidan 50 marta og'irroq narsani ko'tara oladigan kuchli hasharot."
+ },
+ {
+  "title": "o'rgimchak",
+  "content": "O'rgimchak — hasharot emas (o'rgimchaksimonlar sinfi). 8 oyog'i bor, to'r to'qib ov qiladi."
+ },
+ {
+  "title": "kameleon",
+  "content": "Kameleon — rangini atrof-muhitga moslay oladigan kaltakesak. Ko'zlari mustaqil aylanadi."
+ },
+ {
+  "title": "boyqush",
+  "content": "Boyqush — tunda ko'radigan qush, boshi 270 gradusgacha aylanadi."
+ },
+ {
+  "title": "kenguru",
+  "content": "Kenguru — Avstraliyaning ramzi, sakrab yuradigan jonivor."
+ },
+ {
+  "title": "internetni kim yaratgan",
+  "content": "Internetni bir kishi yaratmagan: 1969-yilda ARPANET paydo bo'ldi, Tim Berners-Lee 1989—1991-yillarda WWW (veb) ni ixtiro qildi."
+ },
+ {
+  "title": "www",
+  "content": "WWW (World Wide Web) — veb-sahifalar tizimini Tim Berners-Lee 1991-yilda yaratgan. Internetning ko'rinadigan qismi shu."
+ },
+ {
+  "title": "telefonni kim ixtiro qilgan",
+  "content": "Telefonni Aleksandr Graham Bell 1876-yilda patentladi. Keyinroq murakkab tizimlarga aylandi."
+ },
+ {
+  "title": "birinchi kompyuter",
+  "content": "Birinchi elektron kompyuter ENIAC 1946-yilda AQShda qurilgan: 30 tonna og'irlikda edi!"
+ },
+ {
+  "title": "kompyuter nima",
+  "content": "Kompyuter — ma'lumotni qayta ishlaydigan elektron qurilma. Bugungi kompyuterlar tranzistorlarda ishlaydi."
+ },
+ {
+  "title": "sun'iy yo'ldosh",
+  "content": "Birinchi sun'iy yo'ldosh — Sputnik-1, 1957-yilda SSSR uchirgan. Oyga esa 1969-yilda inson qadam qo'ydi."
+ },
+ {
+  "title": "oyga birinchi",
+  "content": "Nil Armstrong — Oyga qadam qo'ygan birinchi odam (1969-yil 20-iyul, Apollo-11 missiyasi)."
+ },
+ {
+  "title": "birinchi kosmonavt",
+  "content": "Yuriy Gagarin — kosmosga chiqqan birinchi odam (1961-yil 12-aprel, «Vostok-1»)."
+ },
+ {
+  "title": "samolyotni kim ixtiro qilgan",
+  "content": "Aka-uka Raytlar (Uilbur va Orvill) 1903-yilda birinchi muvaffaqiyatli samolyot parvozini amalga oshirishdi."
+ },
+ {
+  "title": "lampochkani kim ixtiro qilgan",
+  "content": "Tomas Edison 1879-yilda amaliy lampochkani yaratdi (avvalgi ixtirolarni takomillashtirgan)."
+ },
+ {
+  "title": "robot nima",
+  "content": "Robot — dasturlangan topshiriqni bajaradigan mexanik qurilma. «Robot» so'zi 1920-yilda Karel Chapek asaridan olingan."
+ },
+ {
+  "title": "dron",
+  "content": "Dron — masofadan boshqariladigan uchuvchi qurilma. Foto, yetkazib berish va kuzatuvda ishlatiladi."
+ },
+ {
+  "title": "vr nima",
+  "content": "VR (virtual reallik) — ko'zoynak orqali sun'iy dunyoga sho'ng'iydigan texnologiya. O'yin va o'qitishda ishlatiladi."
+ },
+ {
+  "title": "sun'iy intellekt nima",
+  "content": "Sun'iy intellekt (AI) — mashinaning o'rganish, fikrlash va qaror qabul qilish qobiliyati. Men shu texnologiya bilan yozilganman!"
+ },
+ {
+  "title": "mashina o'rganish",
+  "content": "Machine Learning — sun'iy intellekt usuli: dastur ma'lumotlardan o'zi o'rganadi, aniq qoidalar yozilmaydi."
+ },
+ {
+  "title": "kripto valyuta",
+  "content": "Kriptovalyuta — raqamli pul turi (masalan, Bitcoin). Blockchain texnologiyasida ishlaydi."
+ },
+ {
+  "title": "blockchain",
+  "content": "Blockchain — ma'lumotni zanjir kabi bloklarga saqlaydigan xavfsiz texnologiya. Kriptovalyutalarning asosi."
+ },
+ {
+  "title": "suv ichish",
+  "content": "Mutaxassislar kuniga 1,5–2 litr suv ichishni tavsiya qiladi. Suv organizmning 60% ini tashkil qiladi."
+ },
+ {
+  "title": "chekish zarar",
+  "content": "Chekish — o'pka saratoni, yurak kasalliklari va erta qarishga olib keladi. Eng xavfli odatlardan biri."
+ },
+ {
+  "title": "sport foydasi",
+  "content": "Kuniga 30 daqiqa jismoniy mashq — yurakni mustahkamlaydi, kayfiyatni ko'taradi va uyquni yaxshilaydi."
+ },
+ {
+  "title": "vitamin c",
+  "content": "S vitamini — immunitetni kuchaytiradi. Apelsin, limon, qalampir va kivada ko'p."
+ },
+ {
+  "title": "vitamin d",
+  "content": "D vitamini — suyaklar uchun muhim. Quyosh nuri ta'sirida organizmda hosil bo'ladi."
+ },
+ {
+  "title": "kaltsiy",
+  "content": "Kaltsiy — suyak va tishlar uchun kerakli mineral. Sut, pishloq va bodomda ko'p."
+ },
+ {
+  "title": "temir ovqatlanish",
+  "content": "Temir — qon uchun muhim mineral. Go'sht, jigar, loviya va ismaloqda ko'p."
+ },
+ {
+  "title": "miya uchun oziq",
+  "content": "Baliq, yong'oq va avakado — miya uchun foydali ovqatlar (omega-3 yog' kislotalari)."
+ },
+ {
+  "title": "stres",
+  "content": "Stresga qarshi: chuqur nafas olish, sayr qilish, suhbatlashish va sevimli ish bilan shug'ullanish yordam beradi."
+ },
+ {
+  "title": "futbol jch",
+  "content": "Futbol bo'yicha jahon chempionati har 4 yilda o'tkaziladi (birinchi marta 1930-yilda Urugvayda)."
+ },
+ {
+  "title": "olimpiada o'yinlari",
+  "content": "Olimpiya o'yinlari — qadimgi Gretsiyada boshlangan, zamonaviy o'yinlar 1896-yildan har 4 yilda o'tkaziladi."
+ },
+ {
+  "title": "boks",
+  "content": "Boks — qo'lqop kiyib, ringda mushtlashish sporti. Qoidalarga qat'iy rioya qilinadi."
+ },
+ {
+  "title": "kurash turlari",
+  "content": "Kurash turlari: erkin kurash, yunon-rum kurashi, sambo, dzyudo va o'zbekcha milliy kurash."
+ },
+ {
+  "title": "muhammad ali",
+  "content": "Muhammad Ali — barcha davrlarning eng buyuk bokschilaridan, «Shaxzoda» (The Greatest) deb atalgan."
+ },
+ {
+  "title": "o'zbek mehmondo'stligi",
+  "content": "O'zbek xalqi mehmondo'stligi bilan mashhur: mehmon eng aziz inson — unga eng yaxshi taom tortiladi!"
+ },
+ {
+  "title": "ramazon",
+  "content": "Ramazon — islom taqvimining to'qqizinchi oyi, ro'za tutiladigan muqaddas oy."
+ },
+ {
+  "title": "qurbon hayiti",
+  "content": "Qurbon hayiti — qurbonlik qilinadigan bayram, Haj amali bilan bog'liq."
+ },
+ {
+  "title": "tandir samsa",
+  "content": "Tandir non va samsa — tandirda pishiriladigan mashhur o'zbek non mahsulotlari."
+ },
+ {
+  "title": "atlas adras",
+  "content": "Atlas va adras — o'zbek matolari, ularning naqshlari betakror."
+ },
+ {
+  "title": "ashula raqs",
+  "content": "O'zbek raqs san'ati jonli va rang-barang; maqom san'ati UNESCO ro'yxatida."
+ },
+ {
+  "title": "o'zbek tili",
+  "content": "O'zbek tili — turkiy tillar guruhiga kiradi. Lotin yozuvida, 30 dan ortiq harf."
+ },
+ {
+  "title": "eng qisqa urush",
+  "content": "Eng qisqa urush — Angliya va Zanzibar o'rtasida 1896-yilda: atigi 38 daqiqa davom etgan!"
+ },
+ {
+  "title": "asal buzilmaydi",
+  "content": "Asal — buzilmaydigan yagona tabiiy oziq-ovqat. Misr qabrlaridan 3 000 yillik asal topilgan!"
+ },
+ {
+  "title": "kamalak 7 rang",
+  "content": "Kamalak 7 rangdan iborat: qizil, to'q sariq, sariq, yashil, ko'k, havo rang va binafsha."
+ },
+ {
+  "title": "kofe",
+  "content": "Kofe dunyodagi eng mashhur ichimliklardan: har kuni 2 milliarddan ortiq chashka ichiladi."
+ },
+ {
+  "title": "choy tarixi",
+  "content": "Choy — Xitoyda miloddan avvalgi 2700-yillarda kashf etilgan, hozir dunyo bo'ylab ichiladi."
+ },
+ {
+  "title": "shokolad",
+  "content": "Shokolad kakao daraxti urug'idan tayyorlanadi. Dastlab ichimlik sifatida ishlatilgan!"
+ },
+ {
+  "title": "pizza",
+  "content": "Pizza Italiyadan chiqqan: 1889-yilda Margherita pizzasi qirolicha sharafiga yaratilgan."
+ },
+ {
+  "title": "eyfel minorasi",
+  "content": "Eyfel minorasi 1889-yilda qurilgan, balandligi 330 m. Parijning ramzi!"
+ },
+ {
+  "title": "yupiter yili",
+  "content": "Yupiterda bir yil 12 Yer yili davom etadi, bir sutkasi esa atigi 10 soat."
+ },
+ {
+  "title": "neytron yulduz",
+  "content": "Neytron yulduz — shu qadar zich yulduzki, uning bir choy qoshiq moddasi Yerda millionlab tonna og'irlik qiladi."
+ },
+ {
+  "title": "eng uzoq umr",
+  "content": "Eng uzoq umr ko'rgan odam (tasdiqlangan) — Jan Kalman (Fransiya, 1875—1997): 122 yil."
+ },
+ {
+  "title": "xashtag",
+  "content": "Xashtag: # belgisi — mavzu teg'i (mock natija)."
+ },
+ {
+  "title": "eng qiziqarli hayvon",
+  "content": "Anatomiya. Anatomiya — ayrim aʼzolar, sistemalar va butun organizmning shakli va tuzilishini oʻrganadigan fan; morfologiyaning bir qismi (qarang Hayvonlar morfologiyasi, Oʻsimliklar morfologiyasi)."
+ },
+ {
+  "title": "Avatar 3 qachon chiqadi?",
+  "content": "„Avatar: The Way of Water“ (2022) filmining davomi. 2025-yilda ekranlarga chiqqan."
+ }
+]

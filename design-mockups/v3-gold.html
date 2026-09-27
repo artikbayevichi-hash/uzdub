@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variant 3 — Premium Oltin</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px;background:#170905;}
+  body::before{content:"";position:fixed;inset:0;background:radial-gradient(800px 600px at 20% 10%, rgba(212,175,55,.14), transparent 60%),radial-gradient(700px 500px at 85% 25%, rgba(120,40,20,.35), transparent 60%),radial-gradient(900px 700px at 55% 100%, rgba(40,18,10,.9), transparent 70%);pointer-events:none;}
+  .label{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:#f6d365;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.4);padding:8px 18px;border-radius:30px;font-size:13px;letter-spacing:.4px;z-index:9;text-shadow:0 0 12px rgba(212,175,55,.5);}
+  .panel{width:382px;height:560px;background:linear-gradient(170deg,#1c1308 0%,#150d06 100%);border:1px solid rgba(212,175,55,.35);border-radius:22px;box-shadow:0 0 50px rgba(212,175,55,.1),0 26px 60px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,215,130,.14);overflow:hidden;display:flex;flex-direction:column;position:relative;}
+  .panel::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#d4af37,#f6d365,#d4af37,transparent);}
+
+  .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(212,175,55,.16);flex-shrink:0;}
+  .ava{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #ffe9a8, #d4af37 55%, #8a6d1b);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(212,175,55,.5);}
+  .ava svg{width:20px;height:20px;fill:#231500;}
+  .hinfo{flex:1;min-width:0;}
+  .hinfo b{color:#f6e7c1;font-size:14px;display:block;text-shadow:0 0 8px rgba(212,175,55,.35);}
+  .onl{color:#d4af37;font-size:11px;display:flex;align-items:center;gap:5px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#d4af37;box-shadow:0 0 9px #d4af37;display:inline-block;animation:p 2s infinite;}
+  @keyframes p{50%{transform:scale(1.4);opacity:.6}}
+  .ib{width:32px;height:32px;border-radius:10px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.06);color:#d4af37;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .ib:hover{background:rgba(212,175,55,.16);color:#f6d365;box-shadow:0 0 14px rgba(212,175,55,.35);}
+
+  .orbarea{display:flex;align-items:center;justify-content:center;padding:22px 0 8px;flex-shrink:0;}
+  .wrap{position:relative;width:128px;height:128px;display:flex;align-items:center;justify-content:center;}
+  .orb{width:86px;height:86px;border-radius:50%;background:radial-gradient(circle at 32% 28%, #fff3c4 0%, #ffd76e 30%, #d4af37 55%, #6b5208 100%);box-shadow:0 0 40px rgba(212,175,55,.55),0 0 90px rgba(212,175,55,.22),inset 0 0 26px rgba(255,255,255,.3);animation:br 4s ease-in-out infinite;position:relative;z-index:2;}
+  @keyframes br{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(212,175,55,.45);opacity:0;}
+
+  .st{text-align:center;font-size:12.5px;color:#dbbf6a;min-height:16px;flex-shrink:0;}
+  .inter{min-height:42px;padding:4px 22px 2px;font-size:14px;text-align:center;color:#fbf0d4;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .inter:empty::before{content:"Gapiring...";color:#7a6530;font-size:12.5px;}
+
+  .log{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px;min-height:0;}
+  .b{border-radius:16px;padding:10px 14px;font-size:13px;line-height:1.5;max-width:88%;}
+  .b.bot{background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.22);color:#f6e7c1;border-bottom-left-radius:6px;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+  .chips span{font-size:11.5px;padding:6px 12px;border-radius:18px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);color:#f4dc9a;cursor:pointer;transition:.2s;}
+  .chips span:hover{background:rgba(212,175,55,.22);box-shadow:0 0 12px rgba(212,175,55,.3);transform:scale(1.04);}
+
+  .set{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:center;padding:4px 12px 2px;font-size:11px;color:#dbbf6a;flex-shrink:0;}
+  .set select{background:#221708;color:#f6e7c1;border:1px solid rgba(212,175,55,.25);border-radius:20px;padding:3px 8px;font-size:11px;outline:none;}
+  .set select:focus{border-color:#d4af37;}
+  .set label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .set label input{accent-color:#d4af37;}
+
+  .inbar{display:flex;gap:8px;align-items:center;padding:8px 12px 6px;flex-shrink:0;}
+  .inbar input{flex:1;background:#221708;border:1px solid rgba(212,175,55,.2);border-radius:24px;padding:10px 14px;color:#fbf0d4;font-size:13px;outline:none;}
+  .inbar input:focus{border-color:#d4af37;box-shadow:0 0 0 3px rgba(212,175,55,.14);}
+  .vb{width:46px;height:46px;border-radius:50%;border:1px solid rgba(212,175,55,.28);background:#221708;color:#d4af37;cursor:pointer;font-size:17px;flex:none;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  .vb:hover{box-shadow:0 0 14px rgba(212,175,55,.4);}
+  .vb:active{transform:scale(.92);}
+  .vb.snd{background:linear-gradient(135deg,#b8860b,#f6d365);border:none;color:#231500;font-weight:700;box-shadow:0 4px 16px rgba(212,175,55,.4);}
+  .vb.mic{background:linear-gradient(135deg,#9a3412,#f97316);border:none;color:#fff;width:52px;height:52px;font-size:20px;box-shadow:0 4px 18px rgba(249,115,22,.45);}
+  .foot{text-align:center;padding:0 12px 12px;font-size:10.5px;color:#7a6530;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="label">👑 <b>Variant 3</b> — Premium Oltin</div>
+<div class="panel">
+  <div class="hdr">
+    <div class="ava"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 3.6 19.33L22 22l-1.03-4.24A10 10 0 0 0 12 2z"/></svg></div>
+    <div class="hinfo"><b>UZDUB AI</b><span class="onl"><i class="dot"></i> Online</span></div>
+    <button class="ib">📋</button>
+    <button class="ib">＋</button>
+    <button class="ib">✕</button>
+  </div>
+  <div class="orbarea">
+    <div class="wrap"><span class="ring"></span><span class="ring"></span><span class="ring"></span><div class="orb"></div></div>
+  </div>
+  <div class="st">Tayyor 😊</div>
+  <div class="inter"></div>
+  <div class="log">
+    <div class="b bot">Assalomu alaykum! Men UZDUB AI yordamchisiman. 🎤 tugmasini bosing va gapiring.</div>
+    <div class="chips"><span>🔥 Eng ko'p ko'rilganlar</span><span>😂 Kulgili film</span><span>👻 Qo'rqinchli anime</span><span>🧙 Sehrli / fantastik</span></div>
+  </div>
+  <div class="set">
+    <select>🎤 O'zbekcha</select>
+    <select>🗣 Madina</select>
+    <label><input type="checkbox" checked> Jonli rejim</label>
+  </div>
+  <div class="inbar">
+    <button class="vb">🔊</button>
+    <input placeholder="Matn yozing yoki gapiring...">
+    <button class="vb snd">➤</button>
+    <button class="vb mic">🎤</button>
+  </div>
+  <div class="foot">🎤 tugmasini bosing — erkin gapiring.</div>
+</div>
+</body>
+</html>

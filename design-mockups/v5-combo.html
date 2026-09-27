@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variant 5 — UZDUB Signature (birlashtirilgan UI/UX)</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px;background:#05070f;overflow:hidden;}
+  .bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .bg::before{content:"";position:absolute;width:600px;height:600px;top:-170px;left:-130px;border-radius:50%;filter:blur(120px);background:radial-gradient(circle,rgba(33,150,243,.5),rgba(79,195,247,.16) 45%,transparent 70%);animation:driftA 16s ease-in-out infinite;}
+  .bg::after{content:"";position:absolute;width:560px;height:560px;bottom:-200px;right:-140px;border-radius:50%;filter:blur(120px);background:radial-gradient(circle,rgba(79,195,247,.45),rgba(21,101,192,.14) 45%,transparent 70%);animation:driftB 19s ease-in-out infinite;}
+  @keyframes driftA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,42px) scale(1.16)}}
+  @keyframes driftB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-54px,-32px) scale(1.12)}}
+  .grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(79,195,247,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at center,black 25%,transparent 75%);mask-image:radial-gradient(ellipse at center,black 25%,transparent 75%);}
+  .label{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:#9fc6ff;background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.35);box-shadow:0 0 24px rgba(33,150,243,.15);padding:8px 18px;border-radius:30px;font-size:13px;letter-spacing:.3px;z-index:9;}
+
+  .panel{width:386px;height:566px;background:rgba(13,19,33,.58);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(147,178,255,.16);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 44px rgba(33,150,243,.1),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;display:flex;flex-direction:column;position:relative;z-index:1;animation:pop .55s cubic-bezier(.2,.8,.2,1);}
+  @keyframes pop{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+  .panel::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 4%,rgba(246,196,83,.85) 26%,rgba(33,150,243,.0) 55%,transparent 96%);z-index:6;}
+
+  /* ---------- Header ---------- */
+  .hdr{display:flex;align-items:center;gap:9px;padding:10px 12px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(147,178,255,.1);flex-shrink:0;position:relative;z-index:5;}
+  .ico{width:34px;height:34px;border-radius:11px;border:1px solid rgba(147,178,255,.16);background:rgba(255,255,255,.05);color:#9db8e8;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:.18s;flex:none;}
+  .ico:hover{background:rgba(33,150,243,.16);color:#cfe2ff;box-shadow:0 0 14px rgba(33,150,243,.25);transform:scale(1.06);}
+  .ico.act{background:rgba(33,150,243,.2);color:#fff;box-shadow:0 0 14px rgba(33,150,243,.3);}
+  .ava{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4fc3f7,#1e88e5 55%,#4527a0);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(33,150,243,.5),0 0 0 2px rgba(255,255,255,.06);flex:none;}
+  .ava svg{width:19px;height:19px;fill:#fff;}
+  .hinfo{flex:1;min-width:0;}
+  .hinfo .nm{display:flex;align-items:center;gap:6px;}
+  .hinfo b{color:#eaf2ff;font-size:13.5px;}
+  .prem{font-size:9px;font-weight:800;letter-spacing:.5px;background:linear-gradient(135deg,#f6c453,#d4a017);color:#221a02;padding:2px 7px;border-radius:20px;box-shadow:0 0 10px rgba(246,196,83,.4);}
+  .onl{color:#34d399;font-size:10.5px;display:flex;align-items:center;gap:5px;margin-top:1px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;display:inline-block;animation:p 2s infinite;}
+  @keyframes p{50%{transform:scale(1.5);opacity:.55}}
+
+  /* ---------- Orb zona ---------- */
+  .orbzone{display:flex;align-items:center;justify-content:center;padding:16px 0 6px;flex-shrink:0;}
+  .orbwrap{position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .orb{width:78px;height:78px;border-radius:50%;background:radial-gradient(circle at 32% 28%, #cfe8ff 0%, #4fc3f7 32%, #1e88e5 58%, #12295e 100%);box-shadow:0 0 34px rgba(33,150,243,.65),0 0 90px rgba(33,150,243,.25),inset 0 0 24px rgba(255,255,255,.22);animation:br 4s ease-in-out infinite;position:relative;z-index:2;}
+  @keyframes br{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .orbstatus{position:absolute;z-index:3;font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#f2f8ff;text-shadow:0 1px 6px rgba(0,0,0,.55);background:rgba(5,10,20,.35);padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.14);white-space:nowrap;}
+  .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(79,195,247,.5);opacity:0;pointer-events:none;}
+  .orbwrap.live .ring{animation:liveR 1.3s ease-out infinite;opacity:0;}
+  @keyframes liveR{0%{transform:scale(.7);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+  .orbwrap.live .orb{animation:liveP 1.1s ease-in-out infinite;}
+  @keyframes liveP{0%,100%{transform:scale(1)}50%{transform:scale(1.12);box-shadow:0 0 46px rgba(244,63,94,.8),0 0 100px rgba(244,63,94,.35),inset 0 0 26px rgba(255,255,255,.3)}}
+  .orbwrap.think .ring{border-color:#f59e0b;border-right-color:transparent;animation:spin 1s linear infinite;opacity:.9;}
+  .orbwrap.think .orb{background:radial-gradient(circle at 32% 28%, #fff3c2 0%, #f59e0b 45%, #3a2a05 100%);box-shadow:0 0 34px rgba(245,158,11,.55),inset 0 0 22px rgba(255,255,255,.15);}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .orbwrap.voice .ring{border-color:#34d399;border-top-color:transparent;animation:spin .9s linear infinite;opacity:.85;}
+  .orbwrap.voice .orb{background:radial-gradient(circle at 32% 28%, #a7f3d0 0%, #10b981 45%, #064e3b 100%);box-shadow:0 0 30px rgba(52,211,153,.55),inset 0 0 22px rgba(255,255,255,.16);}
+
+  /* ---------- Log ---------- */
+  .log{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(79,195,247,.3) transparent;}
+  .b{border-radius:16px;padding:10px 14px;font-size:13px;line-height:1.55;max-width:88%;}
+  .b.bot{background:rgba(255,255,255,.055);border:1px solid rgba(147,178,255,.14);color:#dbe7ff;border-bottom-left-radius:6px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .b.bot .tt{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+  .b.bot .tt em{font-style:normal;font-size:10px;font-weight:700;color:#4fc3f7;background:rgba(33,150,243,.12);padding:2px 8px;border-radius:20px;border:1px solid rgba(33,150,243,.25);}
+
+  /* ---------- Chips (input yoniga ko'chirildi) ---------- */
+  .chiprow{display:flex;gap:6px;padding:4px 12px 2px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;position:relative;z-index:2;}
+  .chiprow::-webkit-scrollbar{display:none;}
+  .chip{font-size:11.5px;padding:6px 12px;border-radius:20px;background:rgba(33,150,243,.1);border:1px solid rgba(79,195,247,.3);color:#bfd9ff;cursor:pointer;transition:.18s;white-space:nowrap;flex:none;}
+  .chip:hover{background:rgba(33,150,243,.22);color:#fff;box-shadow:0 0 12px rgba(33,150,243,.3);transform:translateY(-1px);}
+  .chip.gold{background:rgba(246,196,83,.1);border-color:rgba(246,196,83,.35);color:#ffe9ad;}
+  .chip.gold:hover{background:rgba(246,196,83,.2);box-shadow:0 0 12px rgba(246,196,83,.3);}
+
+  /* ---------- Interim (jonli matn pill) ---------- */
+  .interim{display:none;margin:6px 12px 0;padding:7px 16px;border-radius:20px;background:rgba(255,255,255,.07);border:1px solid rgba(147,178,255,.18);font-size:12.5px;color:#dbe7ff;text-align:center;align-items:center;justify-content:center;gap:8px;flex-shrink:0;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  .interim.show{display:flex;}
+  .wave{display:inline-flex;gap:3px;align-items:flex-end;height:15px;}
+  .wave i{width:3px;border-radius:3px;background:linear-gradient(180deg,#90caf9,#1e88e5);animation:wv 1s ease-in-out infinite;}
+  .wave i:nth-child(2){animation-delay:.12s}.wave i:nth-child(3){animation-delay:.24s}.wave i:nth-child(4){animation-delay:.36s}.wave i:nth-child(5){animation-delay:.48s}
+  @keyframes wv{0%,100%{height:5px}50%{height:15px}}
+
+  /* ---------- Input bar ---------- */
+  .inbar{display:flex;gap:8px;align-items:center;padding:6px 12px 8px;flex-shrink:0;position:relative;z-index:2;}
+  .inbar input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(147,178,255,.16);border-radius:22px;padding:10px 14px;color:#eaf2ff;font-size:13px;outline:none;min-width:0;}
+  .inbar input::placeholder{color:#5d6f92;}
+  .inbar input:focus{border-color:#4fc3f7;box-shadow:0 0 0 3px rgba(33,150,243,.14);}
+  .vb{width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;transition:transform .12s, box-shadow .2s;font-size:18px;}
+  .vb:active{transform:scale(.9);}
+  .vb.vsend{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;box-shadow:0 4px 16px rgba(33,150,243,.45);}
+  .vb.vsend:hover{box-shadow:0 6px 22px rgba(33,150,243,.6);}
+  .vb.vmic{background:linear-gradient(135deg,#d41f45,#f43f5e);color:#fff;width:48px;height:48px;font-size:20px;box-shadow:0 4px 18px rgba(244,63,94,.45);}
+  .vb.vmic.on{animation:micP 1.2s ease-in-out infinite;}
+  @keyframes micP{0%,100%{box-shadow:0 4px 18px rgba(244,63,94,.45)}50%{box-shadow:0 0 0 0 rgba(244,63,94,0),0 4px 30px rgba(244,63,94,.75)}}
+  .foot{text-align:center;padding:0 12px 9px;font-size:10px;color:#4c5c7d;flex-shrink:0;position:relative;z-index:2;}
+
+  /* ---------- Sozlamalar popoveri (⚙️) ---------- */
+  .gearpop{position:absolute;right:12px;bottom:62px;width:216px;background:rgba(13,19,33,.92);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(147,178,255,.2);border-radius:16px;padding:12px;display:none;flex-direction:column;gap:10px;z-index:8;box-shadow:0 18px 44px rgba(0,0,0,.55);animation:gp .25s cubic-bezier(.2,.8,.2,1);}
+  @keyframes gp{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+  .gearpop.show{display:flex;}
+  .gp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;color:#b9cdf2;}
+  .gp-row select{background:#131c30;color:#e8eefc;border:1px solid #2a3852;border-radius:16px;padding:4px 8px;font-size:11px;outline:none;max-width:120px;}
+  .gp-row select:focus{border-color:#4fc3f7;}
+  .gp-row label{display:flex;align-items:center;gap:7px;cursor:pointer;}
+  .gp-row label input{accent-color:#2196f3;}
+  .gp-sep{height:1px;background:rgba(147,178,255,.12);}
+  .gp-title{font-size:10px;font-weight:800;letter-spacing:.8px;color:#6e84ad;text-transform:uppercase;}
+  .tg{width:34px;height:34px;}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grid"></div>
+<div class="label">⭐ <b>Variant 5</b> — UZDUB Signature · Birlashtirilgan UI/UX (joylashuv o'zgardi)</div>
+
+<div class="panel" id="panel">
+  <!-- Header: ☰ chapda, sozlamalar ⚙️, yangi, yopish -->
+  <div class="hdr">
+    <button class="ico" id="btnHist" title="Suhbatlar">☰</button>
+    <div class="ava"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 3.6 19.33L22 22l-1.03-4.24A10 10 0 0 0 12 2z"/></svg></div>
+    <div class="hinfo">
+      <div class="nm"><b>UZDUB AI</b><span class="prem">👑 PREMIUM</span></div>
+      <span class="onl"><i class="dot"></i> Online</span>
+    </div>
+    <button class="ico" id="btnGear" title="Sozlamalar">⚙️</button>
+    <button class="ico" id="btnNew" title="Yangi suhbat">＋</button>
+    <button class="ico" id="btnClose" title="Yopish">✕</button>
+  </div>
+
+  <!-- Orb: status ichida -->
+  <div class="orbzone">
+    <div class="orbwrap" id="orbWrap">
+      <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+      <div class="orb"></div>
+      <div class="orbstatus" id="orbStatus">Tayyor</div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log" id="log">
+    <div class="b bot">
+      <div class="tt"><em>🤖 UZDUB AI</em><em style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.25);color:#34d399;">● Jonli</em></div>
+      Assalomu alaykum! 🎤 tugmasini bosing va gapiring — kino, anime, multfilmlar va istalgan mavzuda suhbatlashamiz. 😊
+    </div>
+    <div class="b bot" style="max-width:70%;">
+      <div class="tt"><em>💡 Tavsiya</em></div>
+      Masalan: <b>"Eng yaxshi 5 jangari film"</b> yoki <b>"qo'rqinchli anime tavsiya qil"</b>
+    </div>
+  </div>
+
+  <!-- Chiplar: endi input yonida -->
+  <div class="chiprow">
+    <span class="chip">🔥 Eng ko'p ko'rilganlar</span>
+    <span class="chip">😂 Kulgili film</span>
+    <span class="chip">👻 Qo'rqinchli anime</span>
+    <span class="chip gold">👑 Premium tanlov</span>
+  </div>
+
+  <!-- Interim: faqat eshitganda -->
+  <div class="interim" id="interim">
+    <span class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></span>
+    <span id="interimTxt">Eshitmoqda... gapiring</span>
+  </div>
+
+  <!-- Input bar -->
+  <div class="inbar">
+    <input id="inp" placeholder="Matn yozing yoki gapiring...">
+    <button class="vb vsend" id="btnSend" title="Yuborish">➤</button>
+    <button class="vb vmic" id="btnMic" title="Gapirish">🎤</button>
+  </div>
+  <div class="foot">🎤 tugmasini bosing — erkin gapiring · JUZ 12+</div>
+
+  <!-- Sozlamalar popoveri -->
+  <div class="gearpop" id="gearPop">
+    <div class="gp-title">Ovoz sozlamalari</div>
+    <div class="gp-row"><span>🎤 Kirish tili</span><select><option>🇺🇿 O'zbekcha</option><option>🇷🇺 Ruscha</option></select></div>
+    <div class="gp-row"><span>🗣 UZDUB ovozi</span><select><option>Madina (ayol)</option><option>Jasur (erkak)</option></select></div>
+    <div class="gp-row"><span>🔊 Hajmi</span><button class="ico tg" style="font-size:14px;">🔊 60%</button></div>
+    <div class="gp-sep"></div>
+    <div class="gp-row"><label><input type="checkbox" checked> ⚡ Jonli rejim (har bir gapga javob)</label></div>
+    <div class="gp-row"><label><input type="checkbox" checked> 🩺 Avtomatik ovozli javob</label></div>
+  </div>
+</div>
+
+<script>
+  var wrap = document.getElementById('orbWrap');
+  var status = document.getElementById('orbStatus');
+  var mic = document.getElementById('btnMic');
+  var interim = document.getElementById('interim');
+  var gearBtn = document.getElementById('btnGear');
+  var gearPop = document.getElementById('gearPop');
+  var listening = false;
+
+  var states = ['live','think','voice'];
+  var labels = { live: '🎙️ Eshitmoqda', think: '✦ O\'ylayapman', voice: '🔊 Gapiraman' };
+
+  function setListen(on){
+    listening = on;
+    mic.classList.toggle('on', on);
+    interim.classList.toggle('show', on);
+    wrap.classList.remove('live','think','voice');
+    if(on){ wrap.classList.add('live'); status.textContent = labels.live; }
+    else { status.textContent = 'Tayyor'; }
+  }
+  mic.addEventListener('click', function(){ setListen(!listening); });
+  wrap.addEventListener('click', function(){ setListen(!listening); });
+
+  var seq = 0;
+  function demoState(){
+    if(!listening) return;
+    wrap.classList.remove('live');
+    var s = states[seq % 3];
+    seq++;
+    wrap.classList.add(s);
+    status.textContent = labels[s];
+    document.getElementById('interimTxt').textContent = s==='live' ? 'Eshitmoqda... gapiring' : (s==='think' ? 'Javob tayyorlanmoqda...' : 'Javob aytilmoqda 🔊');
+    setTimeout(demoState, 1600);
+  }
+  mic.addEventListener('click', function(){ if(listening) setTimeout(demoState, 300); });
+
+  gearBtn.addEventListener('click', function(){
+    gearPop.classList.toggle('show');
+    gearBtn.classList.toggle('act', gearPop.classList.contains('show'));
+  });
+  document.getElementById('btnClose').addEventListener('click', function(){ gearPop.classList.remove('show'); });
+  document.addEventListener('click', function(e){
+    if(!gearPop.classList.contains('show')) return;
+    if(!gearPop.contains(e.target) && !gearBtn.contains(e.target)) gearPop.classList.remove('show');
+  });
+</script>
+</body>
+</html>

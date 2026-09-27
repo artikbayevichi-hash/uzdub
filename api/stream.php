@@ -107,125 +107,128 @@ foreach ($history as $h) {
 $messages[] = ['role' => 'user', 'content' => $userMessage . $context . $userContext];
 
 // ===== Provider fallback tizimi =====
+// 1) LOKAL yangi AI (ai-server/brain.py, Ollama interfeysi) — ASOSIY provider.
+//    Sayt avval o'zining sun'iy intellektidan javob oladi; ishlamasa cloud zaxira.
 $fullText = '';
 $gotAnyToken = false;
 $workingProvider = null;
 
-// 1) Cloud provider'larni sinab ko'rish (Groq → Cerebras → ...)
-foreach (AI_PROVIDERS as $provider) {
-    if (empty($provider['key'])) continue;
-
-    $payload = [
-        'model' => $provider['model'],
-        'messages' => $messages,
-        'stream' => true,
+$payload = [
+    'model' => OLLAMA_MODEL,
+    'messages' => $messages,
+    'stream' => true,
+    'options' => [
         'temperature' => 0.6,
-        'max_tokens' => OLLAMA_NUM_PREDICT,
-    ];
+        'num_ctx' => OLLAMA_NUM_CTX,
+        'num_predict' => OLLAMA_NUM_PREDICT,
+        'num_thread' => OLLAMA_NUM_THREAD,
+    ],
+];
 
-    $ch = curl_init($provider['url']);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $provider['key'],
-        ],
-        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_TIMEOUT => $provider['timeout'],
-        CURLOPT_WRITEFUNCTION => function ($curlHandle, $chunk) use (&$fullText, &$gotAnyToken) {
-            static $buffer = '';
-            $buffer .= $chunk;
-            while (($nl = strpos($buffer, "\n")) !== false) {
-                $line = trim(substr($buffer, 0, $nl));
-                $buffer = substr($buffer, $nl + 1);
-                if ($line === '' || $line === 'data: [DONE]') continue;
-                if (strpos($line, 'data: ') !== 0) continue;
+$ch = curl_init(OLLAMA_URL);
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+    CURLOPT_CONNECTTIMEOUT => 5,
+    CURLOPT_TIMEOUT => OLLAMA_TIMEOUT,
+    CURLOPT_WRITEFUNCTION => function ($curlHandle, $chunk) use (&$fullText, &$gotAnyToken) {
+        static $buffer = '';
+        $buffer .= $chunk;
+        while (($nl = strpos($buffer, "\n")) !== false) {
+            $line = trim(substr($buffer, 0, $nl));
+            $buffer = substr($buffer, $nl + 1);
+            if ($line === '') continue;
 
-                $obj = json_decode(substr($line, 6), true);
-                if (!is_array($obj)) continue;
+            $obj = json_decode($line, true);
+            if (!is_array($obj)) continue;
 
-                $piece = $obj['choices'][0]['delta']['content'] ?? '';
-                if ($piece !== '') {
-                    $gotAnyToken = true;
-                    $fullText .= $piece;
-                    $clean = preg_replace(['/\*{1,2}/', '/`+/'], '', $piece);
-                    sse_send(['delta' => $clean]);
-                }
+            $piece = $obj['message']['content'] ?? '';
+            if ($piece !== '') {
+                $gotAnyToken = true;
+                $fullText .= $piece;
+                $clean = preg_replace(['/`+/'], '', $piece);
+                sse_send(['delta' => $clean]);
             }
-            return strlen($chunk);
-        },
-    ]);
+            if (!empty($obj['done'])) {
+                sse_send(['done' => true]);
+            }
+        }
+        return strlen($chunk);
+    },
+]);
 
-    curl_exec($ch);
-    $curlError = curl_error($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+curl_exec($ch);
+$ollamaError = curl_error($ch);
+$ollamaHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
 
-    // Muvaffaqiyatli ishladi
-    if ($gotAnyToken) {
-        $workingProvider = $provider['name'];
-        break;
-    }
-
-    // Limit yoki xato — keyingi provider'ga o't
-    error_log("UZDUB AI [{$provider['name']}] ishlamadi: HTTP {$httpCode}, curl: {$curlError}");
-    $fullText = '';
-    $gotAnyToken = false;
-    continue;
-}
-
-// 2) Agar cloud provider'lar ishlamagan bo'lsa — Ollama (local)
+// 2) Lokal AI ishlamagan bo'lsa — cloud provider'lar zaxirasi (Groq → Cerebras → ...)
 if (!$gotAnyToken) {
-    $payload = [
-        'model' => OLLAMA_MODEL,
-        'messages' => $messages,
-        'stream' => true,
-        'options' => [
+    error_log("UZDUB AI [ollama/lokal] ishlamadi: HTTP {$ollamaHttp}, curl: {$ollamaError}");
+
+    foreach (AI_PROVIDERS as $provider) {
+        if (empty($provider['key'])) continue;
+
+        $payload = [
+            'model' => $provider['model'],
+            'messages' => $messages,
+            'stream' => true,
             'temperature' => 0.6,
-            'num_ctx' => OLLAMA_NUM_CTX,
-            'num_predict' => OLLAMA_NUM_PREDICT,
-            'num_thread' => OLLAMA_NUM_THREAD,
-        ],
-    ];
+            'max_tokens' => OLLAMA_NUM_PREDICT,
+        ];
 
-    $ch = curl_init(OLLAMA_URL);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_TIMEOUT => OLLAMA_TIMEOUT,
-        CURLOPT_WRITEFUNCTION => function ($curlHandle, $chunk) use (&$fullText, &$gotAnyToken) {
-            static $buffer = '';
-            $buffer .= $chunk;
-            while (($nl = strpos($buffer, "\n")) !== false) {
-                $line = trim(substr($buffer, 0, $nl));
-                $buffer = substr($buffer, $nl + 1);
-                if ($line === '') continue;
+        $ch = curl_init($provider['url']);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $provider['key'],
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => $provider['timeout'],
+            CURLOPT_WRITEFUNCTION => function ($curlHandle, $chunk) use (&$fullText, &$gotAnyToken) {
+                static $buffer = '';
+                $buffer .= $chunk;
+                while (($nl = strpos($buffer, "\n")) !== false) {
+                    $line = trim(substr($buffer, 0, $nl));
+                    $buffer = substr($buffer, $nl + 1);
+                    if ($line === '' || $line === 'data: [DONE]') continue;
+                    if (strpos($line, 'data: ') !== 0) continue;
 
-                $obj = json_decode($line, true);
-                if (!is_array($obj)) continue;
+                    $obj = json_decode(substr($line, 6), true);
+                    if (!is_array($obj)) continue;
 
-                $piece = $obj['message']['content'] ?? '';
-                if ($piece !== '') {
-                    $gotAnyToken = true;
-                    $fullText .= $piece;
-                    $clean = preg_replace(['/\*{1,2}/', '/`+/'], '', $piece);
-                    sse_send(['delta' => $clean]);
+                    $piece = $obj['choices'][0]['delta']['content'] ?? '';
+                    if ($piece !== '') {
+                        $gotAnyToken = true;
+                        $fullText .= $piece;
+                        $clean = preg_replace(['/`+/'], '', $piece);
+                        sse_send(['delta' => $clean]);
+                    }
                 }
-                if (!empty($obj['done'])) {
-                    sse_send(['done' => true]);
-                }
-            }
-            return strlen($chunk);
-        },
-    ]);
+                return strlen($chunk);
+            },
+        ]);
 
-    curl_exec($ch);
-    curl_close($ch);
+        curl_exec($ch);
+        $curlError = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-    if ($gotAnyToken) $workingProvider = 'ollama';
+        // Muvaffaqiyatli ishladi
+        if ($gotAnyToken) {
+            $workingProvider = $provider['name'];
+            break;
+        }
+
+        // Limit yoki xato — keyingi provider'ga o't
+        error_log("UZDUB AI [{$provider['name']}] ishlamadi: HTTP {$httpCode}, curl: {$curlError}");
+        $fullText = '';
+        $gotAnyToken = false;
+        continue;
+    }
 }
 
 // Hech qanday provider ishlamagan
@@ -238,7 +241,7 @@ if (!$gotAnyToken) {
 // Done signal
 sse_send(['done' => true]);
 
-$aiText = trim(preg_replace(['/\*{1,2}/', '/`+/'], '', $fullText));
+$aiText = trim(preg_replace(['/`+/'], '', $fullText));
 
 // Chat sarlavhasini yangilash
 if ($userId && $sessionId) {

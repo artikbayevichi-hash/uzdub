@@ -63,5 +63,6 @@ $is_permanent = ($expires === 'permanent');
         </div>
     </div>
 </div>
+<script src="<?php echo ROOT_URL; ?>/js/auth-particles.js?v=<?php echo @filemtime(__DIR__ . '/../js/auth-particles.js') ?: 1; ?>" defer></script>
 </body>
 </html>

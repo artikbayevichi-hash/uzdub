@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variant 2 — Neon</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px;background:#05070c;}
+  body::before{content:"";position:fixed;inset:0;background:radial-gradient(700px 500px at 20% 15%, rgba(34,211,238,.16), transparent 60%),radial-gradient(700px 500px at 85% 30%, rgba(217,70,239,.16), transparent 60%),radial-gradient(800px 600px at 50% 100%, rgba(99,102,241,.14), transparent 65%);pointer-events:none;}
+  .label{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:#9ff;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.35);padding:8px 18px;border-radius:30px;font-size:13px;letter-spacing:.4px;z-index:9;text-shadow:0 0 12px rgba(34,211,238,.6);}
+  .panel{width:382px;height:560px;background:#0a0d14;border:1px solid rgba(34,211,238,.28);border-radius:22px;box-shadow:0 0 40px rgba(34,211,238,.12),0 24px 60px rgba(0,0,0,.7),inset 0 0 60px rgba(34,211,238,.03);overflow:hidden;display:flex;flex-direction:column;position:relative;}
+  .panel::after{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#22d3ee,#d946ef,transparent);}
+
+  .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(34,211,238,.15);flex-shrink:0;}
+  .ava{width:38px;height:38px;border-radius:10px;background:#0d1117;border:1px solid rgba(34,211,238,.5);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(34,211,238,.35),inset 0 0 12px rgba(34,211,238,.15);}
+  .ava svg{width:20px;height:20px;fill:#22d3ee;filter:drop-shadow(0 0 6px rgba(34,211,238,.8));}
+  .hinfo{flex:1;min-width:0;}
+  .hinfo b{color:#e2f7ff;font-size:14px;display:block;text-shadow:0 0 10px rgba(34,211,238,.45);}
+  .onl{color:#22d3ee;font-size:11px;display:flex;align-items:center;gap:5px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px #22d3ee;display:inline-block;animation:p 1.6s infinite;}
+  @keyframes p{50%{transform:scale(1.5);opacity:.5}}
+  .ib{width:32px;height:32px;border-radius:8px;border:1px solid rgba(34,211,238,.2);background:rgba(34,211,238,.04);color:#7fd8ea;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  .ib:hover{background:rgba(34,211,238,.12);color:#22d3ee;box-shadow:0 0 12px rgba(34,211,238,.3);}
+
+  .orbarea{display:flex;align-items:center;justify-content:center;padding:22px 0 8px;flex-shrink:0;}
+  .wrap{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center;}
+  .orb{width:86px;height:86px;border-radius:50%;background:radial-gradient(circle at 32% 28%, #99f6ff 0%, #22d3ee 38%, #312e81 72%, #0b0f19 100%);box-shadow:0 0 40px rgba(34,211,238,.75),0 0 90px rgba(34,211,238,.35),inset 0 0 26px rgba(255,255,255,.22);animation:br 3.6s ease-in-out infinite;position:relative;z-index:2;}
+  @keyframes br{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(34,211,238,.5);opacity:0;}
+
+  .st{text-align:center;font-size:12.5px;color:#5fcfe4;min-height:16px;flex-shrink:0;text-shadow:0 0 8px rgba(34,211,238,.4);}
+  .inter{min-height:42px;padding:4px 22px 2px;font-size:14px;text-align:center;color:#e0faff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .inter:empty::before{content:"Gapiring...";color:#2f6f7d;font-size:12.5px;}
+
+  .log{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px;min-height:0;}
+  .b{border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.5;max-width:88%;}
+  .b.bot{background:#0d1117;border:1px solid rgba(34,211,238,.22);color:#d8f6ff;border-bottom-left-radius:4px;box-shadow:0 0 14px rgba(34,211,238,.06);}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+  .chips span{font-size:11.5px;padding:6px 12px;border-radius:18px;background:rgba(217,70,239,.1);border:1px solid rgba(217,70,239,.4);color:#f5c8ff;cursor:pointer;transition:.2s;text-shadow:0 0 8px rgba(217,70,239,.5);}
+  .chips span:hover{background:rgba(217,70,239,.22);box-shadow:0 0 14px rgba(217,70,239,.35);}
+
+  .set{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:center;padding:4px 12px 2px;font-size:11px;color:#5fcfe4;flex-shrink:0;}
+  .set select{background:#0d1117;color:#d8f6ff;border:1px solid rgba(34,211,238,.25);border-radius:18px;padding:3px 8px;font-size:11px;outline:none;}
+  .set select:focus{border-color:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.3);}
+  .set label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .set label input{accent-color:#22d3ee;}
+
+  .inbar{display:flex;gap:8px;align-items:center;padding:8px 12px 6px;flex-shrink:0;}
+  .inbar input{flex:1;background:#0d1117;border:1px solid rgba(34,211,238,.2);border-radius:22px;padding:10px 14px;color:#e2f7ff;font-size:13px;outline:none;}
+  .inbar input:focus{border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.14);}
+  .vb{width:46px;height:46px;border-radius:50%;border:1px solid rgba(34,211,238,.25);background:#0d1117;color:#7fd8ea;cursor:pointer;font-size:17px;flex:none;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  .vb:hover{box-shadow:0 0 14px rgba(34,211,238,.35);}
+  .vb:active{transform:scale(.92);}
+  .vb.snd{background:linear-gradient(135deg,#0891b2,#22d3ee);border:none;color:#041e26;font-weight:700;box-shadow:0 0 18px rgba(34,211,238,.5);}
+  .vb.mic{background:linear-gradient(135deg,#d946ef,#f0abfc);border:none;color:#1c0a22;width:52px;height:52px;font-size:20px;font-weight:700;box-shadow:0 0 22px rgba(217,70,239,.55);}
+  .foot{text-align:center;padding:0 12px 12px;font-size:10.5px;color:#2f6f7d;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="label">⬡ <b>Variant 2</b> — Neon (Cyber)</div>
+<div class="panel">
+  <div class="hdr">
+    <div class="ava"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 3.6 19.33L22 22l-1.03-4.24A10 10 0 0 0 12 2z"/></svg></div>
+    <div class="hinfo"><b>UZDUB AI</b><span class="onl"><i class="dot"></i> Online</span></div>
+    <button class="ib">▤</button>
+    <button class="ib">＋</button>
+    <button class="ib">✕</button>
+  </div>
+  <div class="orbarea">
+    <div class="wrap"><span class="ring"></span><span class="ring"></span><span class="ring"></span><div class="orb"></div></div>
+  </div>
+  <div class="st">Tayyor 😊</div>
+  <div class="inter"></div>
+  <div class="log">
+    <div class="b bot">Assalomu alaykum! Men UZDUB AI yordamchisiman. 🎤 tugmasini bosing va gapiring.</div>
+    <div class="chips"><span>🔥 Eng ko'p ko'rilganlar</span><span>😂 Kulgili film</span><span>👻 Qo'rqinchli anime</span><span>🧙 Sehrli / fantastik</span></div>
+  </div>
+  <div class="set">
+    <select>🎤 O'zbekcha</select>
+    <select>🗣 Madina</select>
+    <label><input type="checkbox" checked> Jonli rejim</label>
+  </div>
+  <div class="inbar">
+    <button class="vb">🔊</button>
+    <input placeholder="Matn yozing yoki gapiring...">
+    <button class="vb snd">➤</button>
+    <button class="vb mic">🎤</button>
+  </div>
+  <div class="foot">🎤 tugmasini bosing — erkin gapiring.</div>
+</div>
+</body>
+</html>
