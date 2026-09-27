@@ -101,80 +101,17 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             <button class="drawer-close" onclick="closeDrawer()">&times;</button>
         </li>
         <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/index.php" class="<?php echo (!$active_site && basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">🏠 <?php echo t('home'); ?></a></li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/kino" class="<?php echo $active_site === 'kino' ? 'active' : ''; ?>">🎬 <?php echo t('movies'); ?></a></li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/anime" class="<?php echo $active_site === 'anime' ? 'active' : ''; ?>">🎌 <?php echo t('anime'); ?></a></li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/multfilm" class="<?php echo $active_site === 'multfilm' ? 'active' : ''; ?>">🧸 <?php echo t('cartoons'); ?></a></li>
         <li class="random-dropdown">
-            <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
+            <button type="button" class="random-btn kataloglar-btn<?php echo $active_site ? ' active' : ''; ?>" onclick="this.parentElement.classList.toggle('open')">📚 <?php echo t('catalogs'); ?> ▾</button>
             <div class="random-menu">
-                <a href="<?php echo ROOT_URL; ?>/random.php?slug=kino">🎬 <?php echo t('random_kino'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/random.php?slug=anime">🎭 <?php echo t('random_anime'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/random.php?slug=multfilm">🎪 <?php echo t('random_multfilm'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/random.php">🎲 <?php echo t('random_all'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/kino">🎬 <?php echo t('kino_catalog'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/anime">🎌 <?php echo t('anime_catalog'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/multfilm">🧸 <?php echo t('multfilm_catalog'); ?></a>
             </div>
         </li>
-        <?php
-        // Genre menyusi — og'ir GROUP BY so'rov, 10 daqiqaga faylga keshlanadi
-        $genre_nav_data = db_cache_get('genre_nav', 600);
-        if ($genre_nav_data === null) {
-            $genre_nav_stmt = $pdo->query("
-                SELECT cat.id as cat_id, cat.name as cat_name, cat.slug as cat_slug,
-                       g.name as genre_name, g.slug as genre_slug, g.color,
-                       COUNT(cg.content_id) as cnt
-                FROM categories cat
-                JOIN content c ON c.category_id = cat.id
-                JOIN content_genres cg ON c.id = cg.content_id
-                JOIN genres g ON cg.genre_id = g.id
-                WHERE cat.slug IN ('kino','anime','multfilm')
-                GROUP BY cat.id, g.id
-                ORDER BY cat.name, g.name
-            ");
-            $genre_nav_data = [];
-            while ($gnr = $genre_nav_stmt->fetch()) {
-                $genre_nav_data[$gnr['cat_slug']][] = $gnr;
-            }
-            db_cache_set('genre_nav', $genre_nav_data, 600);
-        }
-        $cat_icons_nav = ['kino' => '🎬', 'anime' => '🎌', 'multfilm' => '🎞️'];
-        ?>
-        <li class="genre-dropdown" id="genreDropdown">
-            <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎵 <?php echo t('genres'); ?> ▾</button>
-            <div class="genre-menu">
-                <div class="genre-menu-head">
-                    <a href="<?php echo ROOT_URL; ?>/genres.php" class="genre-menu-all">📋 <?php echo t('all_genres'); ?></a>
-                </div>
-                <?php foreach (['kino', 'anime', 'multfilm'] as $gs): ?>
-                <div class="genre-menu-cat">
-                    <span class="genre-menu-cat-icon"><?php echo $cat_icons_nav[$gs]; ?></span>
-                    <span class="genre-menu-cat-name"><?php echo t($gs === 'kino' ? 'movies' : ($gs === 'anime' ? 'anime' : 'cartoons')); ?></span>
-                    <span class="genre-menu-arrow">›</span>
-                    <div class="genre-submenu">
-                        <?php if (!empty($genre_nav_data[$gs])): ?>
-                        <?php foreach ($genre_nav_data[$gs] as $gn): ?>
-                        <a href="<?php echo ROOT_URL; ?>/genres.php?genre=<?php echo e($gn['genre_slug']); ?><?php echo $active_site ? '&amp;cat=' . e($active_site) : ''; ?>" class="genre-sub-link">
-                            <span class="gs-dot" style="background:<?php echo e($gn['color'] ?: '#2196f3'); ?>;"></span>
-                            <?php echo e($gn['genre_name']); ?>
-                            <span class="gs-count"><?php echo $gn['cnt']; ?></span>
-                        </a>
-                        <?php endforeach; ?>
-                        <?php else: ?>
-                        <span class="genre-sub-empty"><?php echo t('no_content_genre'); ?></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </li>
-        <li class="random-dropdown">
-            <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">💬 <?php echo t('chat'); ?> <span id="onlineCountHeader" class="online-badge-header">🟢 0</span> ▾</button>
-            <div class="random-menu">
-                <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=kino">🎬 <?php echo t('chat_kino'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=anime">🎌 <?php echo t('chat_anime'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/global_chat.php?cat=multfilm">🎞️ <?php echo t('chat_multfilm'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/voice.php" class="ai-open-widget" onclick="return openAIVoiceWidget(this);" style="color:#4f8cff;border-top:1px solid #223052;margin-top:4px;padding-top:8px;">🤖 UZDUB AI — ovozli suhbat</a>
-            </div>
-        </li>
-        <li class="mobile-hide voice-ai-nav"><a href="<?php echo ROOT_URL; ?>/voice.php" class="ai-open-widget <?php echo (basename($_SERVER['PHP_SELF']) == 'voice.php') ? 'active' : ''; ?>" onclick="return openAIVoiceWidget(this);">🤖 AI</a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/random.php<?php echo $active_site ? '?slug=' . e($active_site) : ''; ?>">🎲 <?php echo t('random'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/genres.php<?php echo $active_site ? '?cat=' . e($active_site) : ''; ?>">🎵 <?php echo t('genres'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/global_chat.php<?php echo $active_site ? '?cat=' . e($active_site) : ''; ?>">💬 <?php echo t('chat'); ?> <span id="onlineCountHeader" class="online-badge-header">🟢 0</span></a></li>
         <?php if (is_user()): ?>
         <li><a href="<?php echo ROOT_URL; ?>/inbox.php">📨 <?php echo t('messages'); ?></a></li>
         <li><a href="<?php echo ROOT_URL; ?>/premium.php" style="color:#f9a825;">👑 <?php echo t('premium'); ?></a></li>
@@ -188,20 +125,6 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             </div>
         </li>
     </ul>
-    <script>
-      /* 🤖 AI tugmasi — widget oynasi mavjud bo'lsa (Premium) uni ochadi,
-         aks holda voice.php sahifasiga o'tadi. */
-      window.openAIVoiceWidget = function (link) {
-        var fab = document.getElementById('aic-fab');
-        var btn = document.getElementById('aic-fab') || document.querySelector('.aic-fab');
-        if (btn && !btn.classList.contains('aic-fab-premium-only')) {
-          if (event && event.preventDefault) event.preventDefault();
-          btn.click();
-          return false;
-        }
-        return true; /* widget yo'q — oddiy havola ishlayveradi */
-      };
-    </script>
     <div class="header-right">
         <?php if (is_user()): ?>
         <div class="notif-bell-wrap" id="notifBellWrap">
