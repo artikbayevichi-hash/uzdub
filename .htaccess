@@ -76,6 +76,9 @@ Options -Indexes
     # /genre/{slug} -> /genres.php?genre={slug}
     RewriteRule ^genre/([a-z0-9\-]+)$ genres.php?genre=$1 [L,QSA]
 
+    # Uchala mustaqil sub-sayt: /kino, /anime, /multfilm
+    RewriteRule ^(kino|anime|multfilm)/?$ category.php?slug=$1 [L,QSA]
+
     # /sitemap.xml -> /sitemap.php
     RewriteRule ^sitemap\.xml$ sitemap.php [L]
 </IfModule>

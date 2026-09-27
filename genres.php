@@ -9,6 +9,10 @@ $per_page = 18;
 $offset = ($page - 1) * $per_page;
 
 $selected_slugs = [];
+if (empty($_GET['genres']) && !empty($_GET['genre'])) {
+    // Legacy: /genre/slug yoki genres.php?genre=x shakli
+    $_GET['genres'] = [$_GET['genre']];
+}
 if (!empty($_GET['genres'])) {
     $raw = $_GET['genres'];
     if (is_string($raw)) $raw = explode(',', $raw);

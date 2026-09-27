@@ -2,261 +2,73 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = t('home');
+$page_title = t('home') . ' — Kino · Anime · Multfilm';
 
-$hero_items = $pdo->query("SELECT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id ORDER BY c.views DESC, c.release_year DESC LIMIT 10")->fetchAll();
-
-$categories = $pdo->query("SELECT * FROM categories ORDER BY id")->fetchAll();
-
-$continue_items = [];
-if (is_user()) {
-    try {
-        $cw = $pdo->prepare(
-            "SELECT c.*, wp.position_seconds, wp.duration_seconds, wp.episode_id
-             FROM watch_progress wp
-             JOIN content c ON wp.content_id = c.id
-             JOIN (SELECT MAX(id) mid FROM watch_progress WHERE user_id = ? AND is_completed = 0 AND (duration_seconds <= 0 OR duration_seconds - position_seconds > 600) GROUP BY content_id) lastw ON lastw.mid = wp.id
-             ORDER BY wp.updated_at DESC
-             LIMIT 12"
-        );
-        $cw->execute([$_SESSION['user_id']]);
-        $continue_items = $cw->fetchAll();
-    } catch (PDOException $e) {
-        error_log('index.php continue error: ' . $e->getMessage());
-    }
-}
-
-$cat_items = [];
-if (!empty($categories)) {
-    foreach ($categories as $cat) {
-        try {
-            $cs = $pdo->prepare("SELECT * FROM content WHERE category_id = ? ORDER BY created_at DESC LIMIT 20");
-            $cs->execute([$cat['id']]);
-            $cat_items[$cat['id']] = $cs->fetchAll();
-        } catch (PDOException $e) { $cat_items[$cat['id']] = []; }
-    }
-}
-
-$all_ids = [];
-foreach ($hero_items as $it) $all_ids[$it['id']] = 1;
-foreach ($continue_items as $it) $all_ids[$it['id']] = 1;
-foreach ($cat_items as $items) foreach ($items as $it) $all_ids[$it['id']] = 1;
-
-$ep_ranges = [];
-if (!empty($all_ids)) {
-    $ids_arr = array_keys($all_ids);
-    $ph = implode(',', array_fill(0, count($ids_arr), '?'));
-    try {
-        $ers = $pdo->prepare("SELECT content_id, MIN(episode_number) AS min_ep, MAX(episode_number) AS max_ep, MAX(created_at) AS last_ep_created_at FROM episodes WHERE content_id IN ($ph) GROUP BY content_id");
-        $ers->execute($ids_arr);
-        while ($er = $ers->fetch(PDO::FETCH_ASSOC)) {
-            $ep_ranges[$er['content_id']] = $er;
-        }
-    } catch (PDOException $e) {}
-}
-
-$favorites = [];
-if (is_user()) {
-    try {
-        $fs = $pdo->prepare("SELECT content_id FROM user_content_status WHERE user_id = ? AND status = 'favorite'");
-        $fs->execute([$_SESSION['user_id']]);
-        while ($fr = $fs->fetch(PDO::FETCH_COLUMN)) $favorites[(int)$fr] = 1;
-    } catch (PDOException $e) {}
-}
+// Uchala sub-sayt statistikasi (har biridagi kontent soni)
+$cat_stats = [];
+try {
+    $st = $pdo->query("SELECT c.category_id, cat.slug AS cat_slug, cat.name AS cat_name, COUNT(*) AS cnt FROM content c JOIN categories cat ON c.category_id = cat.id GROUP BY c.category_id ORDER BY cat.id");
+    while ($r = $st->fetch(PDO::FETCH_ASSOC)) $cat_stats[$r['cat_slug']] = (int)$r['cnt'];
+} catch (PDOException $e) { $cat_stats = []; }
 
 include __DIR__ . '/includes/header.php';
 ?>
 
-<?php if (!empty($hero_items)): ?>
-<section class="hero-carousel">
-    <?php foreach ($hero_items as $i => $hero): ?>
-        <div class="hero-slide <?php echo $i === 0 ? 'active' : ''; ?>" style="background-image: url('<?php echo $hero['poster'] ? e(poster_url($hero['poster'])) : 'https://via.placeholder.com/1400x800/0a0e17/2196f3?text=UZDUB+PLATFORM'; ?>');">
-        <div class="hero-content">
-            <div class="hero-tags">
-                <span class="hero-tag"><?php echo e($hero['cat_name']); ?></span>
-            </div>
-            <h1><?php echo e(t_title($hero)); ?></h1>
-            <div class="hero-meta">
-                <span>&#9733; <?php echo e($hero['rating']); ?></span>
-                <span>&middot;</span>
-                <span><?php echo e($hero['release_year']); ?></span>
-                <span>&middot;</span>
-                <span><?php echo e($hero['content_code'] ?? ''); ?></span>
-            </div>
-            <p><?php echo e(mb_strimwidth(t_desc($hero) ?? '', 0, 200, '...')); ?></p>
-            <div>
-                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-primary">&#9654; <?php echo t('watch'); ?></a>
-                <a href="watch.php?id=<?php echo $hero['id']; ?>" class="btn btn-outline">&#9432; <?php echo t('details'); ?></a>
-            </div>
-        </div>
+<div class="portal-wrap">
+    <div class="portal-hero reveal">
+        <div class="portal-brand">🎬 UZDUB PLATFORM</div>
+        <h1>Bitta platforma — uchta sayt</h1>
+        <p>Kino, Anime va Multfilm — har biri o'z mustaqil katalogi bilan. O'zingizga keraklisini tanlang va shu saytga kiring.</p>
     </div>
-    <?php endforeach; ?>
 
-    <?php if (count($hero_items) > 1): ?>
-    <div class="hero-dots">
-        <?php foreach ($hero_items as $i => $hero): ?>
-        <span class="hero-dot <?php echo $i === 0 ? 'active' : ''; ?>" data-index="<?php echo $i; ?>"></span>
+    <div class="portal-grid">
+        <?php
+        $portal_cards = [
+            [
+                'slug' => 'kino',
+                'icon' => '🎬',
+                'label' => t('movies'),
+                'grad' => '--pc1:#0a1f44;--pc2:#1565c0;--pc3:#2196f3;',
+                'desc' => "Eng so'nggi filmlar, jahon premyeralari va sevimli janrlardagi kinolar — faqat Kino saytida.",
+            ],
+            [
+                'slug' => 'anime',
+                'icon' => '🎌',
+                'label' => t('anime'),
+                'grad' => '--pc1:#2a0f3a;--pc2:#7b1fa2;--pc3:#ce93d8;',
+                'desc' => "Yapon animatsiyasi: yangi sessonlar, mashhur seriyalar va abadiy klassikalar — faqat Anime saytida.",
+            ],
+            [
+                'slug' => 'multfilm',
+                'icon' => '🧸',
+                'label' => t('cartoons'),
+                'grad' => '--pc1:#3a1d00;--pc2:#e65100;--pc3:#ffb300;',
+                'desc' => "Bolalar uchun xavfsiz multfilmlar va oilaviy animatsion filmlar — faqat Multfilm saytida.",
+            ],
+        ];
+        $total_content = array_sum($cat_stats);
+        foreach ($portal_cards as $pc):
+        ?>
+        <a class="portal-card portal-<?php echo e($pc['slug']); ?>" href="<?php echo ROOT_URL; ?>/<?php echo e($pc['slug']); ?>" style="<?php echo $pc['grad']; ?>">
+            <span class="portal-emoji"><?php echo $pc['icon']; ?></span>
+            <span class="portal-name"><?php echo e($pc['label']); ?></span>
+            <span class="portal-desc"><?php echo $pc['desc']; ?></span>
+            <span class="portal-foot">
+                <span class="portal-count"><?php echo isset($cat_stats[$pc['slug']]) ? (int)$cat_stats[$pc['slug']] . ' ta kontent' : 'Katalog'; ?></span>
+                <span class="portal-go">Kirish &#8594;</span>
+            </span>
+        </a>
         <?php endforeach; ?>
     </div>
-    <button class="hero-arrow hero-arrow-prev" aria-label="Oldingi">&#10094;</button>
-    <button class="hero-arrow hero-arrow-next" aria-label="Keyingi">&#10095;</button>
+
+    <?php if ($total_content > 0): ?>
+    <div class="portal-note reveal">
+        <p>Jami <strong><?php echo $total_content; ?></strong> ta kontent uchala saytda alohida ajratilgan — <a href="<?php echo ROOT_URL; ?>/genres.php">Janrlar bo'yicha ko'rish</a> ham doim ochiq.</p>
+    </div>
     <?php endif; ?>
-</section>
-<?php endif; ?>
-
-<?php
-// AI asosida shaxsiy tavsiyalar (tizimga kirgan foydalanuvchilar uchun)
-if (is_user()):
-    $recommendations = [];
-    // Foydalanuvchining oxirgi ko'rgan kontent kategoriyasini olish
-    try {
-        $stmt = $pdo->prepare("SELECT c.category_id FROM watch_progress wp JOIN content c ON wp.content_id = c.id WHERE wp.user_id = ? ORDER BY wp.updated_at DESC LIMIT 3");
-        $stmt->execute([$_SESSION['user_id']]);
-        $history_cats = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        if (!empty($history_cats)) {
-            $unique_cats = array_values(array_unique($history_cats));
-            $uid = (int)$_SESSION['user_id'];
-            $placeholders = implode(',', array_fill(0, count($unique_cats), '?'));
-            $stmt = $pdo->prepare("SELECT DISTINCT c.*, cat.name as cat_name FROM content c JOIN categories cat ON c.category_id=cat.id WHERE c.category_id IN ($placeholders) AND c.id NOT IN (SELECT content_id FROM watch_progress WHERE user_id = ?) ORDER BY c.rating DESC, c.views DESC LIMIT 12");
-            $params = array_merge($unique_cats, [$uid]);
-            $stmt->execute($params);
-            $recommendations = $stmt->fetchAll();
-        }
-    } catch (PDOException $e) {
-        error_log('index.php recommendations error: ' . $e->getMessage());
-        $recommendations = [];
-    }
-    if (!empty($recommendations)):
-?>
-<section class="content-section reveal">
-    <h2>🤖 <?php echo t('recommended'); ?></h2>
-    <div class="row-wrap">
-        <div class="row-scroll">
-            <?php foreach ($recommendations as $item): ?>
-            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']]['max_ep'] ?? null, 'last_ep_created_at' => $ep_ranges[$item['id']]['last_ep_created_at'] ?? null]); ?>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
-<?php endif; ?>
-
-<?php foreach ($categories as $cat):
-    $items = $cat_items[$cat['id']] ?? [];
-    if (empty($items)) continue;
-?>
-<section class="content-section reveal">
-    <h2><?php echo e($cat['name']); ?></h2>
-    <div class="row-wrap">
-        <div class="row-scroll">
-            <?php foreach ($items as $item): ?>
-            <?php echo render_card($item, ['is_favorite' => isset($favorites[$item['id']]), 'total_episodes' => $item['total_episodes'] ?? null, 'aired_episodes' => $ep_ranges[$item['id']]['max_ep'] ?? null, 'last_ep_created_at' => $ep_ranges[$item['id']]['last_ep_created_at'] ?? null]); ?>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-<?php endforeach; ?>
-
-<?php if (empty($categories)): ?>
-<div class="content-section"><p><?php echo t('no_content'); ?></p></div>
-<?php endif; ?>
-
-<?php if (!empty($continue_items)): ?>
-<section class="content-section reveal">
-    <h2>&#9199; <?php echo t('continue'); ?></h2>
-    <div class="row-wrap">
-        <div class="row-scroll">
-            <?php foreach ($continue_items as $item):
-                $pct = $item['duration_seconds'] > 0 ? min(100, round($item['position_seconds'] / $item['duration_seconds'] * 100)) : 0;
-                $cur_ep = null;
-                if (!empty($item['episode_id'])) {
-                    try {
-                        $ep_stmt = $pdo->prepare("SELECT episode_number FROM episodes WHERE id = ?");
-                        $ep_stmt->execute([(int)$item['episode_id']]);
-                        $ep_row = $ep_stmt->fetch(PDO::FETCH_ASSOC);
-                        if ($ep_row) $cur_ep = (int)$ep_row['episode_number'];
-                    } catch (PDOException $e) {}
-                }
-                echo render_card($item, [
-                    'is_favorite' => isset($favorites[$item['id']]),
-                    'episode_id' => !empty($item['episode_id']) ? (int)$item['episode_id'] : null,
-                    'progress' => (int)$pct,
-                    'is_continue' => true,
-                    'current_episode' => $cur_ep,
-                    'total_episodes' => $item['total_episodes'] ?? null,
-                    'aired_episodes' => $ep_ranges[$item['id']]['max_ep'] ?? null,
-                    'last_ep_created_at' => $ep_ranges[$item['id']]['last_ep_created_at'] ?? null,
-                ]);
-            endforeach; ?>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
+</div>
 
 <script>
-(function() {
-    var slides = document.querySelectorAll('.hero-slide');
-    var dots = document.querySelectorAll('.hero-dot');
-    var prevBtn = document.querySelector('.hero-arrow-prev');
-    var nextBtn = document.querySelector('.hero-arrow-next');
-    if (slides.length <= 1) return;
-    var current = 0;
-    var timer;
-
-    slides.forEach(function(s) {
-        s.style.opacity = '';
-        s.style.transform = '';
-        s.style.transition = '';
-    });
-
-    function showSlide(idx) {
-        slides.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
-        dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
-        current = idx;
-    }
-    function nextSlide() { showSlide((current + 1) % slides.length); }
-    function prevSlide() { showSlide((current - 1 + slides.length) % slides.length); }
-    function resetTimer() { clearInterval(timer); timer = setInterval(nextSlide, 6000); }
-
-    if (prevBtn) prevBtn.addEventListener('click', function() { prevSlide(); resetTimer(); });
-    if (nextBtn) nextBtn.addEventListener('click', function() { nextSlide(); resetTimer(); });
-    dots.forEach(function(dot) {
-        dot.addEventListener('click', function() {
-            showSlide(parseInt(dot.dataset.index));
-            resetTimer();
-        });
-    });
-
-    var touchStartX = 0;
-    var touchEndX = 0;
-    var carousel = document.querySelector('.hero-carousel');
-    if (carousel) {
-        carousel.addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        carousel.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-    }
-
-    function handleSwipe() {
-        var diff = touchStartX - touchEndX;
-        if (Math.abs(diff) > 50) {
-            if (diff > 0) {
-                nextSlide();
-            } else {
-                prevSlide();
-            }
-            resetTimer();
-        }
-    }
-
-    resetTimer();
-})();
-
 /* Scroll-reveal */
 (function() {
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

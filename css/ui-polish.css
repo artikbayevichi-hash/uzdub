@@ -1,0 +1,382 @@
+/* ============================================================
+   UZDUB UI POLISH — kinematik jilo qatlami
+   (style.css dan KEYIN yuklanadi; faqat ko'rinish, logika tegilmaydi)
+   ============================================================ */
+
+/* ---------- 1) HERO: o'qish uchun gradient + katta sarlavha ---------- */
+.hero-slide {
+  background-color: #0a0e17;
+}
+.hero-slide::before {
+  /* Chapdan va pastdan qoramtir gradient — matn poster ustida aniq o'qiladi */
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(5, 7, 13, 0.92) 0%,
+      rgba(5, 7, 13, 0.6) 32%,
+      rgba(5, 7, 13, 0.08) 62%,
+      rgba(5, 7, 13, 0.4) 100%),
+    linear-gradient(0deg, rgba(5, 7, 13, 0.85) 0%, rgba(5, 7, 13, 0.05) 42%);
+}
+.hero-content {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+.hero-content h1 {
+  font-size: clamp(26px, 4.4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.5px;
+  text-shadow: 0 3px 24px rgba(0, 0, 0, 0.7), 0 0 42px rgba(33, 150, 243, 0.28);
+}
+.hero-content p {
+  font-size: 15px;
+  color: rgba(232, 238, 245, 0.92);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.75);
+}
+.hero-content .hero-meta {
+  margin: 8px 0 10px;
+}
+.hero-content .hero-tag {
+  background: rgba(33, 150, 243, 0.22);
+  border: 1px solid rgba(79, 195, 247, 0.5);
+  backdrop-filter: blur(6px);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+/* ---------- 1.1) HERO tugmalari ---------- */
+.hero-content .btn-primary {
+  font-size: 15px;
+  padding: 13px 26px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2196f3 0%, #0d47a1 100%);
+  box-shadow: 0 6px 22px rgba(33, 150, 243, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+.hero-content .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(33, 150, 243, 0.7);
+}
+.hero-content .btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+.hero-content .btn-primary:hover::after {
+  left: 135%;
+}
+.hero-content .btn-outline {
+  font-size: 15px;
+  padding: 13px 24px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+}
+.hero-content .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--blue-glow);
+}
+
+/* ---------- 1.2) HERO nuqtalar ---------- */
+.hero-dot {
+  height: 5px;
+  width: 24px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.hero-dot.active {
+  background: var(--blue-glow);
+  width: 44px;
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.8);
+}
+.hero-dot:hover {
+  background: var(--blue-glow);
+}
+
+/* ---------- 2) KARTALAR: hover animatsiya + ▶ tugma ---------- */
+.card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: linear-gradient(135deg, #1a2438, #0f1730);
+  transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), filter 0.3s ease;
+}
+.card {
+  border-radius: 14px;
+}
+.card-poster {
+  border-radius: 14px;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(33, 150, 243, 0.25),
+    0 0 26px rgba(33, 150, 243, 0.16);
+}
+.card:hover .card-poster img {
+  transform: scale(1.06);
+  filter: brightness(0.62);
+}
+/* ▶ markaziy o'ynatish tugmasi (::after gradient band bo'lsa — ::before bilan) */
+.card-poster::before {
+  content: "▶";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  text-indent: 2px;
+  background: radial-gradient(circle at 32% 30%, #4fc3f7, #2196f3 58%, #0d47a1);
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(33, 150, 243, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  opacity: 0;
+  transform: scale(0.62);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.card:hover .card-poster::before {
+  opacity: 1;
+  transform: scale(1);
+}
+/* Pastki info — poster ustida aniqroq gradient */
+.card-info {
+  background: linear-gradient(0deg, rgba(5, 8, 15, 0.94) 0%, rgba(5, 8, 15, 0.6) 62%, transparent 100%);
+  padding-top: 28px;
+}
+/* ★ reyting yulduzi oltin */
+.card-meta .card-rating {
+  color: #f9a825;
+}
+
+/* ---------- 3) BO'LIM SARLAVHALARI ---------- */
+.content-section h2 {
+  font-size: 24px;
+  padding-left: 13px;
+  border-left: 4px solid transparent;
+  border-image: linear-gradient(180deg, #2196f3, #4fc3f7) 1;
+  letter-spacing: 0.2px;
+}
+.content-section h2::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 2px;
+  margin-top: 6px;
+  background: linear-gradient(90deg, #2196f3, transparent);
+  border-radius: 2px;
+}
+
+/* ---------- 4) O'RALMA (horizontal scroll) — maxsus scrollbar ---------- */
+.row-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #2196f3 rgba(255, 255, 255, 0.06);
+}
+.row-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.row-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+.row-scroll::-webkit-scrollbar-thumb {
+  background: rgba(33, 150, 243, 0.55);
+  border-radius: 8px;
+}
+.row-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 195, 247, 0.85);
+}
+
+/* ---------- 5) FOOTER ---------- */
+.site-footer {
+  border-top: 1px solid rgba(33, 150, 243, 0.22);
+}
+.site-footer a {
+  transition: color 0.2s ease;
+}
+.site-footer a:hover {
+  color: var(--blue-glow);
+}
+
+/* ---------- 6) Mavjudligi (a11y): fokus halqasi ---------- */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--blue-glow);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   3 TA SUB-SAYT PORTALI + SAYT AKCENTLARI
+   ============================================================ */
+
+/* ---------- Portal sahifa (index.php) ---------- */
+.portal-wrap { max-width: 1180px; margin: 0 auto; padding: 48px 16px 70px; }
+.portal-hero { text-align: center; margin-bottom: 44px; }
+.portal-brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  color: var(--blue-glow); text-transform: uppercase;
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(79, 195, 247, 0.35);
+  padding: 7px 18px; border-radius: 30px; margin-bottom: 18px;
+}
+.portal-hero h1 {
+  font-size: clamp(28px, 4.6vw, 52px);
+  font-weight: 800; line-height: 1.1; letter-spacing: -0.5px;
+  margin: 0 0 12px; text-shadow: 0 3px 26px rgba(0, 0, 0, 0.6);
+}
+.portal-hero p { color: var(--text-muted); font-size: 16px; max-width: 620px; margin: 0 auto; line-height: 1.6; }
+.portal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.portal-card {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between;
+  min-height: 360px; padding: 30px; border-radius: 22px; overflow: hidden;
+  text-decoration: none; color: #fff; border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(160deg, var(--pc1), var(--pc2) 55%, var(--pc3));
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.portal-card::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, 0.22), transparent 52%);
+  pointer-events: none;
+}
+.portal-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.portal-emoji { font-size: 54px; line-height: 1; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35)); }
+.portal-name { font-size: 36px; font-weight: 800; letter-spacing: 1px; margin: 20px 0 10px; position: relative; z-index: 1; }
+.portal-desc { font-size: 14px; line-height: 1.65; opacity: 0.95; position: relative; z-index: 1; flex: 1; }
+.portal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; position: relative; z-index: 1; }
+.portal-count {
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 6px 14px; border-radius: 22px; backdrop-filter: blur(4px);
+}
+.portal-go {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700;
+  background: rgba(255, 255, 255, 0.22); border: 1px solid rgba(255, 255, 255, 0.45);
+  padding: 10px 20px; border-radius: 26px;
+  transition: background 0.2s, transform 0.2s;
+}
+.portal-card:hover .portal-go { background: rgba(255, 255, 255, 0.34); transform: translateX(5px); }
+.portal-note { text-align: center; margin-top: 36px; color: var(--text-muted); font-size: 14px; }
+.portal-note a { color: var(--blue-glow); text-decoration: none; }
+.portal-note a:hover { text-decoration: underline; }
+
+/* ---------- Sub-sayt akcentlari (body.site-*) ---------- */
+body.site-kino { --acc: #2196f3; --acc2: #4fc3f7; --acc-deep: #0d47a1; --acc-soft: rgba(33, 150, 243, 0.14); --acc-line: rgba(79, 195, 247, 0.3); --acc-shadow: rgba(33, 150, 243, 0.45); }
+body.site-anime { --acc: #ab47bc; --acc2: #f06292; --acc-deep: #7b1fa2; --acc-soft: rgba(171, 71, 188, 0.15); --acc-line: rgba(240, 98, 146, 0.32); --acc-shadow: rgba(171, 71, 188, 0.45); }
+body.site-multfilm { --acc: #fb8c00; --acc2: #ffd54f; --acc-deep: #e65100; --acc-soft: rgba(251, 140, 0, 0.15); --acc-line: rgba(255, 213, 79, 0.32); --acc-shadow: rgba(251, 140, 0, 0.45); }
+
+body.site-kino .logo-sub.ls-site,
+body.site-anime .logo-sub.ls-site,
+body.site-multfilm .logo-sub.ls-site { color: var(--acc2); }
+
+.nav-links a.active { color: var(--acc2, #4fc3f7); }
+.nav-links a.active::after {
+  content: ""; display: block; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--acc, #2196f3), transparent);
+  margin-top: 2px;
+}
+
+body.site-kino .hero-content .hero-tag,
+body.site-anime .hero-content .hero-tag,
+body.site-multfilm .hero-content .hero-tag { background: var(--acc-soft); border-color: var(--acc-line); color: var(--acc2); }
+
+body.site-anime .hero-content .btn-primary,
+body.site-multfilm .hero-content .btn-primary {
+  background: linear-gradient(135deg, var(--acc) 0%, var(--acc-deep) 100%);
+  box-shadow: 0 6px 22px var(--acc-shadow);
+}
+
+body.site-kino .content-section h2,
+body.site-anime .content-section h2,
+body.site-multfilm .content-section h2 { border-image: linear-gradient(180deg, var(--acc), var(--acc2)) 1; }
+
+body.site-kino .content-section h2::after,
+body.site-anime .content-section h2::after,
+body.site-multfilm .content-section h2::after { background: linear-gradient(90deg, var(--acc), transparent); }
+
+body.site-kino .row-scroll,
+body.site-anime .row-scroll,
+body.site-multfilm .row-scroll { scrollbar-color: var(--acc) rgba(255, 255, 255, 0.06); }
+body.site-kino .row-scroll::-webkit-scrollbar-thumb,
+body.site-anime .row-scroll::-webkit-scrollbar-thumb,
+body.site-multfilm .row-scroll::-webkit-scrollbar-thumb { background: var(--acc); }
+body.site-kino .row-scroll::-webkit-scrollbar-thumb:hover,
+body.site-anime .row-scroll::-webkit-scrollbar-thumb:hover,
+body.site-multfilm .row-scroll::-webkit-scrollbar-thumb:hover { background: var(--acc2); }
+
+body.site-kino .site-footer,
+body.site-anime .site-footer,
+body.site-multfilm .site-footer { border-top-color: var(--acc-line); }
+
+body.site-kino .hero-dot.active,
+body.site-anime .hero-dot.active,
+body.site-multfilm .hero-dot.active { background: var(--acc2); box-shadow: 0 0 12px var(--acc); }
+
+/* ---------- Sub-sayt: yuqori chiziq (site-strip) ---------- */
+.site-strip { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+.site-strip-box {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--acc-soft); border: 1px solid var(--acc-line);
+  border-radius: 16px; padding: 14px 20px; margin-top: 20px;
+  backdrop-filter: blur(6px);
+}
+.site-strip-icon { font-size: 30px; line-height: 1; }
+.site-strip-text { display: flex; flex-direction: column; gap: 2px; }
+.site-strip-name { font-weight: 800; font-size: 17px; color: var(--acc2); letter-spacing: 0.3px; }
+.site-strip-slog { font-size: 13px; color: var(--text-muted); }
+.site-strip-back { color: var(--acc2); text-decoration: none; font-weight: 600; }
+.site-strip-back:hover { text-decoration: underline; }
+
+/* ---------- Sub-sayt: janr chiplari ---------- */
+.site-genre-chips {
+  max-width: 1180px; margin: 34px auto 0; padding: 0 16px;
+  display: flex; flex-wrap: wrap; gap: 9px; align-items: center;
+}
+.sgc-label { font-size: 13px; font-weight: 800; color: var(--acc2, #4fc3f7); margin-right: 4px; letter-spacing: 0.3px; }
+.sgc-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; color: var(--text-light);
+  background: var(--acc-soft); border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: all 0.18s;
+}
+.sgc-chip:hover { background: var(--acc); color: #fff; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); }
+.sgc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sgc-cnt { font-size: 11px; font-weight: 700; opacity: 0.8; background: rgba(0, 0, 0, 0.28); padding: 2px 8px; border-radius: 12px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .portal-grid { grid-template-columns: 1fr; gap: 18px; }
+  .portal-card { min-height: 0; }
+  .portal-name { font-size: 28px; }
+}
