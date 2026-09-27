@@ -50,11 +50,18 @@ function build_genre_url($extras = []) {
     foreach ($selected_slugs as $s) $params['genres'][] = $s;
     if (!empty($extras['sort'])) $params['sort'] = $extras['sort'];
     elseif ($sort !== 'newest') $params['sort'] = $sort;
-    if (!empty($extras['cat'])) $params['cat'] = $extras['cat'];
-    elseif ($cat_filter) $params['cat'] = $cat_filter;
+    if (array_key_exists('cat', $extras)) {
+        if (!empty($extras['cat'])) $params['cat'] = $extras['cat'];
+    } elseif ($cat_filter) {
+        $params['cat'] = $cat_filter;
+    }
     if (!empty($extras['page'])) $params['page'] = $extras['page'];
     return ROOT_URL . '/genres.php?' . http_build_query($params);
 }
+
+$allowed = ['kino', 'anime', 'multfilm'];
+$sql_base = "";
+$params = [];
 
 if ($selected_count > 0) {
     $names = [];
@@ -67,20 +74,10 @@ if ($selected_count > 0) {
     $params = $selected_ids;
 
     $where_extra = "";
-    $allowed = ['kino', 'anime', 'multfilm'];
     if (in_array($cat_filter, $allowed)) {
         $where_extra = " AND cat.slug = ?";
         $params[] = $cat_filter;
     }
-
-    $order = match($sort) {
-        'rating' => 'c.rating DESC, c.title ASC',
-        'year_desc' => 'c.release_year DESC, c.title ASC',
-        'year_asc' => 'c.release_year ASC, c.title ASC',
-        'popular' => 'c.views DESC, c.title ASC',
-        'title' => 'c.title ASC',
-        default => 'c.created_at DESC, c.title ASC',
-    };
 
     $sql_base = "
         FROM content c
@@ -90,20 +87,42 @@ if ($selected_count > 0) {
         GROUP BY c.id
         HAVING COUNT(DISTINCT cg.genre_id) = $selected_count
     ";
-
-    $cnt = $pdo->prepare("SELECT COUNT(*) $sql_base");
-    $cnt->execute($params);
-    $total = (int)$cnt->fetchColumn();
-    $total_pages = max(1, (int)ceil($total / $per_page));
-
-    $data = $pdo->prepare("SELECT c.*, cat.name AS cat_name, cat.slug AS cat_slug $sql_base ORDER BY $order LIMIT $per_page OFFSET $offset");
-    $data->execute($params);
-    $content_items = $data->fetchAll();
-
-    $cc = $pdo->prepare("SELECT cat.slug, COUNT(DISTINCT c.id) AS cnt FROM content c JOIN content_genres cg ON c.id=cg.content_id JOIN categories cat ON c.category_id=cat.id WHERE cg.genre_id IN ($placeholders) $where_extra GROUP BY cat.id");
-    $cc->execute($params);
-    while ($r = $cc->fetch()) $cat_counts[$r['slug']] = (int)$r['cnt'];
+} else {
+    // Janr tanlanmagan — barcha kontent (yoki faol katalog bo'yicha) darhol ko'rsatiladi
+    $head_title = t('genres_all_content');
+    $where_extra = "";
+    if (in_array($cat_filter, $allowed)) {
+        $where_extra = " WHERE cat.slug = ?";
+        $params[] = $cat_filter;
+    }
+    $sql_base = "
+        FROM content c
+        JOIN categories cat ON c.category_id = cat.id
+        $where_extra
+    ";
 }
+
+$order = match($sort) {
+    'rating' => 'c.rating DESC, c.title ASC',
+    'year_desc' => 'c.release_year DESC, c.title ASC',
+    'year_asc' => 'c.release_year ASC, c.title ASC',
+    'popular' => 'c.views DESC, c.title ASC',
+    'title' => 'c.title ASC',
+    default => 'c.created_at DESC, c.title ASC',
+};
+
+$cnt = $pdo->prepare("SELECT COUNT(*) $sql_base");
+$cnt->execute($params);
+$total = (int)$cnt->fetchColumn();
+$total_pages = max(1, (int)ceil($total / $per_page));
+
+$data = $pdo->prepare("SELECT c.*, cat.name AS cat_name, cat.slug AS cat_slug $sql_base ORDER BY $order LIMIT $per_page OFFSET $offset");
+$data->execute($params);
+$content_items = $data->fetchAll();
+
+$cc = $pdo->prepare("SELECT cat.slug, COUNT(DISTINCT c.id) AS cnt $sql_base GROUP BY cat.id");
+$cc->execute($params);
+while ($r = $cc->fetch()) $cat_counts[$r['slug']] = (int)$r['cnt'];
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -165,10 +184,6 @@ include __DIR__ . '/includes/header.php';
 .genre-pagination a:hover{background:var(--blue-primary);color:#fff;border-color:var(--blue-primary)}
 .genre-pagination .active{background:var(--blue-primary);color:#fff;border-color:var(--blue-primary);font-weight:600}
 .genre-pagination .disabled{opacity:.35;pointer-events:none}
-.genre-all-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.genre-all-card{display:flex;align-items:center;gap:12px;padding:16px;background:var(--card-bg);border:1px solid rgba(33,150,243,0.15);border-radius:10px;text-decoration:none;color:var(--text-light);transition:all .2s}
-.genre-all-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.3)}
-.genre-all-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
 .genre-result-info{font-size:13px;color:var(--text-muted);margin-bottom:14px}
 @media(max-width:768px){.genre-page{flex-direction:column}.genre-sidebar{width:100%}.genre-sidebar-inner{position:static}.genre-sidebar-list{max-height:none}.genre-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.genre-controls{flex-direction:column;align-items:stretch}.genre-cat-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}}
 </style>
@@ -222,9 +237,11 @@ include __DIR__ . '/includes/header.php';
             </a>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
         <div class="genre-head">
             <h2>
+                <?php if ($selected_count > 0): ?>
                 <?php foreach ($selected_slugs as $i => $s):
                     $sg = $all_genres_by_slug[$s] ?? null;
                     if (!$sg) continue;
@@ -232,26 +249,25 @@ include __DIR__ . '/includes/header.php';
                 ?>
                 <span class="gh-dot" style="color:<?php echo e($sg['color'] ?: '#2196f3'); ?>;">●</span><?php echo e($sg['name']); ?>
                 <?php endforeach; ?>
+                <?php else: ?>
+                🎵 <?php echo t('genres_all_content'); ?>
+                <?php endif; ?>
             </h2>
             <div class="genre-controls">
                 <div class="genre-cat-tabs">
-                    <?php
-                    $base_all = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'sort' => $sort]));
-                    ?>
-                    <a href="<?php echo $base_all; ?>" class="genre-cat-tab <?php echo !$cat_filter ? 'active' : ''; ?>">
-                        📋 <?php echo t('all_genres'); ?><span class="tab-count"><?php echo $total; ?></span>
+                    <a href="<?php echo build_genre_url(['cat' => '']); ?>" class="genre-cat-tab <?php echo !$cat_filter ? 'active' : ''; ?>">
+                        📋 <?php echo t('all_categories'); ?><span class="tab-count"><?php echo $total; ?></span>
                     </a>
                     <?php foreach (['kino' => '🎬', 'anime' => '🎌', 'multfilm' => '🎞️'] as $cs => $ci): ?>
                     <?php if (!empty($cat_counts[$cs])): ?>
-                    <?php $tab_url = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'cat' => $cs, 'sort' => $sort])); ?>
-                    <a href="<?php echo $tab_url; ?>" class="genre-cat-tab <?php echo $cat_filter === $cs ? 'active' : ''; ?>">
+                    <a href="<?php echo build_genre_url(['cat' => $cs]); ?>" class="genre-cat-tab <?php echo $cat_filter === $cs ? 'active' : ''; ?>">
                         <?php echo $ci; ?> <?php echo t($cs === 'kino' ? 'movies' : ($cs === 'anime' ? 'anime' : 'cartoons')); ?><span class="tab-count"><?php echo $cat_counts[$cs]; ?></span>
                     </a>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
                 <div class="genre-sort">
-                    <?php $sort_base = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'cat' => $cat_filter])); ?>
+                    <?php $sort_base = build_genre_url([]); ?>
                     <select onchange="window.location.href='<?php echo e($sort_base); ?>&sort='+this.value">
                         <?php
                         $sorts = ['newest' => t('newest'), 'popular' => t('most_viewed'), 'rating' => t('top_rated'), 'year_desc' => '↓ ' . t('release_year'), 'year_asc' => '↑ ' . t('release_year'), 'title' => 'A-Z'];
@@ -275,7 +291,7 @@ include __DIR__ . '/includes/header.php';
         <?php if ($total_pages > 1): ?>
         <div class="genre-pagination">
             <?php
-            $pp = ROOT_URL . '/genres.php?' . http_build_query(array_filter(['genres' => $selected_slugs, 'sort' => $sort, 'cat' => $cat_filter]));
+            $pp = build_genre_url([]);
             ?>
             <a href="<?php echo $pp . '&page=' . ($page - 1); ?>" class="<?php echo $page <= 1 ? 'disabled' : ''; ?>">‹</a>
             <?php
@@ -300,22 +316,6 @@ include __DIR__ . '/includes/header.php';
         <div class="genre-empty">
             <span class="ge-icon">🎭</span>
             <?php echo t('no_content_genre'); ?>
-        </div>
-        <?php endif; ?>
-
-        <?php else: ?>
-        <h2>📋 <?php echo t('all_genres'); ?></h2>
-        <p style="color:var(--text-muted);margin:0 0 20px;font-size:14px;"><?php echo t('browse_by_genre'); ?></p>
-        <div class="genre-all-grid">
-            <?php foreach ($all_genres as $g): ?>
-            <a href="<?php echo ROOT_URL; ?>/genres.php?genres[]=<?php echo e($g['slug']); ?>" class="genre-all-card">
-                <span class="genre-all-icon" style="background:<?php echo e($g['color'] ?: '#2196f3'); ?>22;color:<?php echo e($g['color'] ?: '#2196f3'); ?>;"><?php echo mb_substr($g['name'], 0, 2); ?></span>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:14px;font-weight:600;"><?php echo e($g['name']); ?></div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;"><?php echo $g['content_count']; ?> <?php echo t('content_count'); ?></div>
-                </div>
-            </a>
-            <?php endforeach; ?>
         </div>
         <?php endif; ?>
     </div>
