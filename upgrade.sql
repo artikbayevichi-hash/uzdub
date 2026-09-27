@@ -304,5 +304,33 @@ CREATE TABLE IF NOT EXISTS user_content_new_seen (
     KEY content_id (content_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- =====================================================
+-- REELS — qisqa vertikal videolar (VK Video orqali)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS reels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT DEFAULT NULL,
+    video_url VARCHAR(500) NOT NULL,
+    thumb VARCHAR(500) DEFAULT NULL,
+    content_id INT DEFAULT NULL,
+    episode_id INT DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    views INT NOT NULL DEFAULT 0,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_by INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_active (is_active, sort_order, id),
+    KEY idx_content (content_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS reel_likes (
+    reel_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (reel_id, user_id),
+    KEY idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 SELECT 'Yangilash muvaffaqiyatli yakunlandi!' AS natija;
 

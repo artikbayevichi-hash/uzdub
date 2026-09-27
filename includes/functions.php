@@ -655,6 +655,25 @@ function vk_resolve_video($url, $ttl_hours = 24) {
     return $result;
 }
 
+// Faqat keshdan o'qiydi (tarmoqqa chiqmaydi). Reels lentasi kabi ko'p video birdan
+// ko'rsatiladigan joylarda kutmasdan tayyor havolani berish uchun.
+function vk_cached_video($url, $ttl_hours = 24) {
+    $info = vk_parse_url($url);
+    if (!$info) return null;
+
+    $dir = vk_cache_dir();
+    if (!$dir) return null;
+    $file = $dir . '/' . $info['oid'] . '_' . $info['id'] . '.json';
+    if (!is_file($file)) return null;
+
+    $cached = @json_decode(@file_get_contents($file), true);
+    if (is_array($cached) && !empty($cached['best']) && isset($cached['ts'])
+        && (time() - (int)$cached['ts']) < $ttl_hours * 3600) {
+        return $cached;
+    }
+    return null;
+}
+
 // VK video'ni toza HTML5 playerda ko'rsatadi; mp4 olinmasa VK iframe'ga qaytadi.
 function render_vk_player($video_url, $player_id, $poster = null, $subs_html = '', $intro_start = 0, $intro_end = 0) {
     $refresh = ROOT_URL . '/api/vk-refresh.php?url=' . rawurlencode($video_url);
