@@ -84,6 +84,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
         <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=kino">🎬 <?php echo t('movies'); ?></a></li>
         <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=anime">🎌 <?php echo t('anime'); ?></a></li>
         <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm">🧸 <?php echo t('cartoons'); ?></a></li>
+        <li><a href="<?php echo ROOT_URL; ?>/reels.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'reels.php') ? 'active' : ''; ?>">🎞️ <?php echo t('reels'); ?></a></li>
         <li class="random-dropdown">
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
             <div class="random-menu">
@@ -373,6 +374,9 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
     </a>
     <a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='multfilm') ? 'active' : ''; ?>">
         <span class="bn-icon">🧸</span><span class="bn-label"><?php echo t('cartoons'); ?></span>
+    </a>
+    <a href="<?php echo ROOT_URL; ?>/reels.php" class="<?php echo $__cur_page=='reels.php' ? 'active' : ''; ?>">
+        <span class="bn-icon">🎞️</span><span class="bn-label"><?php echo t('reels'); ?></span>
     </a>
     <?php if (is_user()): $__u = current_user(); ?>
     <a href="<?php echo ROOT_URL; ?>/profile.php?uid=<?php echo e($__u['user_id']); ?>" class="<?php echo $__cur_page=='profile.php' ? 'active' : ''; ?>">

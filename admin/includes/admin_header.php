@@ -27,6 +27,7 @@ $current = basename($_SERVER['PHP_SELF']);
         <a href="video_upload.php" class="<?php echo $current=='video_upload.php'?'active':''; ?>">&#11014; Video URL (VK / Archive.org)</a>
         <a href="video_sources.php" class="<?php echo $current=='video_sources.php'?'active':''; ?>">&#128260; Video manbalari kuzatuvi</a>
         <a href="anihub_import.php" class="<?php echo $current=='anihub_import.php'?'active':''; ?>">&#128279; AniHub Import</a>
+        <a href="reels.php" class="<?php echo $current=='reels.php'?'active':''; ?>">&#127902; Reels</a>
         <div class="side-group">Foydalanuvchilar</div>
         <a href="users.php" class="<?php echo $current=='users.php'?'active':''; ?>">&#128101; Foydalanuvchilar</a>
         <a href="chat.php" class="<?php echo $current=='chat.php'?'active':''; ?>">&#128172; Chat boshqarish</a>
