@@ -69,11 +69,11 @@ $response = null;
 if (contains($norm, ['bosh sahifa', 'asosiy sahifa', 'bosh sahifaga'])) {
     $response = ['action' => 'navigate', 'url' => $BASE . 'index.php', 'speak' => "Bosh sahifaga o'tyapman."];
 } elseif (contains($norm, ['anime bo\'lim', 'anime bolim', 'animega']) || $norm === 'anime') {
-    $response = ['action' => 'navigate', 'url' => $BASE . 'anime', 'speak' => "Anime bo'limini ochyapman."];
+    $response = ['action' => 'navigate', 'url' => $BASE . 'category.php?slug=anime', 'speak' => "Anime bo'limini ochyapman."];
 } elseif (contains($norm, ['kino bo\'lim', 'kino bolim', 'kinolarga']) || $norm === 'kino') {
-    $response = ['action' => 'navigate', 'url' => $BASE . 'kino', 'speak' => "Kino bo'limini ochyapman."];
+    $response = ['action' => 'navigate', 'url' => $BASE . 'category.php?slug=kino', 'speak' => "Kino bo'limini ochyapman."];
 } elseif (contains($norm, ['multfilm bo\'lim', 'multfilm bolim', 'multfilmlarga']) || contains($norm, ['multfilm'])) {
-    $response = ['action' => 'navigate', 'url' => $BASE . 'multfilm', 'speak' => "Multfilm bo'limini ochyapman."];
+    $response = ['action' => 'navigate', 'url' => $BASE . 'category.php?slug=multfilm', 'speak' => "Multfilm bo'limini ochyapman."];
 } elseif (contains($norm, ['xabarlarim', 'xabarlar bo\'limi', 'inbox'])) {
     $response = ['action' => 'navigate', 'url' => $BASE . 'inbox.php', 'speak' => "Xabarlaringizni ochyapman."];
 } elseif (contains($norm, ['premium', 'obuna'])) {

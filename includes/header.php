@@ -26,16 +26,6 @@ if (is_user() && !empty($pdo)) {
         }
     } catch (Throwable $e) { $resume_toast = null; }
 }
-
-// Uchala mustaqil sub-sayt identifikatsiyasi.
-// category.php $active_site = 'kino'|'anime'|'multfilm' qilib beradi.
-$active_site = $active_site ?? '';
-$site_meta = [
-    'kino'     => ['name' => 'KINO',     'icon' => '🎬'],
-    'anime'    => ['name' => 'ANIME',    'icon' => '🎌'],
-    'multfilm' => ['name' => 'MULTFILM', 'icon' => '🧸'],
-];
-$site_cur = ($active_site !== '' && isset($site_meta[$active_site])) ? $site_meta[$active_site] : null;
 ?>
 <!DOCTYPE html>
 <html lang="uz">
@@ -59,11 +49,10 @@ $site_cur = ($active_site !== '' && isset($site_meta[$active_site])) ? $site_met
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/style.css?v=<?php echo @filemtime(__DIR__ . '/../css/style.css') ?: 1; ?>">
 <link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/emoji-blue.css?v=<?php echo @filemtime(__DIR__ . '/../css/emoji-blue.css') ?: 1; ?>">
-<link rel="stylesheet" href="<?php echo ROOT_URL; ?>/css/ui-polish.css?v=<?php echo @filemtime(__DIR__ . '/../css/ui-polish.css') ?: 1; ?>">
 <script src="<?php echo ROOT_URL; ?>/js/online-tracker.js" defer></script>
 <script src="<?php echo ROOT_URL; ?>/js/emoji-blue.js" defer></script>
 </head>
-<body class="<?php echo $site_cur ? 'site-' . e($active_site) : ''; ?>">
+<body>
 <script>window.UZDUB_IS_LOGGED_IN = <?php echo is_user() ? 'true' : 'false'; ?>;</script>
 <script>window.__UZDUB_RESUME__ = <?php echo json_encode($resume_toast, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;</script>
 <div class="ambient-dust">
@@ -83,16 +72,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
 ?>
 
 <header class="site-header">
-    <a href="<?php echo ROOT_URL; ?>/index.php" class="logo">UZDUB<span class="logo-sub<?php echo $site_cur ? ' ls-site' : ''; ?>"><?php
-        if ($site_cur) {
-            $chars = preg_split('//u', $site_cur['name'], -1, PREG_SPLIT_NO_EMPTY);
-            foreach ($chars as $ci => $ch) {
-                echo '<span class="ls-char" style="transition-delay:' . (0.5 + $ci * 0.08) . 's">' . e($ch) . '</span>';
-            }
-        } else {
-            echo '<span class="ls-char" style="transition-delay:0.5s">P</span><span class="ls-char" style="transition-delay:0.58s">L</span><span class="ls-char" style="transition-delay:0.66s">A</span><span class="ls-char" style="transition-delay:0.74s">T</span><span class="ls-char" style="transition-delay:0.82s">F</span><span class="ls-char" style="transition-delay:0.9s">O</span><span class="ls-char" style="transition-delay:0.98s">R</span><span class="ls-char" style="transition-delay:1.06s">M</span>';
-        }
-    ?></span></a>
+    <a href="<?php echo ROOT_URL; ?>/index.php" class="logo">UZDUB<span class="logo-sub"><span class="ls-char" style="transition-delay:0.5s">P</span><span class="ls-char" style="transition-delay:0.58s">L</span><span class="ls-char" style="transition-delay:0.66s">A</span><span class="ls-char" style="transition-delay:0.74s">T</span><span class="ls-char" style="transition-delay:0.82s">F</span><span class="ls-char" style="transition-delay:0.9s">O</span><span class="ls-char" style="transition-delay:0.98s">R</span><span class="ls-char" style="transition-delay:1.06s">M</span></span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Menyu">&#9776;</button>
     <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
     <ul class="nav-links" id="navLinks">
@@ -100,10 +80,10 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
             <span class="drawer-title">☰ Menyu</span>
             <button class="drawer-close" onclick="closeDrawer()">&times;</button>
         </li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/index.php" class="<?php echo (!$active_site && basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">🏠 <?php echo t('home'); ?></a></li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/kino" class="<?php echo $active_site === 'kino' ? 'active' : ''; ?>">🎬 <?php echo t('movies'); ?></a></li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/anime" class="<?php echo $active_site === 'anime' ? 'active' : ''; ?>">🎌 <?php echo t('anime'); ?></a></li>
-        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/multfilm" class="<?php echo $active_site === 'multfilm' ? 'active' : ''; ?>">🧸 <?php echo t('cartoons'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/index.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">🏠 <?php echo t('home'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=kino">🎬 <?php echo t('movies'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=anime">🎌 <?php echo t('anime'); ?></a></li>
+        <li class="mobile-hide"><a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm">🧸 <?php echo t('cartoons'); ?></a></li>
         <li class="random-dropdown">
             <button type="button" class="random-btn" onclick="this.parentElement.classList.toggle('open')">🎲 <?php echo t('random'); ?> ▾</button>
             <div class="random-menu">
@@ -151,7 +131,7 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
                     <div class="genre-submenu">
                         <?php if (!empty($genre_nav_data[$gs])): ?>
                         <?php foreach ($genre_nav_data[$gs] as $gn): ?>
-                        <a href="<?php echo ROOT_URL; ?>/genres.php?genre=<?php echo e($gn['genre_slug']); ?><?php echo $active_site ? '&amp;cat=' . e($active_site) : ''; ?>" class="genre-sub-link">
+                        <a href="<?php echo ROOT_URL; ?>/genres.php?genre=<?php echo e($gn['genre_slug']); ?>" class="genre-sub-link">
                             <span class="gs-dot" style="background:<?php echo e($gn['color'] ?: '#2196f3'); ?>;"></span>
                             <?php echo e($gn['genre_name']); ?>
                             <span class="gs-count"><?php echo $gn['cnt']; ?></span>
@@ -401,13 +381,13 @@ if (is_user() && empty($_SESSION['session_db_id']) && !empty($pdo)) {
     <a href="<?php echo ROOT_URL; ?>/index.php" class="<?php echo $__cur_page=='index.php' ? 'active' : ''; ?>">
         <span class="bn-icon">🏠</span><span class="bn-label"><?php echo t('home'); ?></span>
     </a>
-    <a href="<?php echo ROOT_URL; ?>/kino" class="<?php echo $active_site === 'kino' ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/category.php?slug=kino" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='kino') ? 'active' : ''; ?>">
         <span class="bn-icon">🎬</span><span class="bn-label"><?php echo t('movies'); ?></span>
     </a>
-    <a href="<?php echo ROOT_URL; ?>/anime" class="<?php echo $active_site === 'anime' ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/category.php?slug=anime" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='anime') ? 'active' : ''; ?>">
         <span class="bn-icon">🎌</span><span class="bn-label"><?php echo t('anime'); ?></span>
     </a>
-    <a href="<?php echo ROOT_URL; ?>/multfilm" class="<?php echo $active_site === 'multfilm' ? 'active' : ''; ?>">
+    <a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm" class="<?php echo ($__cur_page=='category.php' && ($_GET['slug'] ?? '')=='multfilm') ? 'active' : ''; ?>">
         <span class="bn-icon">🧸</span><span class="bn-label"><?php echo t('cartoons'); ?></span>
     </a>
     <?php if (is_user()): $__u = current_user(); ?>

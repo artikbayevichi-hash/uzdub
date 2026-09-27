@@ -21,9 +21,9 @@
             <div class="footer-links">
                 <h4><?php echo t('useful_links'); ?></h4>
                 <a href="<?php echo ROOT_URL; ?>/index.php"><?php echo t('home'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/kino"><?php echo t('movies'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/anime"><?php echo t('anime'); ?></a>
-                <a href="<?php echo ROOT_URL; ?>/multfilm"><?php echo t('cartoons'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/category.php?slug=kino"><?php echo t('movies'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/category.php?slug=anime"><?php echo t('anime'); ?></a>
+                <a href="<?php echo ROOT_URL; ?>/category.php?slug=multfilm"><?php echo t('cartoons'); ?></a>
             </div>
             <div class="footer-links">
                 <h4><?php echo t('legal'); ?></h4>
