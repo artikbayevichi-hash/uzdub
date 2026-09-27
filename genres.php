@@ -111,7 +111,7 @@ $order = match($sort) {
     default => 'c.created_at DESC, c.title ASC',
 };
 
-$cnt = $pdo->prepare("SELECT COUNT(*) FROM (SELECT 1 $sql_base) gcnt_c");
+$cnt = $pdo->prepare("SELECT COUNT(*) $sql_base");
 $cnt->execute($params);
 $total = (int)$cnt->fetchColumn();
 $total_pages = max(1, (int)ceil($total / $per_page));
@@ -120,21 +120,7 @@ $data = $pdo->prepare("SELECT c.*, cat.name AS cat_name, cat.slug AS cat_slug $s
 $data->execute($params);
 $content_items = $data->fetchAll();
 
-if ($selected_count > 0) {
-    // Janr tanlangan — katalog bo'yicha sonlar alohida so'rovda (sql_base GROUP BY o'z ichiga oladi)
-    $cc = $pdo->prepare("SELECT cat.slug, COUNT(DISTINCT c.id) AS cnt
-        FROM content c
-        JOIN content_genres cg ON c.id = cg.content_id
-        JOIN categories cat ON c.category_id = cat.id
-        WHERE cg.genre_id IN ($placeholders) $where_extra
-        GROUP BY cat.id");
-} else {
-    $cc = $pdo->prepare("SELECT cat.slug, COUNT(DISTINCT c.id) AS cnt
-        FROM content c
-        JOIN categories cat ON c.category_id = cat.id
-        $where_extra
-        GROUP BY cat.id");
-}
+$cc = $pdo->prepare("SELECT cat.slug, COUNT(DISTINCT c.id) AS cnt $sql_base GROUP BY cat.id");
 $cc->execute($params);
 while ($r = $cc->fetch()) $cat_counts[$r['slug']] = (int)$r['cnt'];
 
@@ -225,7 +211,7 @@ include __DIR__ . '/includes/header.php';
                         🔍 <?php echo t('browse_by_genre'); ?>
                     </button>
                     <?php if ($selected_count > 0): ?>
-                    <button type="button" class="genre-clear-btn" onclick="window.location.href='<?php echo e(ROOT_URL . '/genres.php' . ($cat_filter ? '?cat=' . e($cat_filter) : '')); ?>'">✕ <?php echo t('all_genres'); ?></button>
+                    <button type="button" class="genre-clear-btn" onclick="window.location.href=ROOT_URL + '/genres.php'">✕ <?php echo t('all_genres'); ?></button>
                     <?php endif; ?>
                 </div>
                 <input type="hidden" name="sort" value="<?php echo e($sort); ?>">
@@ -356,8 +342,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         var sortVal = form.querySelector('input[name="sort"]');
         if (sortVal && sortVal.value !== 'newest') params.set('sort', sortVal.value);
-        var cat = <?php echo json_encode($cat_filter, JSON_UNESCAPED_UNICODE); ?>;
-        if (cat) params.set('cat', cat);
         window.location.href = ROOT_URL + '/genres.php?' + params.toString();
     });
 });
